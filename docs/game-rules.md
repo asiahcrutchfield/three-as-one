@@ -126,7 +126,7 @@ Passive assist:
 - Inactive characters recover an additional 5% HP at the end of each round
 
 #### Stage
-Paradise: paradise.png
+Paradise: public/assests/stages/paradise.png
 
 ### Officer
 
@@ -145,7 +145,7 @@ Passive assist:
 - Reduces damage taken by the active character by 5
 
 #### Stage
-Taipei: ximending.png
+Taipei: public/assests/stages/ximending.png
 
 ### Man
 
@@ -167,7 +167,7 @@ Passive assist:
 - Increases active character damage by 5%
 
 #### Stage
-New Orleans: mardi_gras.png
+New Orleans: public/assests/stages/mardi_gras.png
 
 ## Enemies
 
@@ -202,8 +202,8 @@ High HP, low damage
 ## Core Mechanics
 
 - Active character is randomly selected at the start of each cycle
-    - When game first starts, characters are randomly selected from all available characters
-    - Subsequent random selections are taken from inactive characters
+    - On game start, characters are randomly selected from all available characters
+    - Subsequent random selections are taken from non-defeated, inactive characters
 
 - Only one character is active at a time
 

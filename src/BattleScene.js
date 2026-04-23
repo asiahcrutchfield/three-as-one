@@ -1,484 +1,468 @@
 import Phaser from 'phaser';
 
 const ALL_CHARACTERS = ['Girl', 'Officer', 'Man'];
+const ENEMIES = ['Blitzer', 'Tank', 'Charger'];
 
 export class BattleScene extends Phaser.Scene {
     constructor() {
         super('BattleScene');
     }
 
-    init(data) {
-        this.currentCycle = data.cycle || 1;
-        this.baseEnemyHp = this.currentCycle === 1 ? 300 : (this.currentCycle === 2 ? 150 : 400);
+    preload() {
+        this.load.image('stage_girl', 'assests/stages/paradise.png');
+        this.load.image('stage_officer', 'assests/stages/ximending.png');
+        this.load.image('stage_man', 'assests/stages/mardi_gras.png');
 
-        this.characters = data.characters || {
-            'Girl': { hp: 100, maxHp: 100, animalHp: 100, isDead: false, comfortCooldown: 0, encourageCooldown: 0 },
-            'Officer': { hp: 150, maxHp: 150, isDead: false },
-            'Man': { hp: 200, maxHp: 200, isDead: false }
-        };
-
-        this.enemy = { hp: this.baseEnemyHp, maxHp: this.baseEnemyHp, type: this.getEnemyType(), turnCounter: 0 };
-        this.isGameOver = false;
-        
-        let aliveChars = ALL_CHARACTERS.filter(c => !this.characters[c].isDead);
-        if (data.activeCharacter && aliveChars.includes(data.activeCharacter)) {
-            this.activeCharacter = data.activeCharacter;
-        } else {
-            this.activeCharacter = aliveChars.length > 0 ? Phaser.Utils.Array.GetRandom(aliveChars) : null;
-        }
-
-        this.inactives = aliveChars.filter(c => c !== this.activeCharacter);
-        
-        // Status Effects
-        this.suppressEnemyNextTurn = false;
-        this.guardNextTurn = false;
-        this.officerProtectNextTurn = false;
-        this.encourageNextAction = false;
-        
-        // Meltdown
-        this.meltdownRoundsLeft = data.meltdownRoundsLeft || 0;
-        this.meltdownStabilized = data.meltdownStabilized || false;
+        this.load.image('char_Girl', 'assests/characters/girl/girl.png');
+        this.load.image('char_Officer', 'assests/characters/officer/officer.png');
+        this.load.image('char_Man', 'assests/characters/man/man.png');
     }
 
-    getEnemyType() {
-        if (this.currentCycle === 1) return 'Tank';
-        if (this.currentCycle === 2) return 'Charger';
-        return 'Boss (Blitzer)';
+    getGirlEmotion() {
+        if (this.characters['Girl'].isDead) return 'Defeated';
+        return this.characters['Girl'].animalHp > 50 ? 'Happy' : 'Sad';
+    }
+
+    init() {
+        // Init properties
+        this.characters = {
+            'Girl': { animalHp: 100, maxAnimalHp: 100 },
+            'Officer': { hp: 150, maxHp: 150 },
+            'Man': { hp: 200, maxHp: 200 }
+        };
+        
+        let aliveChars = ALL_CHARACTERS.map(c => c);
+        this.activeCharacter = Phaser.Utils.Array.GetRandom(aliveChars);
+        this.inactives = aliveChars.filter(c => c !== this.activeCharacter);
+
+        const enemyType = Phaser.Utils.Array.GetRandom(ENEMIES);
+        let enemyHp = 300;
+        if (enemyType === 'Tank') enemyHp = 500;
+        if (enemyType === 'Blitzer') enemyHp = 250;
+        this.enemy = { type: enemyType, hp: enemyHp, maxHp: enemyHp, intent: null, turnCounter: 0 };
+        
+        this.isGameOver = false;
+        
+        // Cooldowns & Status tracking
+        this.cooldowns = { girlComfort: 0, girlEncourage: 0, assist0: 0, assist1: 0 };
+        this.status = { suppress: false, guard: false, protect: false, encourage: false, brace: false };
+
+        this.updateEnemyIntent();
     }
 
     create() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
-        this.add.text(10, 10, `Cycle: ${this.currentCycle} / 3 | Enemy: ${this.enemy.type}`, { fontSize: '20px', fill: '#fff' });
+        this.bgStage = this.add.image(width / 2, height / 2, 'stage_' + this.activeCharacter.toLowerCase());
+        this.bgStage.setDisplaySize(width, height);
+        this.bgStage.setDepth(-1);
 
-        this.playerRect = this.add.rectangle(width * 0.25, height * 0.4, 80, 150, 0x3498db);
-        this.playerInfoText = this.add.text(width * 0.25, height * 0.4 - 100, '', {
-            fontSize: '18px', fill: '#ffffff', fontStyle: 'bold', align: 'center'
-        }).setOrigin(0.5);
+        // Graphics for health bars
+        this.graphics = this.add.graphics();
 
-        this.enemyRect = this.add.rectangle(width * 0.75, height * 0.4, 80, 150, 0xe74c3c);
-        this.enemyInfoText = this.add.text(width * 0.75, height * 0.4 - 100, '', {
-            fontSize: '18px', fill: '#ffffff', fontStyle: 'bold', align: 'center'
-        }).setOrigin(0.5);
+        // 1. Enemy Layout (Right Side)
+        this.enemyRect = this.add.rectangle(width * 0.75, height * 0.65, 100, 150, 0xe74c3c);
+        this.enemyText = this.add.text(width * 0.75, height * 0.65 - 90, '', { fontSize: '18px', fill: '#fff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
+        this.intentText = this.add.text(width * 0.5, height * 0.1, '', { fontSize: '24px', fill: '#e74c3c', fontStyle: 'bold', align: 'center', backgroundColor: '#00000088' }).setOrigin(0.5);
 
-        this.actionLogText = this.add.text(width * 0.5, height * 0.3, 'Round Start! Waiting for your action...', {
-            fontSize: '20px', fill: '#aaaaaa', align: 'center', wordWrap: { width: 400 }
-        }).setOrigin(0.5);
+        // 2. Active Character (Bottom Left)
+        this.playerSprite = this.add.image(width * 0.25, height * 0.65, 'char_' + this.activeCharacter);
+        this.playerSprite.setDisplaySize(150, 150);
+        this.playerText = this.add.text(width * 0.25, height * 0.65 - 90, '', { fontSize: '18px', fill: '#fff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
 
-        this.uiControlsText = this.add.text(width * 0.5, height * 0.8, '', {
-            fontSize: '18px', fill: '#f1c40f', align: 'center', wordWrap: { width: 700 }
-        }).setOrigin(0.5);
-
-        this.meltdownText = this.add.text(width * 0.5, height * 0.15, '', {
-            fontSize: '22px', fill: '#ff0000', align: 'center', fontStyle: 'bold'
-        }).setOrigin(0.5);
-
-        // Keyboard setup
-        this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-        this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        this.keyJ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J);
-        this.keyK = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K);
-        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE); // For Stabilize
-
-        this.keyA.on('down', () => this.handlePlayerAction('A'));
-        this.keyS.on('down', () => this.handlePlayerAction('S'));
-        this.keyD.on('down', () => this.handlePlayerAction('D'));
-        this.keyJ.on('down', () => this.handleAssist('J'));
-        this.keyK.on('down', () => this.handleAssist('K'));
-        this.keySpace.on('down', () => this.handleStabilize());
-
-        this.events.on('shutdown', () => {
-            this.input.keyboard.removeAllKeys(true);
+        // 3. Inactive Allies (Side Panels)
+        this.inactiveSprites = [];
+        this.inactiveTexts = [];
+        this.inactives.forEach((charName, i) => {
+            let xPos = width * 0.08;
+            let yPos = height * 0.3 + (i * 180);
+            let s = this.add.image(xPos, yPos, 'char_' + charName);
+            s.setDisplaySize(80, 80);
+            s.setAlpha(0.6);
+            let t = this.add.text(xPos, yPos - 50, '', { fontSize: '14px', fill: '#ccc', align: 'center' }).setOrigin(0.5);
+            this.inactiveSprites.push(s);
+            this.inactiveTexts.push(t);
         });
+
+        // 4. Action Log
+        this.actionLogText = this.add.text(width * 0.5, height * 0.45, 'Battle Start! Choose an action.', {
+            fontSize: '20px', fill: '#aaaaaa', align: 'center', wordWrap: { width: 400 }, backgroundColor: '#000000aa'
+        }).setOrigin(0.5);
+
+        // 5. Controls Bottom Center
+        this.uiControlsText = this.add.text(width * 0.5, height * 0.85, '', {
+            fontSize: '18px', fill: '#f1c40f', align: 'center', wordWrap: { width: 700 }, backgroundColor: '#000000bb'
+        }).setOrigin(0.5);
+
+        // Input
+        this.input.keyboard.on('keydown', this.handleInput, this);
 
         this.updateUI();
     }
 
-    getGirlEmotion() {
-        if (this.characters['Girl'].isDead) return 'Dead';
-        if (this.meltdownRoundsLeft > 0) return 'Meltdown';
-        const animalHp = this.characters['Girl'].animalHp;
-        const ratio = animalHp / 100;
-        if (ratio >= 0.75) return 'Happy';
-        if (ratio >= 0.5) return 'Neutral';
-        if (ratio >= 0.25) return 'Upset';
-        if (animalHp > 0) return 'Sad';
-        return 'Sad'; // Fallback if 0 but meltdown ended
-    }
-
-    updateUI() {
-        if (!this.activeCharacter) return;
+    updateEnemyIntent() {
+        this.enemy.turnCounter++;
+        let e = this.enemy;
+        this.status.brace = false; // reset previous brace if any, handle in turn
         
-        let cLog = `${this.activeCharacter}\nHP: ${Math.floor(this.characters[this.activeCharacter].hp)}/${this.characters[this.activeCharacter].maxHp}`;
-        if (this.activeCharacter === 'Girl') {
-            cLog += `\nAnimal: ${Math.floor(this.characters['Girl'].animalHp)}/100`;
-            cLog += `\nEmotion: ${this.getGirlEmotion()}`;
-            cLog += `\nCDs: Comfort(${this.characters['Girl'].comfortCooldown}), Encourage(${this.characters['Girl'].encourageCooldown})`;
-        } else {
-            if (!this.characters['Girl'].isDead) {
-                cLog += `\n(Girl Inactive - Animal: ${Math.floor(this.characters['Girl'].animalHp)}/100 | Emotion: ${this.getGirlEmotion()})`;
+        if (e.type === 'Blitzer') {
+            if (e.turnCounter % 2 === 0) {
+                e.intent = { name: 'Double Strike', dmg: 20, desc: 'Will attack twice rapidly! (20x2 dmg)', hits: 2 };
+            } else {
+                e.intent = { name: 'Strike', dmg: 30, desc: 'Will deal quick damage. (30 dmg)', hits: 1 };
             }
-        }
-        this.playerInfoText.setText(cLog);
-
-        this.enemyInfoText.setText(`${this.enemy.type}\nHP: ${Math.floor(this.enemy.hp)}/${this.enemy.maxHp}`);
-
-        let abilitiesTxt = '';
-        if (this.activeCharacter === 'Girl') abilitiesTxt = `A: Pounce (Emotion Dmg) | S: Comfort (Heal Animal 25) | D: Encourage (Next 2x)\n`;
-        else if (this.activeCharacter === 'Officer') abilitiesTxt = `A: Attack (15) | S: Suppress (Enemy dmg/2) | D: Guard (-50% dmg taken)\n`;
-        else if (this.activeCharacter === 'Man') abilitiesTxt = `A: Attack (25) | S: Overexert (40 dmg, takes 15) | D: Push Through (Attack x2?)\n`;
-
-        abilitiesTxt += '\nAssists:\n';
-        if (this.inactives.length > 0) {
-            abilitiesTxt += `J: ${this.inactives[0]} Assist  `;
-            if (this.inactives.length > 1) {
-                abilitiesTxt += `|  K: ${this.inactives[1]} Assist`;
+        } else if (e.type === 'Tank') {
+            if (e.turnCounter % 3 === 0) {
+                e.intent = { name: 'Heavy Slam', dmg: 50, desc: 'Preparing a massive slam! (50 dmg)', hits: 1 };
+            } else if (e.turnCounter % 3 === 2) {
+                e.intent = { name: 'Heavy Strike', dmg: 35, desc: 'Heavy Attack (35 dmg)', hits: 1 };
+            } else {
+                e.intent = { name: 'Brace', dmg: 0, desc: 'Defending. Takes reduced damage next turn.', hits: 0, effect: 'brace' };
             }
-        }
-        
-        this.uiControlsText.setText(abilitiesTxt);
-
-        if (this.meltdownRoundsLeft > 0) {
-            this.meltdownText.setText(`MELTDOWN! (${this.meltdownRoundsLeft} rounds left)\nPress SPACE to Stabilize (Cost 20 HP to all)`);
-        } else {
-            this.meltdownText.setText('');
+        } else if (e.type === 'Charger') {
+            if (e.turnCounter % 3 === 0) {
+                e.intent = { name: 'Unleash', dmg: 70, desc: 'UNLEASHING CHARGED ATTACK! (70 dmg)', hits: 1 };
+            } else {
+                e.intent = { name: 'Charge', dmg: 0, desc: 'Charging power...', hits: 0 };
+            }
         }
     }
 
-    handleStabilize() {
-        if (this.isGameOver || this.meltdownRoundsLeft <= 0 || this.meltdownStabilized) return;
-        
-        this.meltdownRoundsLeft = 0;
-        this.meltdownStabilized = true;
-        
-        // Cost 20 HP from all alive allies
-        Object.keys(this.characters).forEach(c => {
-            if (!this.characters[c].isDead) {
-                this.characters[c].hp = Math.max(0, this.characters[c].hp - 20);
-            }
-        });
-
-        this.actionLogText.setText(this.actionLogText.text + `\nStabilized meltdown! All allies took 20 DMG.`);
-        this.postCombatResolution(); // Re-check defeats since HP dropped
-    }
-
-    handlePlayerAction(key) {
+    handleInput(event) {
         if (this.isGameOver) {
-            this.handleEndGameInput(key);
+            if (event.code === 'KeyR') {
+                this.scene.restart();
+            }
             return;
         }
 
-        let dmg = 0;
-        let heal = 0;
-        let selfDmg = 0;
-        let logMsg = '';
+        const key = event.key.toUpperCase();
+        let tookAction = false;
+        let playerLog = '';
+        let pdmg = 0, selfDmg = 0;
+        let encourageMult = this.status.encourage ? 2 : 1;
+        this.status.encourage = false;
 
-        let multiplier = this.encourageNextAction ? 2 : 1;
-        this.encourageNextAction = false;
-        
-        // Decrement Cooldowns
-        if (this.characters['Girl'].comfortCooldown > 0) this.characters['Girl'].comfortCooldown--;
-        if (this.characters['Girl'].encourageCooldown > 0) this.characters['Girl'].encourageCooldown--;
+        // Decrease Cooldowns before resolving this turn's actions
+        if (this.cooldowns.girlComfort > 0) this.cooldowns.girlComfort--;
+        if (this.cooldowns.girlEncourage > 0) this.cooldowns.girlEncourage--;
+        if (this.cooldowns.assist0 > 0) this.cooldowns.assist0--;
+        if (this.cooldowns.assist1 > 0) this.cooldowns.assist1--;
 
-        // Meltdown misfire
-        if (this.meltdownRoundsLeft > 0 && Math.random() < 0.3) {
-            logMsg += "Misfire due to Meltdown! Random Attack! ";
-            dmg = 10 * multiplier;
-            this.executeCombat(dmg, 0, 0, logMsg, false, 0); 
-            return;
-        }
-
-        let manMultiplier = 1;
-        if (this.activeCharacter === 'Man') {
-            const hpRatio = this.characters['Man'].hp / this.characters['Man'].maxHp;
-            if (hpRatio <= 0.1) manMultiplier = 1.15;
-            else if (hpRatio <= 0.25) manMultiplier = 1.1;
-        }
-
-        let girlMultiplier = 1;
+        // Action resolution
         if (this.activeCharacter === 'Girl') {
             if (key === 'A') { // Pounce
-                const emotion = this.getGirlEmotion();
-                let basePounce = 18;
-                if (emotion === 'Happy') basePounce = 24;
-                else if (emotion === 'Upset') basePounce = 14;
-                else if (emotion === 'Sad') basePounce = 10;
-                
-                dmg = basePounce * multiplier;
-                logMsg = `Girl uses Pounce! Deals ${dmg} dmg.`;
+                let base = this.characters['Girl'].animalHp > 50 ? 24 : 10;
+                pdmg = base * encourageMult;
+                playerLog = `Girl uses Pounce! Deals ${pdmg} damage.`;
+                tookAction = true;
             } else if (key === 'S') { // Comfort
-                if (this.characters['Girl'].comfortCooldown > 0) {
-                    this.actionLogText.setText('Comfort is on cooldown!');
-                    return;
-                }
-                this.characters['Girl'].comfortCooldown = 2; // Every other turn
-                this.characters['Girl'].animalHp = Math.min(100, this.characters['Girl'].animalHp + (25 * multiplier));
-                logMsg = `Girl uses Comfort, heals animal for ${25 * multiplier}.`;
+                if (this.cooldowns.girlComfort > 0) { this.floatText(this.playerSprite, "Cooldown!", '#e74c3c'); return; }
+                this.cooldowns.girlComfort = 2; // Sets cooldown
+                let heal = 25 * encourageMult;
+                this.characters['Girl'].animalHp = Math.min(100, this.characters['Girl'].animalHp + heal);
+                playerLog = `Girl comforts Animal! Heals ${heal} HP.`;
+                this.showHeal(this.playerSprite, heal);
+                tookAction = true;
             } else if (key === 'D') { // Encourage
-                if (this.characters['Girl'].encourageCooldown > 0) {
-                    this.actionLogText.setText('Encourage is on cooldown!');
-                    return;
-                }
-                this.characters['Girl'].encourageCooldown = 2; // Every other turn
-                this.encourageNextAction = true;
-                logMsg = `Girl uses Encourage! Next action 2x effect.`;
+                if (this.cooldowns.girlEncourage > 0) { this.floatText(this.playerSprite, "Cooldown!", '#e74c3c'); return; }
+                this.cooldowns.girlEncourage = 2;
+                this.status.encourage = true;
+                playerLog = `Girl uses Encourage! Next action 2x effect.`;
+                this.floatText(this.playerSprite, "Encouraged!", '#f1c40f');
+                tookAction = true;
             }
         } else if (this.activeCharacter === 'Officer') {
             if (key === 'A') {
-                dmg = 15 * multiplier;
-                logMsg = `Officer Attacks for ${dmg}!`;
+                pdmg = 15 * encourageMult;
+                playerLog = `Officer Attacks! Deals ${pdmg} damage.`;
+                tookAction = true;
             } else if (key === 'S') {
-                this.suppressEnemyNextTurn = true;
-                logMsg = `Officer used Suppress! Enemy damage halved next turn.`;
+                this.status.suppress = true;
+                playerLog = `Officer Suppresses enemy! Halves their damage this round.`;
+                this.floatText(this.enemyRect, "Suppressed!", '#3498db');
+                tookAction = true;
             } else if (key === 'D') {
-                this.guardNextTurn = true;
-                logMsg = `Officer Guards! Takes 50% damage next turn.`;
+                this.status.guard = true;
+                playerLog = `Officer Guards! Ready to mitigate half damage.`;
+                this.floatText(this.playerSprite, "Guarding!", '#3498db');
+                tookAction = true;
             }
         } else if (this.activeCharacter === 'Man') {
             if (key === 'A') {
-                dmg = 25 * multiplier * manMultiplier;
-                logMsg = `Man Attacks for ${Math.floor(dmg)}!`;
+                pdmg = 25 * encourageMult;
+                playerLog = `Man Attacks! Deals ${pdmg} damage.`;
+                tookAction = true;
             } else if (key === 'S') {
-                dmg = 40 * multiplier * manMultiplier;
+                pdmg = 40 * encourageMult;
                 selfDmg = 15;
-                logMsg = `Man Overexerts for ${Math.floor(dmg)} dmg! Pays 15 HP.`;
+                playerLog = `Man Overexerts! Takes 15 damage to deal ${pdmg}.`;
+                tookAction = true;
             } else if (key === 'D') {
-                dmg = 25 * multiplier * manMultiplier; // Repeat basic attack
-                logMsg = `Man Pushes Through! Attacks for ${Math.floor(dmg)}!`;
+                pdmg = 35 * encourageMult;
+                playerLog = `Man Pushes Through! Deals ${pdmg} damage.`;
+                tookAction = true;
             }
         }
-        
-        // Passive: Man increases active damage by 5%
-        if (dmg > 0 && this.inactives.includes('Man')) dmg *= 1.05;
 
-        this.executeCombat(Math.floor(dmg), heal, selfDmg, logMsg, false, 0); // animal heal is processed directly above
-    }
-
-    handleAssist(key) {
-        if (this.isGameOver) return;
-        let assistTargetIndex = key === 'J' ? 0 : 1;
-        if (assistTargetIndex >= this.inactives.length) return;
-        
-        let assistant = this.inactives[assistTargetIndex];
-        let logMsg = '';
-        
-        if (assistant === 'Girl') {
-            let heal = this.characters[this.activeCharacter].maxHp * 0.2;
-            this.characters[this.activeCharacter].hp = Math.min(this.characters[this.activeCharacter].maxHp, this.characters[this.activeCharacter].hp + heal);
-            logMsg = `Girl's Assist heals ${this.activeCharacter} for ${heal} HP!`;
-        } else if (assistant === 'Officer') {
-            this.officerProtectNextTurn = true;
-            logMsg = `Officer's Assist will protect active character from the next attack!`;
-        } else if (assistant === 'Man') {
-            let dmg = this.enemy.hp * 0.2; // 20% CURRENT hp
-            dmg = Math.floor(dmg);
-            this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
-            logMsg = `Man's Assist deals ${dmg} damage (20% enemy current HP)!`;
+        if (!tookAction) {
+            // Check Assists
+            if (key === 'J' && this.inactives.length > 0) {
+                if (this.cooldowns.assist0 > 0) { this.floatText(this.inactiveSprites[0], "Cooldown!", '#e74c3c'); return; }
+                playerLog = this.executeAssist(0);
+                tookAction = true;
+            } else if (key === 'K' && this.inactives.length > 1) {
+                if (this.cooldowns.assist1 > 0) { this.floatText(this.inactiveSprites[1], "Cooldown!", '#e74c3c'); return; }
+                playerLog = this.executeAssist(1);
+                tookAction = true;
+            }
         }
-        
-        this.executeCombat(0, 0, 0, logMsg, true, 0); 
+
+        if (tookAction) {
+            this.input.keyboard.enabled = false; // block inputs during resolution
+            this.resolveTurn(playerLog, pdmg, selfDmg);
+        }
     }
 
-    executeCombat(playerDmg, playerHeal, selfDmg, playerMsg, isAssist, animalHeal) {
-        if (playerDmg > 0) this.enemy.hp -= playerDmg;
-        if (selfDmg > 0) this.characters[this.activeCharacter].hp -= selfDmg;
+    executeAssist(index) {
+        let assistChar = this.inactives[index];
+        index === 0 ? this.cooldowns.assist0 = 3 : this.cooldowns.assist1 = 3;
+        
+        let msg = '';
+        if (assistChar === 'Girl') {
+            let activeObj = this.characters[this.activeCharacter];
+            let heal = 30;
+            activeObj.hp = Math.min(activeObj.maxHp, activeObj.hp + heal);
+            msg = `Girl Assist: Heals active character for 30 HP!`;
+            this.showHeal(this.playerSprite, heal);
+        } else if (assistChar === 'Officer') {
+            this.status.protect = true;
+            msg = `Officer Assist: Protecting from next enemy action!`;
+            this.floatText(this.playerSprite, "Protected!", '#3498db');
+        } else if (assistChar === 'Man') {
+            msg = `Man Assist: Unleashes flat burst damage (40)!`;
+            this.applyDamageToEnemy(40);
+        }
+        return msg;
+    }
 
-        // Apply clamping
-        this.clampHP();
+    resolveTurn(playerMsg, playerDmg, selfDmg) {
+        // Update Log immediately so player can see feedback
+        this.actionLogText.setText(playerMsg);
+        
+        if (selfDmg > 0) {
+            this.characters[this.activeCharacter].hp -= selfDmg;
+            this.showDamage(this.playerSprite, selfDmg);
+        }
 
-        let totalMsg = playerMsg;
+        if (playerDmg > 0) {
+            if (this.status.brace) playerDmg = Math.floor(playerDmg / 2); // Tank brace mitigates
+            this.applyDamageToEnemy(playerDmg);
+        }
 
-        // Check if Enemy Defeated Immediately
+        // Wait a beat before enemy acts
+        this.time.delayedCall(1000, this.resolveEnemyAction, [], this);
+    }
+
+    applyDamageToEnemy(dmg) {
+        this.enemy.hp = Math.max(0, this.enemy.hp - dmg);
+        this.showDamage(this.enemyRect, dmg);
+        this.flashSprite(this.enemyRect);
+        if (this.enemy.hp > 0) this.cameras.main.shake(100, 0.01);
+    }
+
+    resolveEnemyAction() {
         if (this.enemy.hp <= 0) {
-            this.updateUI();
-            totalMsg += `\nEnemy defeated! Cycle ends.`;
-            this.actionLogText.setText(totalMsg);
-            this.endCycle(true);
+            this.endBattle(true);
             return;
         }
 
-        // --- ENEMY TURN ---
-        let enemyDmgBase = 0;
-        this.enemy.turnCounter++;
+        let e = this.enemy;
+        let eLog = `Enemy executes: ${e.intent.name}!`;
 
-        if (this.enemy.type === 'Tank') {
-            enemyDmgBase = 10;
-        } else if (this.enemy.type === 'Charger') {
-            if (this.enemy.turnCounter % 3 === 0) {
-                enemyDmgBase = 40;
-                totalMsg += `\nCharger unloads its payload!`;
-            } else {
-                totalMsg += `\nCharger is charging up...`;
-            }
-        } else {
-            enemyDmgBase = 20; // Boss Blitzer
+        if (e.intent.effect === 'brace') {
+            this.status.brace = true;
+            this.floatText(this.enemyRect, "Braced!", '#3498db');
         }
 
-        if (enemyDmgBase > 0) {
-            let finalEnemyDmg = enemyDmgBase;
-            if (this.suppressEnemyNextTurn) finalEnemyDmg /= 2;
-            if (this.guardNextTurn) finalEnemyDmg /= 2;
-            
-            if (this.officerProtectNextTurn) {
-                finalEnemyDmg = 0;
-                this.officerProtectNextTurn = false;
-                totalMsg += `\nOfficer blocked the attack!`;
-            } else {
-                // Officer passive: reduce damage by 5 
-                if (this.inactives.includes('Officer')) finalEnemyDmg = Math.max(0, finalEnemyDmg - 5);
-            }
+        if (e.intent.hits > 0) {
+            let hitsRemaining = e.intent.hits;
+            let dmgPerHit = e.intent.dmg;
 
-            finalEnemyDmg = Math.floor(finalEnemyDmg);
-            this.characters[this.activeCharacter].hp -= finalEnemyDmg;
-            
-            if (this.activeCharacter === 'Girl' && finalEnemyDmg > 0) {
-                this.characters['Girl'].animalHp -= finalEnemyDmg * 0.5;
-            }
+            if (this.status.suppress) dmgPerHit = Math.ceil(dmgPerHit / 2);
+            if (this.status.guard) dmgPerHit = Math.ceil(dmgPerHit / 2);
 
-            totalMsg += `\nEnemy deals ${finalEnemyDmg} damage.`;
-        }
-
-        this.suppressEnemyNextTurn = false;
-        this.guardNextTurn = false;
-
-        // Clamp HP again after enemy damage
-        this.clampHP();
-
-        // Round processing
-        if (this.meltdownRoundsLeft > 0) {
-            this.meltdownRoundsLeft--;
-            if (this.meltdownRoundsLeft === 0) totalMsg += `\nMeltdown has ended!`;
-        } else {
-            // Passive heal from Girl only if no meltdown
-            if (this.inactives.includes('Girl')) {
-                this.inactives.forEach(c => {
-                    this.characters[c].hp = Math.min(this.characters[c].maxHp, this.characters[c].hp + this.characters[c].maxHp * 0.05);
-                });
-            }
-        }
-
-        this.clampHP();
-        this.actionLogText.setText(totalMsg);
-        
-        this.postCombatResolution();
-    }
-
-    clampHP() {
-        this.enemy.hp = Math.max(0, this.enemy.hp);
-        Object.keys(this.characters).forEach(c => {
-            this.characters[c].hp = Math.max(0, this.characters[c].hp);
-        });
-        this.characters['Girl'].animalHp = Math.max(0, this.characters['Girl'].animalHp);
-    }
-
-    postCombatResolution() {
-        if (this.isGameOver) return; // Prevent double trigger
-        
-        let shouldUpdateUI = false;
-
-        // Check if any character HP is 0
-        Object.keys(this.characters).forEach(c => {
-            if (this.characters[c].hp === 0 && !this.characters[c].isDead) {
-                this.characters[c].isDead = true;
-                this.actionLogText.setText(this.actionLogText.text + `\n${c} has been defeated!`);
-                shouldUpdateUI = true;
-            }
-        });
-
-        // 1. Check ALL characters DEAD
-        let aliveChars = ALL_CHARACTERS.filter(c => !this.characters[c].isDead);
-        if (aliveChars.length === 0) {
-            this.endCycle(false);
-            return;
-        }
-
-        // 2. Animal Defeat triggers Meltdown & Girl inactive
-        if (this.characters['Girl'].animalHp === 0 && this.meltdownRoundsLeft === 0 && !this.meltdownStabilized && !this.characters['Girl'].isDead) {
-            this.meltdownRoundsLeft = 2;
-            this.actionLogText.setText(this.actionLogText.text + `\nAnimal Defeated! MELTDOWN TRIGGERED! Girl becomes inactive.`);
-            
-            // Force Girl to be inactive
-            if (this.activeCharacter === 'Girl') {
-                aliveChars = aliveChars.filter(c => c !== 'Girl');
-                if (aliveChars.length > 0) {
-                    this.activeCharacter = Phaser.Utils.Array.GetRandom(aliveChars);
-                    shouldUpdateUI = true;
-                }
-            }
-        }
-
-        // 3. Active character is dead
-        if (this.characters[this.activeCharacter] && this.characters[this.activeCharacter].isDead) {
-            if (aliveChars.length > 0) {
-                // If Girl is alive but in meltdown, can she be selected? 
-                // Rule: "Girl is inactive during meltdown"
-                if (this.meltdownRoundsLeft > 0) aliveChars = aliveChars.filter(c => c !== 'Girl');
-                
-                if (aliveChars.length > 0) {
-                    this.activeCharacter = Phaser.Utils.Array.GetRandom(aliveChars);
-                    this.actionLogText.setText(this.actionLogText.text + `\n${this.activeCharacter} steps in actively!`);
+            let applyHit = () => {
+                if (this.isGameOver) return;
+                let actualDmg = dmgPerHit;
+                if (this.status.protect) {
+                    actualDmg = 0;
+                    this.status.protect = false;
+                    this.floatText(this.playerSprite, "Blocked!", '#3498db');
                 } else {
-                    // Everyone else dead, and Girl is in meltdown so she can't act... basically game over for this cycle
-                    this.endCycle(false);
-                    return;
+                    if (this.activeCharacter === 'Girl') {
+                        this.characters['Girl'].animalHp = Math.max(0, this.characters['Girl'].animalHp - actualDmg);
+                    } else {
+                        this.characters[this.activeCharacter].hp = Math.max(0, this.characters[this.activeCharacter].hp - actualDmg);
+                    }
+                    this.showDamage(this.playerSprite, actualDmg);
+                    this.flashSprite(this.playerSprite);
+                    this.cameras.main.shake(150, 0.015);
                 }
+
+                hitsRemaining--;
+                if (hitsRemaining > 0) {
+                    this.time.delayedCall(400, applyHit, [], this);
+                } else {
+                    this.postTurnCleanup(eLog);
+                }
+            };
+            applyHit();
+            return; // clean-up is done chronologically after hits
+        }
+
+        this.postTurnCleanup(eLog);
+    }
+
+    postTurnCleanup(enemyLog) {
+        this.actionLogText.setText(this.actionLogText.text + '\n' + enemyLog);
+        this.status.suppress = false;
+        this.status.guard = false;
+        
+        let isDefeated = false;
+        if (this.activeCharacter === 'Girl' && this.characters['Girl'].animalHp <= 0) isDefeated = true;
+        if (this.activeCharacter !== 'Girl' && this.characters[this.activeCharacter].hp <= 0) isDefeated = true;
+        
+        if (isDefeated) {
+            this.characters[this.activeCharacter].isDead = true;
+            let aliveChars = ALL_CHARACTERS.filter(c => !this.characters[c].isDead);
+            if (aliveChars.length === 0) {
+                this.endBattle(false);
+                return;
+            } else {
+                this.actionLogText.setText(this.actionLogText.text + `\n${this.activeCharacter} was defeated and swapped!`);
+                this.activeCharacter = Phaser.Utils.Array.GetRandom(aliveChars);
+                this.inactives = aliveChars.filter(c => c !== this.activeCharacter);
+                if (this.bgStage) this.bgStage.setTexture('stage_' + this.activeCharacter.toLowerCase());
             }
         }
         
-        // Re-evaluate inactives based on who is active
-        this.inactives = ALL_CHARACTERS.filter(c => !this.characters[c].isDead && c !== this.activeCharacter);
-        
+        this.updateEnemyIntent();
         this.updateUI();
+        this.input.keyboard.enabled = true;
     }
 
-    endCycle(win) {
-        if (this.isGameOver) return; // Prevent double execution
+    endBattle(isVictory) {
         this.isGameOver = true;
-        let grade = 'D';
+        this.actionLogText.setText(isVictory ? "VICTORY!\n\nPress R to Restart Test" : "DEFEAT...\n\nPress R to Restart Test");
+        this.uiControlsText.setText('');
+        this.intentText.setText('');
+        this.updateUI(); // Updates bars one last time
+        this.input.keyboard.enabled = true; // allow R key
+    }
 
-        if (win) {
-            let totalAlive = ALL_CHARACTERS.filter(c => !this.characters[c].isDead).length;
-            let avgHpR = ALL_CHARACTERS.reduce((acc, c) => acc + (this.characters[c].isDead ? 0 : this.characters[c].hp / this.characters[c].maxHp), 0) / 3;
+    // --- Aesthetics & UI Helpers ---
 
-            if (totalAlive === 3 && avgHpR > 0.7) grade = 'S';
-            else if (totalAlive === 3) grade = 'A';
-            else if (totalAlive === 2) grade = 'B';
-            else grade = 'C';
+    updateUI() {
+        this.graphics.clear();
+        if (this.isGameOver) return; // Freeze UI
+
+        if (this.playerSprite && this.activeCharacter) this.playerSprite.setTexture('char_' + this.activeCharacter);
+
+        // Intent
+        this.intentText.setText(`ENEMY INTENT:\n[ ${this.enemy.intent.name.toUpperCase()} ]\n${this.enemy.intent.desc}`);
+
+        // Enemy info
+        this.enemyText.setText(`${this.enemy.type}\nHP: ${Math.floor(this.enemy.hp)}/${this.enemy.maxHp}`);
+        this.drawHealthBar(this.enemyRect.x - 50, this.enemyRect.y + 85, 100, 10, this.enemy.hp, this.enemy.maxHp);
+
+        // Active Player
+        let actT = '';
+        if (this.activeCharacter === 'Girl') {
+            actT = `Girl (Emotion: ${this.getGirlEmotion()})\nAnimal: ${Math.floor(this.characters['Girl'].animalHp)}/100`;
+            this.drawHealthBar(this.playerSprite.x - 75, this.playerSprite.y + 85, 150, 12, this.characters['Girl'].animalHp, this.characters['Girl'].maxAnimalHp);
+        } else {
+            actT = `${this.activeCharacter}\nHP: ${Math.floor(this.characters[this.activeCharacter].hp)}/${this.characters[this.activeCharacter].maxHp}`;
+            this.drawHealthBar(this.playerSprite.x - 75, this.playerSprite.y + 85, 150, 12, this.characters[this.activeCharacter].hp, this.characters[this.activeCharacter].maxHp);
+        }
+        this.playerText.setText(actT);
+
+        // Inactives
+        this.inactives.forEach((charName, i) => {
+            this.inactiveSprites[i].setTexture('char_' + charName);
+            this.inactiveSprites[i].setVisible(true);
+            if (charName === 'Girl') {
+                this.inactiveTexts[i].setText(`Girl\n${this.getGirlEmotion()}`);
+                this.drawHealthBar(this.inactiveSprites[i].x - 40, this.inactiveSprites[i].y + 50, 80, 8, this.characters['Girl'].animalHp, this.characters['Girl'].maxAnimalHp);
+            } else {
+                this.inactiveTexts[i].setText(`${charName}\nHP: ${Math.floor(this.characters[charName].hp)}/${this.characters[charName].maxHp}`);
+                this.drawHealthBar(this.inactiveSprites[i].x - 40, this.inactiveSprites[i].y + 50, 80, 8, this.characters[charName].hp, this.characters[charName].maxHp);
+            }
+        });
+        
+        for (let i = this.inactives.length; i < 2; i++) {
+            if (this.inactiveSprites[i]) this.inactiveSprites[i].setVisible(false);
+            if (this.inactiveTexts[i]) this.inactiveTexts[i].setText('');
         }
 
-        this.uiControlsText.setText('');
-        this.meltdownText.setText('');
-        this.actionLogText.setText(this.actionLogText.text + `\n\nCycle Ended! Grade: ${grade}\nPress A to proceed.`);
-        this.nextCycleReady = true;
-        this.playerRect.setVisible(false);
-        this.enemyRect.setVisible(false);
-        this.playerInfoText.setVisible(false);
-        this.enemyInfoText.setVisible(false);
+        // Controls Box
+        let controls = '';
+        if (this.activeCharacter === 'Girl') {
+            controls = `A: Pounce | S: Comfort (CD: ${this.cooldowns.girlComfort}) | D: Encourage (CD: ${this.cooldowns.girlEncourage})\n`;
+        } else if (this.activeCharacter === 'Officer') {
+            controls = `A: Attack | S: Suppress | D: Guard\n`;
+        } else if (this.activeCharacter === 'Man') {
+            controls = `A: Attack | S: Overexert | D: Push Through\n`;
+        }
+
+        if (this.inactives.length > 0) {
+            controls += `Assists:\nJ: ${this.inactives[0]} (CD: ${this.cooldowns.assist0}) `;
+            if (this.inactives.length > 1) {
+                controls += `| K: ${this.inactives[1]} (CD: ${this.cooldowns.assist1})`;
+            }
+        }
+        this.uiControlsText.setText(controls);
     }
 
-    handleEndGameInput(key) {
-        if (!this.nextCycleReady || key !== 'A') return;
-        
-        const clonedChars = JSON.parse(JSON.stringify(this.characters));
-        Object.keys(clonedChars).forEach(c => clonedChars[c].activeCooldown = 0);
-        // Ensure cooldowns and animal restart fresh for new cycle (or preserved if game design wants persistence)
-        clonedChars['Girl'].comfortCooldown = 0;
-        clonedChars['Girl'].encourageCooldown = 0;
-        
-        let aliveChars = ALL_CHARACTERS.filter(c => !clonedChars[c].isDead);
-        
-        if (aliveChars.length === 0 || this.currentCycle >= 3) {
-            this.scene.start('BattleScene', { cycle: 1, characters: undefined });
+    drawHealthBar(x, y, w, h, current, max) {
+        this.graphics.fillStyle(0x000000);
+        this.graphics.fillRect(x, y, w, h);
+        if (current > 0) {
+            let ratio = current / max;
+            let color = 0x2ecc71; // green
+            if (ratio < 0.25) color = 0xe74c3c; // red
+            else if (ratio < 0.5) color = 0xf1c40f; // yellow
+            this.graphics.fillStyle(color);
+            this.graphics.fillRect(x, y, w * ratio, h);
+        }
+    }
+
+    showDamage(target, amount) {
+        if (amount === 0) return;
+        this.floatText(target, `-${amount}`, '#e74c3c');
+    }
+
+    showHeal(target, amount) {
+        if (amount === 0) return;
+        this.floatText(target, `+${Math.floor(amount)}`, '#2ecc71');
+    }
+
+    floatText(target, text, color) {
+        let t = this.add.text(target.x, target.y - 40, text, { fontSize: '24px', fill: color, fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+        this.tweens.add({
+            targets: t, y: target.y - 100, alpha: 0, duration: 1000,
+            onComplete: () => t.destroy()
+        });
+    }
+
+    flashSprite(sprite) {
+        if (sprite.setTintFill && sprite.clearTint) {
+            sprite.setTintFill(0xffcccc);
+            this.time.delayedCall(150, () => sprite.clearTint());
         } else {
-            this.scene.start('BattleScene', { 
-                cycle: this.currentCycle + 1, 
-                characters: clonedChars, 
-                activeCharacter: this.activeCharacter,
-                meltdownRoundsLeft: this.meltdownRoundsLeft,
-                meltdownStabilized: this.meltdownStabilized
-            });
+            sprite.setAlpha(0.5);
+            this.time.delayedCall(150, () => sprite.setAlpha(1));
         }
     }
 }
