@@ -73,7 +73,7 @@ Animal Defeat:
 - Has 4 emotional states:
   - Happy
   - Neutral
-  - Upset
+  - Worried
   - Sad
 
 - Animal health changes emotional states
