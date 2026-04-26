@@ -38,8 +38,8 @@
             "animations": {
                 "idle": {
                     "src": "/assets/characters/tiger/tiger_idle.png",
-                    "frameWidth": 512,
-                    "frameHeight": 321,
+                    "frameWidth": 1024,
+                    "frameHeight": 643,
                     "fps": 30
                 }
             }

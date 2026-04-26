@@ -82,7 +82,9 @@ function loop(timestamp) {
 // DRAW SINGLE SPRITE
 // ========================
 function drawSprite(sprite, frame, x, y) {
-    const f = frame % sprite.frameCount;
+    const cycle = sprite.frameCount * 2 - 2;
+    let f = frame % cycle;
+    if (f >= sprite.frameCount) f = cycle - f;
 
     ctx.drawImage(
         sprite.image,
@@ -101,8 +103,13 @@ function drawSprite(sprite, frame, x, y) {
 // DRAW UNIT (TIGER + GIRL)
 // ========================
 function drawUnit(unit, frame, x, y) {
-    const tigerFrame = frame % unit.tiger.frameCount;
-    const girlFrame = frame % unit.girl.frameCount;
+    const tigerCycle = unit.tiger.frameCount * 2 - 2;
+    let tigerFrame = frame % tigerCycle;
+    if (tigerFrame >= unit.tiger.frameCount) tigerFrame = tigerCycle - tigerFrame;
+
+    const girlCycle = unit.girl.frameCount * 2 - 2;
+    let girlFrame = frame % girlCycle;
+    if (girlFrame >= unit.girl.frameCount) girlFrame = girlCycle - girlFrame;
 
     // anchor: tiger feet
     const baseY = y + unit.tiger.frameHeight;
@@ -146,6 +153,15 @@ function drawUnit(unit, frame, x, y) {
         unit.girl.frameWidth,
         unit.girl.frameHeight
     );
+
+    // Draw unit box (union of both)
+    const minX = Math.min(x, x + unit.offsetX);
+    const minY = Math.min(y, baseY - unit.girl.frameHeight + unit.offsetY);
+    const maxX = Math.max(x + unit.tiger.frameWidth, x + unit.offsetX + unit.girl.frameWidth);
+    const maxY = Math.max(y + unit.tiger.frameHeight, baseY - unit.girl.frameHeight + unit.offsetY + unit.girl.frameHeight);
+    
+    ctx.strokeStyle = "green";
+    ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
 }
 
 // ========================

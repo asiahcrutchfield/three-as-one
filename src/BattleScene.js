@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import characterData from '../public/assets/characters/index.json';
 
 const ALL_CHARACTERS = ['Girl', 'Officer', 'Man'];
 const ENEMIES = ['Blitzer', 'Tank', 'Charger'];
@@ -13,9 +14,13 @@ export class BattleScene extends Phaser.Scene {
         this.load.image('stage_officer', 'assests/stages/ximending.png');
         this.load.image('stage_man', 'assests/stages/mardi_gras.png');
 
-        this.load.image('char_Girl', 'assests/characters/girl/girl.png');
-        this.load.image('char_Officer', 'assests/characters/officer/officer.png');
-        this.load.image('char_Man', 'assests/characters/man/man.png');
+        for (const [key, charInfo] of Object.entries(characterData.characters)) {
+            const anim = charInfo.animations.idle;
+            this.load.spritesheet(`char_${key}`, anim.src, {
+                frameWidth: anim.frameWidth,
+                frameHeight: anim.frameHeight
+            });
+        }
     }
 
     getGirlEmotion() {
@@ -54,6 +59,17 @@ export class BattleScene extends Phaser.Scene {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
 
+        for (const [key, charInfo] of Object.entries(characterData.characters)) {
+            const anim = charInfo.animations.idle;
+            this.anims.create({
+                key: `${key}_idle`,
+                frames: this.anims.generateFrameNumbers(`char_${key}`),
+                frameRate: anim.fps || 10,
+                repeat: -1,
+                yoyo: true
+            });
+        }
+
         this.bgStage = this.add.image(width / 2, height / 2, 'stage_' + this.activeCharacter.toLowerCase());
         this.bgStage.setDisplaySize(width, height);
         this.bgStage.setDepth(-1);
@@ -66,24 +82,22 @@ export class BattleScene extends Phaser.Scene {
         this.enemyText = this.add.text(width * 0.75, height * 0.65 - 90, '', { fontSize: '18px', fill: '#fff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
         this.intentText = this.add.text(width * 0.5, height * 0.1, '', { fontSize: '24px', fill: '#e74c3c', fontStyle: 'bold', align: 'center', backgroundColor: '#00000088' }).setOrigin(0.5);
 
-        // 2. Active Character (Bottom Left)
-        this.playerSprite = this.add.image(width * 0.25, height * 0.65, 'char_' + this.activeCharacter);
-        this.playerSprite.setDisplaySize(150, 150);
-        this.playerText = this.add.text(width * 0.25, height * 0.65 - 90, '', { fontSize: '18px', fill: '#fff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
+        // 2. Character Displays
+        this.characterDisplays = {};
+        ALL_CHARACTERS.forEach(charName => {
+            this.characterDisplays[charName] = this.createCharacterDisplay(charName);
+            this.characterDisplays[charName].setVisible(false);
+        });
+
+        this.playerText = this.add.text(0, 0, '', { fontSize: '18px', fill: '#fff', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
 
         // 3. Inactive Allies (Side Panels)
         this.inactiveSprites = [];
         this.inactiveTexts = [];
-        this.inactives.forEach((charName, i) => {
-            let xPos = width * 0.08;
-            let yPos = height * 0.3 + (i * 180);
-            let s = this.add.image(xPos, yPos, 'char_' + charName);
-            s.setDisplaySize(80, 80);
-            s.setAlpha(0.6);
-            let t = this.add.text(xPos, yPos - 50, '', { fontSize: '14px', fill: '#ccc', align: 'center' }).setOrigin(0.5);
-            this.inactiveSprites.push(s);
+        for (let i = 0; i < 2; i++) {
+            let t = this.add.text(0, 0, '', { fontSize: '14px', fill: '#ccc', align: 'center' }).setOrigin(0.5);
             this.inactiveTexts.push(t);
-        });
+        }
 
         // 4. Action Log
         this.actionLogText = this.add.text(width * 0.5, height * 0.45, 'Battle Start! Choose an action.', {
@@ -99,6 +113,28 @@ export class BattleScene extends Phaser.Scene {
         this.input.keyboard.on('keydown', this.handleInput, this);
 
         this.updateUI();
+    }
+
+    createCharacterDisplay(charName) {
+        const container = this.add.container(0, 0);
+        
+        if (charName === 'Girl') {
+            const unit = characterData.units.girl_tiger;
+            unit.members.forEach(member => {
+                const sprite = this.add.sprite(member.offsetX, member.offsetY, `char_${member.id}`);
+                sprite.play(`${member.id}_idle`);
+                sprite.setOrigin(0.5, 1);
+                container.add(sprite);
+            });
+        } else {
+            const key = charName.toLowerCase();
+            const sprite = this.add.sprite(0, 0, `char_${key}`);
+            sprite.play(`${key}_idle`);
+            sprite.setOrigin(0.5, 1);
+            container.add(sprite);
+        }
+        
+        return container;
     }
 
     updateEnemyIntent() {
@@ -368,7 +404,19 @@ export class BattleScene extends Phaser.Scene {
         this.graphics.clear();
         if (this.isGameOver) return; // Freeze UI
 
-        if (this.playerSprite && this.activeCharacter) this.playerSprite.setTexture('char_' + this.activeCharacter);
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+
+        ALL_CHARACTERS.forEach(charName => {
+            this.characterDisplays[charName].setVisible(false);
+            this.characterDisplays[charName].setAlpha(1);
+        });
+
+        const activeDisp = this.characterDisplays[this.activeCharacter];
+        this.playerSprite = activeDisp;
+        activeDisp.setVisible(true);
+        activeDisp.setPosition(width * 0.25, height * 0.65 + 75);
+        activeDisp.setScale(0.25);
 
         // Intent
         this.intentText.setText(`ENEMY INTENT:\n[ ${this.enemy.intent.name.toUpperCase()} ]\n${this.enemy.intent.desc}`);
@@ -378,32 +426,60 @@ export class BattleScene extends Phaser.Scene {
         this.drawHealthBar(this.enemyRect.x - 50, this.enemyRect.y + 85, 100, 10, this.enemy.hp, this.enemy.maxHp);
 
         // Active Player
+        let px = activeDisp.x;
+        let py = activeDisp.y - 120;
+        
         let actT = '';
         if (this.activeCharacter === 'Girl') {
             actT = `Girl (Emotion: ${this.getGirlEmotion()})\nAnimal: ${Math.floor(this.characters['Girl'].animalHp)}/100`;
-            this.drawHealthBar(this.playerSprite.x - 75, this.playerSprite.y + 85, 150, 12, this.characters['Girl'].animalHp, this.characters['Girl'].maxAnimalHp);
+            this.drawHealthBar(px - 75, py + 85, 150, 12, this.characters['Girl'].animalHp, this.characters['Girl'].maxAnimalHp);
         } else {
             actT = `${this.activeCharacter}\nHP: ${Math.floor(this.characters[this.activeCharacter].hp)}/${this.characters[this.activeCharacter].maxHp}`;
-            this.drawHealthBar(this.playerSprite.x - 75, this.playerSprite.y + 85, 150, 12, this.characters[this.activeCharacter].hp, this.characters[this.activeCharacter].maxHp);
+            this.drawHealthBar(px - 75, py + 85, 150, 12, this.characters[this.activeCharacter].hp, this.characters[this.activeCharacter].maxHp);
         }
+        this.playerText.setPosition(px, py);
         this.playerText.setText(actT);
+
+        // Draw green box around active character for testing
+        const bounds = activeDisp.getBounds();
+        this.graphics.lineStyle(1, 0x00ff00, 1);
+        this.graphics.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+        if (this.activeCharacter === 'Girl') {
+            activeDisp.list.forEach(child => {
+                const childBounds = child.getBounds();
+                this.graphics.lineStyle(1, child.texture.key === 'char_tiger' ? 0xff0000 : 0x0000ff, 1);
+                this.graphics.strokeRect(childBounds.x, childBounds.y, childBounds.width, childBounds.height);
+            });
+        }
 
         // Inactives
         this.inactives.forEach((charName, i) => {
-            this.inactiveSprites[i].setTexture('char_' + charName);
-            this.inactiveSprites[i].setVisible(true);
+            const inDisp = this.characterDisplays[charName];
+            this.inactiveSprites[i] = inDisp;
+            inDisp.setVisible(true);
+            inDisp.setAlpha(0.6);
+            
+            let xPos = width * 0.08;
+            let yPos = height * 0.3 + (i * 180);
+            
+            inDisp.setPosition(xPos, yPos + 40);
+            inDisp.setScale(0.12);
+
+            let txtY = inDisp.y - 60;
             if (charName === 'Girl') {
                 this.inactiveTexts[i].setText(`Girl\n${this.getGirlEmotion()}`);
-                this.drawHealthBar(this.inactiveSprites[i].x - 40, this.inactiveSprites[i].y + 50, 80, 8, this.characters['Girl'].animalHp, this.characters['Girl'].maxAnimalHp);
+                this.drawHealthBar(xPos - 40, txtY + 50, 80, 8, this.characters['Girl'].animalHp, this.characters['Girl'].maxAnimalHp);
             } else {
                 this.inactiveTexts[i].setText(`${charName}\nHP: ${Math.floor(this.characters[charName].hp)}/${this.characters[charName].maxHp}`);
-                this.drawHealthBar(this.inactiveSprites[i].x - 40, this.inactiveSprites[i].y + 50, 80, 8, this.characters[charName].hp, this.characters[charName].maxHp);
+                this.drawHealthBar(xPos - 40, txtY + 50, 80, 8, this.characters[charName].hp, this.characters[charName].maxHp);
             }
+            this.inactiveTexts[i].setPosition(xPos, txtY);
+            this.inactiveTexts[i].setVisible(true);
         });
-        
+
         for (let i = this.inactives.length; i < 2; i++) {
-            if (this.inactiveSprites[i]) this.inactiveSprites[i].setVisible(false);
-            if (this.inactiveTexts[i]) this.inactiveTexts[i].setText('');
+            if (this.inactiveTexts[i]) this.inactiveTexts[i].setVisible(false);
         }
 
         // Controls Box
@@ -449,9 +525,13 @@ export class BattleScene extends Phaser.Scene {
     }
 
     floatText(target, text, color) {
-        let t = this.add.text(target.x, target.y - 40, text, { fontSize: '24px', fill: color, fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
+        let startY = target.y - 40;
+        if (target.list) {
+            startY = target.scale < 0.2 ? target.y - 80 : target.y - 180;
+        }
+        let t = this.add.text(target.x, startY, text, { fontSize: '24px', fill: color, fontStyle: 'bold', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5);
         this.tweens.add({
-            targets: t, y: target.y - 100, alpha: 0, duration: 1000,
+            targets: t, y: startY - 60, alpha: 0, duration: 1000,
             onComplete: () => t.destroy()
         });
     }
@@ -460,6 +540,11 @@ export class BattleScene extends Phaser.Scene {
         if (sprite.setTintFill && sprite.clearTint) {
             sprite.setTintFill(0xffcccc);
             this.time.delayedCall(150, () => sprite.clearTint());
+        } else if (sprite.list) {
+            sprite.list.forEach(child => { if (child.setTintFill) child.setTintFill(0xffcccc); });
+            this.time.delayedCall(150, () => {
+                sprite.list.forEach(child => { if (child.clearTint) child.clearTint(); });
+            });
         } else {
             sprite.setAlpha(0.5);
             this.time.delayedCall(150, () => sprite.setAlpha(1));
