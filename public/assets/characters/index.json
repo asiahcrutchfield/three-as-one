@@ -51,12 +51,14 @@
                 {
                     "id": "tiger",
                     "offsetX": 0,
-                    "offsetY": 0
+                    "offsetY": 0,
+                    "z": 1
                 },
                 {
                     "id": "girl",
-                    "offsetX": 80,
-                    "offsetY": -120
+                    "offsetX": 140,
+                    "offsetY": -220,
+                    "z": 2
                 }
             ]
         }

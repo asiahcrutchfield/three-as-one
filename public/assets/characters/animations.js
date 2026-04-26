@@ -47,8 +47,8 @@ async function init() {
     unit = {
         tiger,
         girl,
-        offsetX: 0,
-        offsetY: -260 // adjust this if needed
+        offsetX: 140,   // left/right
+        offsetY: -220   // up/down from tiger back
     };
 
     requestAnimationFrame(loop);
@@ -73,7 +73,7 @@ function loop(timestamp) {
     drawSprite(man, frame, 200, 50);
 
     // draw unit (tiger + girl)
-    drawUnit(unit, frame, 400, 250);
+    drawUnit(unit, frame, 80, 260);
 
     requestAnimationFrame(loop);
 }
@@ -103,65 +103,51 @@ function drawSprite(sprite, frame, x, y) {
 // DRAW UNIT (TIGER + GIRL)
 // ========================
 function drawUnit(unit, frame, x, y) {
-    const tigerCycle = unit.tiger.frameCount * 2 - 2;
-    let tigerFrame = frame % tigerCycle;
-    if (tigerFrame >= unit.tiger.frameCount) tigerFrame = tigerCycle - tigerFrame;
+    const tigerFrame = frame % unit.tiger.frameCount;
+    const girlFrame = frame % unit.girl.frameCount;
 
-    const girlCycle = unit.girl.frameCount * 2 - 2;
-    let girlFrame = frame % girlCycle;
-    if (girlFrame >= unit.girl.frameCount) girlFrame = girlCycle - girlFrame;
+    // --- TIGER (grounded) ---
+    const tigerX = x;
+    const tigerY = y;
 
-    // anchor: tiger feet
-    const baseY = y + unit.tiger.frameHeight;
-
-    // 🐯 draw tiger (BACK)
     ctx.drawImage(
         unit.tiger.image,
         tigerFrame * unit.tiger.frameWidth,
         0,
         unit.tiger.frameWidth,
         unit.tiger.frameHeight,
-        x,
-        y,
+        tigerX,
+        tigerY,
         unit.tiger.frameWidth,
         unit.tiger.frameHeight
     );
 
-    // 👧 draw girl (FRONT)
+    // --- GIRL (aligned by FEET, not top) ---
+    const girlX = x + unit.offsetX;
+
+    const girlY =
+        tigerY + unit.tiger.frameHeight   // bottom of tiger
+        - unit.girl.frameHeight           // move up by girl's height
+        + unit.offsetY;                   // fine tuning
+
     ctx.drawImage(
         unit.girl.image,
         girlFrame * unit.girl.frameWidth,
         0,
         unit.girl.frameWidth,
         unit.girl.frameHeight,
-        x + unit.offsetX,
-        baseY - unit.girl.frameHeight + unit.offsetY,
+        girlX,
+        girlY,
         unit.girl.frameWidth,
         unit.girl.frameHeight
     );
 
-    // ========================
-    // DEBUG BOXES (optional)
-    // ========================
-    ctx.strokeStyle = "red";
-    ctx.strokeRect(x, y, unit.tiger.frameWidth, unit.tiger.frameHeight);
+    // --- DEBUG ---
+    ctx.strokeStyle = "orange";
+    ctx.strokeRect(tigerX, tigerY, unit.tiger.frameWidth, unit.tiger.frameHeight);
 
-    ctx.strokeStyle = "blue";
-    ctx.strokeRect(
-        x + unit.offsetX,
-        baseY - unit.girl.frameHeight + unit.offsetY,
-        unit.girl.frameWidth,
-        unit.girl.frameHeight
-    );
-
-    // Draw unit box (union of both)
-    const minX = Math.min(x, x + unit.offsetX);
-    const minY = Math.min(y, baseY - unit.girl.frameHeight + unit.offsetY);
-    const maxX = Math.max(x + unit.tiger.frameWidth, x + unit.offsetX + unit.girl.frameWidth);
-    const maxY = Math.max(y + unit.tiger.frameHeight, baseY - unit.girl.frameHeight + unit.offsetY + unit.girl.frameHeight);
-    
-    ctx.strokeStyle = "green";
-    ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
+    ctx.strokeStyle = "cyan";
+    ctx.strokeRect(girlX, girlY, unit.girl.frameWidth, unit.girl.frameHeight);
 }
 
 // ========================

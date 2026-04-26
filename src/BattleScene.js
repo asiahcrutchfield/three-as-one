@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import characterData from '../public/assets/characters/index.json';
+import characterData from '/assets/characters/index.json';
 
 const ALL_CHARACTERS = ['Girl', 'Officer', 'Man'];
 const ENEMIES = ['Blitzer', 'Tank', 'Charger'];

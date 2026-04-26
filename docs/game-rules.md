@@ -1,6 +1,6 @@
 ## Definitions
 
-Cycle:
+Battle:
 A full combat sequence that ends when either the player defeats the enemy or all player characters are defeated.
 
 Turn:
@@ -10,6 +10,9 @@ Round:
 A pair of turns: 
 - Player's turn
 - Enemy's turn
+
+Entity:
+A character or enemy
 
 ### Defeat
 
@@ -51,20 +54,6 @@ Animal Defeat:
   - Randomly select a new active character from remaining characters
 
 ## Characters
-
-### General
-
-- Player controls 3 characters: Girl, Officer, Man
-
-- Only one character is active per cycle
-
-- Each character has 3 abilities
-
-- Inactive characters provide:
-  - 1 passive assist (always active)
-  - 1 active assist (can be triggered, then goes on cooldown)
-
-- If active character is defeated, the new active character is randomly selected from the remaining characters
 
 ### Girl
 
@@ -185,46 +174,58 @@ High HP, low damage
 - On 3rd turn: deals high damage. A random number between 7%-10% of active character's max HP
 - Then repeats
 
+### Mob
+
+- Composed of 1 active enemy and 1-2 inactive enemies
+
 ### Boss
 
-## Game Flow
+## Battles
 
-1. Start a new cycle
-2. Randomly select an active character
-3. Repeat:
-    a. Player takes an action
-    b. Enemy takes an action
-4. Until:
-    - Enemy is defeated OR
-    - All player characters are defeated
-5. End the cycle and assign a grade
+- At the start of each battle, a random character is chosen from the available character roster.
+  - on game start, a random character is chose from among all possible characters
+  - every following battle, a random character is chosen from the inactive, non-defeated characters
+- Every new battle, players have the option of switching out the active character with an inactive, non-defeated character only once.
+  - gives +1 combo
 
-## Core Mechanics
+### Attacks
 
-- Active character is randomly selected at the start of each cycle
-    - On game start, characters are randomly selected from all available characters
-    - Subsequent random selections are taken from non-defeated, inactive characters
+- Both enemies and characters have 3 kinds of attacks: close-range, long-range and status
+  - close-range moves are stronger
+    - counter: yes
+    - defend: yes
+    - dodge: small window
+  - long-range moves are weaker
+    - counter: no
+    - defend: yes
+    - dodge: yes 
+  - status moves affect the status of the current character or enemy (healing, defense, attack boost, etc.)
 
-- Only one character is active at a time
+### Combos 
 
-- When the active character is defeated, a new one is randomly selected from remaining characters
+- counter success → +1
+- dodge → no gain
+- defense → +0.5
+- wrong defense → reset
 
-- Cooldowns are measured in turns
+### Defensive Moves
 
-- When a character is defeated, they are removed from the game
+- There are 3 kinds of defenses: counter, dodge and defense
+  - counter allows an entity to negate any damage and return 1.5x - 2x the damage to the attacking entity. It can be performed by properly timing it. If the entity fails a counter then they will receive 1.25x damage
+  - defense lowers damage taken by entity from anywhere between 50% - 75%. It needs a cooldown of 1 turn
+    - reduces 50–75%
+    - +0.5 combo
+    - enables stronger next attack 
+  - dodge allows an entity to evade all damage. It must be properly timed
 
-- A cycle ends when:
-  - Enemy is defeated 
-  OR
-  - All player characters are defeated
+Counter vs long-range:
+→ fails automatically
 
-- Each cycle receives a grade (D → S) based on performance
+Dodge vs close-range:
+→ harder timing
 
-- After any action:
-  1. Apply damage/healing
-  2. Clamp HP values (no negatives)
-  3. Check defeat conditions
-  4. Trigger effects (meltdown, death, win/loss)
+Defense vs status:
+→ only valid option
 
 ## Grading
 
