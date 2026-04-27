@@ -8,23 +8,27 @@
 
   <link rel="stylesheet" href="/src/testing/style.css">
 
+  <script type="module" src="/assets/ui/health_bar/health_bar.js"></script>
+  <script type="module" src="/assets/ui/combo_meter/combo_meter.js"></script>
+  <script type="module" src="/assets/ui/action_buttons/action_buttons.js"></script>
   <script type="module" src="/src/render/render.js" defer></script>
 </head>
 
 <body>
 
   <div id="app">
-    <div id="game-state-debug">
-      <p>Status: <span id="status">Idle</span></p>
-      <p>HP: <span id="hp">100</span></p>
-      <p>Combo: <span id="combo">0</span></p>
+    <div id="battle-ui">
+      <div id="player-hud">
+        <health-bar id="player-hp" hp="100" max-hp="100" name="Girl"></health-bar>
+        <combo-meter id="combo" value="1.00"></combo-meter>
+      </div>
+      
+      <div id="enemy-hud">
+        <health-bar id="enemy-hp" hp="100" max-hp="100" name="Striker" type="enemy"></health-bar>
+      </div>
     </div>
 
-    <div id="actions">
-      <button id="attack-btn">Attack</button>
-      <button id="block-btn">Block</button>
-      <button id="counter-btn">Counter</button>
-    </div>
+    <action-buttons></action-buttons>
 
     <div class="enemy"></div>
     <div id="battle-stage"></div>

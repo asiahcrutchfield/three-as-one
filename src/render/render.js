@@ -3,9 +3,22 @@ import { gameState } from '../game/state.js';
 import { playerAttack, enemyAttack } from '../game/combat.js';
 
 function updateDebugUI() {
-    document.getElementById('status').textContent = gameState.status;
-    document.getElementById('hp').textContent = gameState.player.hp;
-    document.getElementById('combo').textContent = gameState.combo.toFixed(2);
+    const playerHpEl = document.getElementById('player-hp');
+    if (playerHpEl) {
+        playerHpEl.setAttribute('hp', gameState.player.hp);
+        playerHpEl.setAttribute('max-hp', gameState.player.maxHp);
+    }
+    
+    const enemyHpEl = document.getElementById('enemy-hp');
+    if (enemyHpEl) {
+        enemyHpEl.setAttribute('hp', gameState.enemy.hp);
+        enemyHpEl.setAttribute('max-hp', gameState.enemy.maxHp);
+    }
+
+    const comboEl = document.getElementById('combo');
+    if (comboEl) {
+        comboEl.setAttribute('value', gameState.combo.toFixed(2));
+    }
 }
 
 function addLog(message) {
@@ -82,43 +95,46 @@ async function init() {
         }
     }
 
-    document.getElementById('attack-btn').addEventListener('click', () => {
-        if (gameState.turn !== "player") return;
-        const enemyHpBefore = gameState.enemy.hp;
+    const actionButtons = document.querySelector('action-buttons');
+    if (actionButtons) {
+        actionButtons.addEventListener('action-attack', () => {
+            if (gameState.turn !== "player") return;
+            const enemyHpBefore = gameState.enemy.hp;
 
-        playerAttack(gameState);
-        flashElement('.enemy-sprite', 'feedback-attack');
+            playerAttack(gameState);
+            flashElement('.enemy-sprite', 'feedback-attack');
 
-        const damage = enemyHpBefore - gameState.enemy.hp;
-        addLog(`Player attacked for ${damage} damage.`);
-        addLog(`Enemy HP: ${gameState.enemy.hp}/${gameState.enemy.maxHp}`);
-        addLog(`Combo: x${gameState.combo.toFixed(2)}`);
+            const damage = enemyHpBefore - gameState.enemy.hp;
+            addLog(`Player attacked for ${damage} damage.`);
+            addLog(`Enemy HP: ${gameState.enemy.hp}/${gameState.enemy.maxHp}`);
+            addLog(`Combo: x${gameState.combo.toFixed(2)}`);
 
-        updateDebugUI();
-        handleEnemyTurn();
-    });
-
-    document.getElementById('block-btn').addEventListener('click', () => {
-        if (gameState.turn !== "player") return;
-
-        import('../game/combat.js').then(({ playerBlock }) => {
-            playerBlock(gameState);
-            addLog(`Player prepared to block.`);
             updateDebugUI();
             handleEnemyTurn();
         });
-    });
 
-    document.getElementById('counter-btn').addEventListener('click', () => {
-        if (gameState.turn !== "player") return;
-
-        import('../game/combat.js').then(({ playerCounter }) => {
-            playerCounter(gameState);
-            addLog(`Player prepared to counter.`);
-            updateDebugUI();
-            handleEnemyTurn();
+        actionButtons.addEventListener('action-block', () => {
+            if (gameState.turn !== "player") return;
+            
+            import('../game/combat.js').then(({ playerBlock }) => {
+                playerBlock(gameState);
+                addLog(`Player prepared to block.`);
+                updateDebugUI();
+                handleEnemyTurn();
+            });
         });
-    });
+
+        actionButtons.addEventListener('action-counter', () => {
+            if (gameState.turn !== "player") return;
+            
+            import('../game/combat.js').then(({ playerCounter }) => {
+                playerCounter(gameState);
+                addLog(`Player prepared to counter.`);
+                updateDebugUI();
+                handleEnemyTurn();
+            });
+        });
+    }
 }
 
 init();

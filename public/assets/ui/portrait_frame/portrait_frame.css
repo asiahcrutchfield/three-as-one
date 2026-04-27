@@ -1,0 +1,112 @@
+.portrait-container {
+    position: relative;
+    width: 120px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.portrait-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2c3e50, #1a252f);
+    z-index: 1;
+}
+
+.portrait-image-wrapper {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 30px;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.portrait-placeholder {
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.1), transparent);
+}
+
+.portrait-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.portrait-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+    z-index: 3;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.role-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #bdc3c7;
+    margin-right: 8px;
+    box-shadow: 0 0 5px currentColor;
+}
+
+.role-icon.damage { background: #e74c3c; color: #e74c3c; }
+.role-icon.defense { background: #3498db; color: #3498db; }
+.role-icon.support { background: #2ecc71; color: #2ecc71; }
+
+.character-name {
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.portrait-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-sizing: border-box;
+    z-index: 4;
+    pointer-events: none;
+}
+
+/* Active State */
+:host([active="true"]) .portrait-container {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 15px 30px rgba(241, 196, 15, 0.3);
+}
+
+:host([active="true"]) .portrait-border {
+    border-color: #f1c40f;
+    box-shadow: inset 0 0 15px rgba(241, 196, 15, 0.3);
+}
+
+/* Inactive State */
+:host([active="false"]) .portrait-container {
+    filter: grayscale(80%) brightness(0.6);
+    transform: scale(0.95);
+}

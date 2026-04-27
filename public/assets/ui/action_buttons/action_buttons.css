@@ -1,0 +1,90 @@
+.actions-container {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(15, 20, 25, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.action-btn {
+    position: relative;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.action-btn:active {
+    transform: scale(0.95) translateY(2px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.btn-text {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.btn-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+/* Attack Button */
+.attack-btn {
+    border-bottom: 3px solid #c0392b;
+}
+.attack-btn .btn-glow {
+    background: radial-gradient(circle at center, rgba(231, 76, 60, 0.6) 0%, transparent 70%);
+}
+.attack-btn:hover {
+    border-color: #e74c3c;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+}
+.attack-btn:hover .btn-glow { opacity: 1; }
+
+/* Block Button */
+.block-btn {
+    border-bottom: 3px solid #2980b9;
+}
+.block-btn .btn-glow {
+    background: radial-gradient(circle at center, rgba(52, 152, 219, 0.6) 0%, transparent 70%);
+}
+.block-btn:hover {
+    border-color: #3498db;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+}
+.block-btn:hover .btn-glow { opacity: 1; }
+
+/* Counter Button */
+.counter-btn {
+    border-bottom: 3px solid #27ae60;
+}
+.counter-btn .btn-glow {
+    background: radial-gradient(circle at center, rgba(46, 204, 113, 0.6) 0%, transparent 70%);
+}
+.counter-btn:hover {
+    border-color: #2ecc71;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);
+}
+.counter-btn:hover .btn-glow { opacity: 1; }

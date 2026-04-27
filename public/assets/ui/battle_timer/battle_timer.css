@@ -1,0 +1,79 @@
+.timer-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.timer-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.timer-track {
+    fill: rgba(0, 0, 0, 0.4);
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 6;
+}
+
+.timer-fill {
+    fill: none;
+    stroke: #3498db;
+    stroke-width: 6;
+    stroke-dasharray: 283; /* 2 * PI * 45 */
+    stroke-dashoffset: 0;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
+    filter: drop-shadow(0 0 4px rgba(52, 152, 219, 0.6));
+}
+
+.timer-text {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.timer-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(52, 152, 219, 0.8);
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+/* Warning State (<= 3 seconds) */
+.timer-container.warning .timer-fill {
+    stroke: #f1c40f;
+    filter: drop-shadow(0 0 6px rgba(241, 196, 15, 0.8));
+}
+.timer-container.warning .timer-value {
+    color: #f1c40f;
+    text-shadow: 0 0 10px rgba(241, 196, 15, 0.8);
+}
+
+/* Urgent State (<= 1.5 seconds) */
+@keyframes urgentPulse {
+    0% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(231, 76, 60, 0.8)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(231, 76, 60, 1)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 5px rgba(231, 76, 60, 0.8)); }
+}
+
+.timer-container.urgent .timer-fill {
+    stroke: #e74c3c;
+    animation: urgentPulse 0.5s infinite;
+}
+.timer-container.urgent .timer-value {
+    color: #e74c3c;
+    text-shadow: 0 0 12px rgba(231, 76, 60, 0.8);
+    animation: urgentPulse 0.5s infinite;
+}
