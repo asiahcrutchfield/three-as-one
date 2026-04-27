@@ -7,7 +7,8 @@
                     "src": "/assets/characters/man/man_idle.png",
                     "frameWidth": 512,
                     "frameHeight": 768,
-                    "fps": 30
+                    "fps": 30,
+                    "scale": 0.4
                 }
             }
         },
@@ -18,7 +19,8 @@
                     "src": "/assets/characters/officer/officer_idle.png",
                     "frameWidth": 512,
                     "frameHeight": 768,
-                    "fps": 30
+                    "fps": 30,
+                    "scale": 0.4
                 }
             }
         },
@@ -29,7 +31,8 @@
                     "src": "/assets/characters/girl/girl_idle.png",
                     "frameWidth": 512,
                     "frameHeight": 768,
-                    "fps": 30
+                    "fps": 30,
+                    "scale": 0.4
                 }
             }
         },
@@ -40,7 +43,8 @@
                     "src": "/assets/characters/tiger/tiger_idle.png",
                     "frameWidth": 1024,
                     "frameHeight": 643,
-                    "fps": 30
+                    "fps": 30,
+                    "scale": 0.4
                 }
             }
         }

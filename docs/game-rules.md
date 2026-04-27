@@ -77,45 +77,139 @@ Animal Defeat:
   - Worried → weaker attack, stronger support
   - Sad → weakest attack, strongest support
 
-- If Tiger reaches 0 HP, girl immediately enters a special meltdown state.
-  - Meltdown lasts for 2 rounds
-  - She gets switched out randomly with another character
-  - Girl is inactive during meltdown
-    - Active character actions have a 30% chance to misfire (random attack)
-    - Healing of inactive characters is paused
-  - "Stabilize" (one-time option during meltdown)
-    - Ends meltdown early
-    - Costs 20 HP from all allies
+## MELTDOWN
+
+Meltdown is triggered when the tiger reaches 0 HP.
+
+### Effects
+
+- Lasts for 2 rounds
+- Girl becomes inactive
+- Player is forced to switch to another character
+
+### Unstable State
+
+During meltdown:
+
+- Active character gains:
+  - +25% damage
+  - +0.25 combo on any successful action
+
+- Timing to choose an action becomes shorter
+
+- Actions are **unstable**:
+  - Long range actions (gun shot, rock throw) have 25% chance to miss but are stronger
+  - Does NOT cause complete action failure
+
+- Passive healing is reduced to 0%
+
+### Combo Interaction
+
+- Combo is NOT reset on meltdown
+- Combo gain is slightly increased during meltdown
+- Taking heavy damage still reduces combo as normal
+
+### Stabilize (Optional Action)
+
+- Ends meltdown early
+- Cost:
+  - 15 HP from all allies
+- Removes all unstable effects
+- Girl stays inactive
 
 ### Abilities
 
-Offensive moves:
+#### Offensive moves
 - Pounce:
+  - Range: close
   - Tiger attacks the enemy
   - Base damage: 18
   - Damage changes based on emotion
-    - Happy: 18  = 24
+    - Happy: 24
     - Neutral: 18
-    - Upset: 18 = 14
-    - Sad: 18 = 10
+    - Worried: 14
+    - Sad: 10
 
-Defensive moves:
-- Encourage:
-  - Next action deals 2x effect  
-  - Can only be used every other turn
+- Rock Throw:
+  - Range: long
+  - Girl throws a rock at the enemy
+  - Base damage: 12
+  - Damage changes based on emotion
+    - Happy: 18
+    - Neutral: 12
+    - Worried: 8
+    - Sad: 6
 
-Specials:
+#### Defensive moves
+- Block:
+  - Reduces damage taken by 50%
+
+- Dodge:
+  - 30% chance to completely avoid the next attack
+
+- Counter:
+  - Successful:
+    - Happy: 
+      - 1.5x damage
+      - +0.5 combo
+      - Easier timing window
+    - Neutral: 
+      - 1.25x damage
+      - +0.25 combo
+      - Normal timing window
+    - Worried: 
+      - 1x damage
+      - +0.125 combo
+      - Harder timing window
+    - Sad:
+      - 0.75x damage
+      - +0.0625 combo
+      - Hardest timing window
+  - Failed:
+    - Reset combo multiplier to x1.0
+    - Take 10% extra damage from counter
+
+#### Specials
 - Comfort:
   - Heals 25 HP of animal's health
   - Can only be used every other turn
 
+- Tiger's Roar:
+  - Causes enemy to skip next turn
+  - Base damage: 15
+  - Damage changes based on emotion
+    - Happy: 20
+    - Neutral: 15
+    - Worried: 10
+    - Sad: 5
+  - 1 time use per battle
+
 #### Assists
 
 Active assist:
-- Heals active member's health by 20%
+- Heals active and passive characters
+- Effect influenced by emotional state:
+  - Happy
+    - Active + 20% HP
+    - Passive + 10% HP
+  - Neutral
+    - Active + 15% HP
+    - Passive + 7.5% HP
+  - Worried
+    - Active + 10% HP
+    - Passive + 5% HP
+  - Sad
+    - Active + 5% HP
+    - Passive + 2.5% HP
+- 3 turn cooldown
 
 Passive assist:
-- Inactive characters recover an additional 5% HP at the end of each round
+- Inactive characters recover additional HP
+  - Happy: +10%
+  - Neutral: +7.5%
+  - Worried: +5%
+  - Sad: +2.5%
+  - Meltdown: 0%
 
 #### Stage
 Paradise: public/assests/stages/paradise.png
@@ -124,16 +218,57 @@ Paradise: public/assests/stages/paradise.png
 
 ### Abilities
 
-Offensive moves:
+Baton Strike:
+- Range: close
+- Damage: 15
+- If enemy is suppressed → +5 damage
 
-Defensive moves:
+Gun Shot:
+- Range: long
+- Damage: 10
+- Reduces enemy damage next turn
 
-Specials:
+#### Offensive moves
+
+Baton Strike:
+- Range: close
+- Damage: 15
+- If enemy is suppressed → +5 damage
+
+Gun Shot:
+- Range: long
+- Damage: 10
+- Reduces enemy damage next turn
+
+#### Defensive moves
+
+Block:
+- Reduces damage by 70% (strongest)
+- +0.5 combo
+
+Counter:
+- Always 1.25x damage (consistent, not risky)
+- Smaller reward, safer timing
+
+Dodge:
+- Standard timing
+- Slightly harder than Girl
+
+#### Specials
+
+Suppress:
+- Enemy deals 50% damage next turn
+- Lasts 2 turns
+
+Command:
+- Next character switch is free
+- +1 combo
 
 #### Assists
 
 Active assist:
 - Protects active member from next attack
+- 3 turn cooldown
 
 Passive assist:
 - Reduces damage taken by the active character by 5
@@ -148,11 +283,41 @@ Taipei: public/assests/stages/ximending.png
 
 #### Abilities
 
-Offensive moves:
+#### Offensive moves
 
-Defensive moves:
+Heavy Swing:
+- Range: close
+- Damage: 30
+- High counter risk
 
-Specials:
+Throw Object:
+- Range: long
+- Damage: 18
+- Safe but weaker scaling
+
+#### Defensive moves
+
+Counter:
+- 2.0x damage (STRONGEST)
+- Hardest timing
+- +1 combo
+
+Block:
+- Only reduces 40% damage
+
+Dodge:
+- Standard timing
+
+#### Specials
+
+Overexert:
+- Deals 40 damage
+- Takes 15 self-damage
+
+All In:
+- Consumes combo
+- Damage = 20 × combo
+- Resets combo to x1
 
 #### Assists
 
@@ -171,47 +336,70 @@ New Orleans: public/assests/stages/mardi_gras.png
 - Balanced enemy
 - Uses both close-range and long-range attacks
 - Occasionally uses a status move (small buff or debuff)
+- Clearly telegraphs attack type before acting:
+  - Close-range → counterable
+  - Long-range → cannot be countered
+  - Status → indicated before use
+
+---
 
 ### Breaker
 - Uses fast close-range attacks
 - Counters deal reduced damage against it
-- Deals bonus damage if player blocks repeatedly 
+- Gains **Pressure** when player blocks:
+  - +1 Pressure per block
+  - At 3 Pressure → next attack deals heavy bonus damage
+  - Pressure resets after empowered attack
+- Encourages switching between defense types
+
+---
 
 ### Disruptor
 - Uses status moves frequently
-- Can reduce combo or prevent combo gain temporarily
-- Has weaker direct damage 
+- Applies **Combo Lock**:
+  - Combo cannot increase for 1 turn
+  - Combo is not reduced
+- Has weaker direct damage
+- Occasionally applies small combo reduction instead of full disruption
+
+---
 
 ### Hunter
-- Targets the Tiger directly
-- Deals increased damage to companions
-- Causes faster emotional decay
+- Strong against girl's tiger companion
+- Applies **Mark** to the Tiger:
+  - Marked Tiger takes increased damage on next attack
+- Applies pressure through timing rather than constant damage
+
+---
 
 ### Tank
 - High HP, low damage
-- Reduces incoming damage at high HP
-- Becomes more aggressive at low HP
+- Above 50% HP:
+  - Reduces incoming damage
+- Below 50% HP:
+  - Loses damage reduction
+  - Gains increased attack power
+- Shifts from defensive to aggressive mid-fight
+
+---
 
 ### Mob
 - 1 active enemy
-- 1–2 inactive enemies that rotate in
+- 1–2 inactive enemies that rotate in every few turns
 - Inactive enemies can:
-  - buff the active one
-  - apply status effects
-
-### Mob
-- 1 active enemy
-- 1–2 inactive enemies that rotate in
-- Inactive enemies can:
-  - buff the active one
-  - apply status effects
+  - Apply buffs to the active enemy
+  - Attack inactive characters
+    - Can also be attacked by inactive characters
+    - Can be targeted by active assists
+    - Cannot be attacked by the active character
+- Inactive enemies do not directly deal damage
+- Rotation order is predictable
 
 ## BATTLES
 
 - At the start of each battle, a random character is chosen to be the active character from the available character roster.
   - remaining characters are inactive
   - on game start, a random character is chose from among all possible characters
-  - every following battle, a random character is chosen from the inactive, non-defeated characters
 - Every new battle, players have the option of switching out the active character with an inactive, non-defeated character only once.
   - gives +1 combo
 
@@ -242,48 +430,189 @@ New Orleans: public/assests/stages/mardi_gras.png
     - special move: a special attack specific to that character
       - can only be used once per battle
 
-### Combos
+### COMBO SYSTEM 
 
-Combo:
-A multiplier that rewards momentum, variety, and successful defensive timing.
+#### Core Rules
 
-- Combo starts at x1.0 at the beginning of each battle
-- Combo can increase up to x3.0
-- Combo affects damage and healing
-- Combo resets to x1.0 when the player makes a major mistake
+- Combo starts at x1.0
+- Max combo: x3.0
 
-Combo Gain:
+#### Combo Gain
+
 - Successful counter: +0.5
-- Correctly timed dodge: +0.25
-- Successful defense/block: +0.25
-- Manual character switch: +0.5
-- Using an active assist: +0.5
-- Defeating an enemy: +1.0
+- Successful dodge: +0.25
+- Successful block: +0.25
+- Manual switch: +0.5
+- Active assist: +0.5
+- Fast action (first 50% of timer): +0.25
+- Defeating enemy: +1.0
 
-Combo Loss:
-- Failed counter: reset to x1.0
-- Active character is defeated: reset to x1.0
-- Meltdown misfire: reset to x1.0
-- Taking heavy damage: -0.5
+#### Combo Loss
 
-Combo Use:
-- Damage = base damage × combo
-- Healing = base healing × (1 + ((combo - 1) × 0.25))
+- Failed counter: -1.0
+- Heavy damage: -0.5
+- Timeout: -0.5
+- Active character defeated: reset to x1.0
 
-Example:
-- Combo x1.0 → 25 damage stays 25
-- Combo x2.0 → 25 damage becomes 50
-- Combo x3.0 → 25 damage becomes 75
+#### Removed
+
+- No combo reset from meltdown
+- No micro values (0.125, 0.0625, etc.)
+
+#### Combo Effects
+
+- Damage:
+  - Damage = base × combo
+
+- Healing:
+  - Healing = base × (1 + ((combo - 1) × 0.25))
+
+#### Example
+
+- x1.0 → 25 damage → 25
+- x2.0 → 25 damage → 50
+- x3.0 → 25 damage → 75
 
 ### Defensive Moves
 
 - There are 3 kinds of defenses: counter, dodge and block
-  - counter allows an entity to negate any damage and return 1.5x - 2x the damage to the attacking entity. It can be performed by properly timing it. If the entity fails a counter then they will receive 1.25x damage
   - block lowers damage taken by entity from anywhere between 50% - 75%. It needs a cooldown of 1 turn
     - reduces 50–75%
     - +0.5 combo
     - enables stronger next attack 
   - dodge allows an entity to evade all damage. It must be properly timed
+  - Counter (see below)
+
+#### COUNTER SYSTEM 
+
+Counter is a timing-based defensive action that negates damage and returns damage to the enemy.
+
+---
+
+### Timing Windows
+
+Each counter has 3 outcomes:
+
+#### Perfect Counter
+- Negates all incoming damage
+- Deals enhanced counter damage
+- Grants full combo bonus
+
+#### Good Counter
+- Negates most damage (75%)
+- Deals reduced counter damage
+- Grants partial combo bonus
+
+#### Failed Counter
+- Takes full damage
+- No counter damage
+- Small combo loss
+
+---
+
+### Combo Interaction
+
+- Perfect Counter: +0.5 combo
+- Good Counter: +0.25 combo
+- Failed Counter: -0.5 combo
+
+---
+
+### Counter Rules
+
+- Counter only works against close-range attacks
+- Automatically fails against long-range attacks
+- Cannot counter status moves
+
+---
+
+### End of Battle Summary
+
+- The end of each battle has displays a summary/
+- The summary displays the following information:
+  - HP Bonus
+  - Combo Bonus
+  - Counters
+  - Penalties
+
+- Example: 
+HP Bonus: +22
+Combo Bonus: +15
+Counters: +18
+Penalties: -10
+
+FINAL SCORE: 145 → S RANK
+
+## CHARACTER DIFFERENCES
+
+---
+
+### Girl (Adaptive Counter)
+
+- Timing window changes based on emotion:
+
+| Emotion | Window Size | Damage Multiplier |
+|--------|------------|------------------|
+| Happy  | Large      | 1.5x             |
+| Neutral| Medium     | 1.25x            |
+| Worried| Small      | 1.0x             |
+| Sad    | Very Small | 0.75x            |
+
+- Perfect → full reward
+- Good → still viable defensive option
+
+---
+
+### Officer (Stable Counter)
+
+- Fixed timing window (medium)
+- Consistent results:
+
+  - Perfect:
+    - 1.25x damage
+    - +0.5 combo
+
+  - Good:
+    - 1.0x damage
+    - +0.25 combo
+
+- Failed:
+  - -0.25 combo
+  - No extra damage taken
+
+---
+
+### Man (High-Risk Counter)
+
+- Smallest timing window
+
+- Perfect:
+  - 2.0x damage
+  - +1.0 combo
+
+- Good:
+  - 1.25x damage
+  - +0.25 combo
+
+- Failed:
+  - Takes +10% damage
+  - -0.75 combo
+
+---
+
+### Additional Rules
+
+- Counter timing is consistent per character
+- Visual/audio cues indicate timing window
+- Enemy telegraphs must align with counter timing
+
+---
+
+## DESIGN PRINCIPLES
+
+- Counter should feel learnable, not random
+- Failure should punish, but not reset progress entirely
+- Each character expresses a different risk/reward profile
 
 Counter vs long-range:
 → fails automatically
@@ -318,10 +647,78 @@ Combo Interaction:
 - Action chosen within first 50% of timer → +0.25 combo
 - Timeout → -0.5 combo
 
-## GRADING
+## GRADING SYSTEM
 
-S: won with high HP
-A: won cleanly
-B: won with struggle
-C: barely won
-D: lost
+Grading is based on player performance during a battle. Grades determine reward options that can be taken into the next battle. The higher the grade, the better the reward options. 
+
+### Score Calculation
+
+Start with base score: 100
+
+---
+
+### Bonuses
+
+- Remaining HP:
+  +0 to +30 points
+  (based on % of total team HP remaining)
+
+- Max Combo Reached:
+  +0 to +20 points
+  (higher combo = higher reward)
+
+- Successful Counters:
+  +2 points per Perfect Counter
+  +1 point per Good Counter
+
+- Fast Actions:
+  +1 point per action chosen in first 50% of timer
+
+---
+
+### Penalties
+
+- Heavy Damage Taken:
+  -1 point per instance
+
+- Failed Counters:
+  -2 points each
+
+- Timeout (missed turn):
+  -5 points each
+
+- Character Defeated:
+  -10 points each
+
+---
+
+### Final Grade
+
+- S Rank: 130+ points
+- A Rank: 110–129 points
+- B Rank: 90–109 points
+- C Rank: 70–89 points
+- D Rank: below 70 or defeat
+
+---
+
+### Reward System
+
+- Rewards:
+  - HP bonus
+  - Combo bonus
+  - Counter bonus
+  - Fast action bonus
+- Reward Options:
+  - Only one option can be chosen
+    - S Rank: All options available
+    - A Rank: Choose from 3 options
+    - B Rank: Choose from 2 options
+    - C Rank: Choose from 1 option
+    - D Rank: No options available
+
+### Design Notes
+
+- Rewards aggressive, skillful play
+- Encourages use of combo and counter systems
+- Penalizes passive or slow decisions

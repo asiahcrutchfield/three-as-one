@@ -1,99 +1,28 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Animation Viewer</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      display: flex;
-      height: 100vh;
-      background-color: #222;
-      color: white;
-      font-family: sans-serif;
-    }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TESTING GROUND</title>
 
-    #sidebar {
-      width: 300px;
-      background-color: #333;
-      padding: 20px;
-      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
+  <link rel="stylesheet" href="/src/testing/style.css">
 
-    #sidebar select,
-    #sidebar button {
-      padding: 10px;
-      font-size: 16px;
-      background: #444;
-      color: white;
-      border: 1px solid #555;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    #sidebar select:focus,
-    #sidebar button:hover {
-      background: #555;
-    }
-
-    #main-view {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-    }
-
-    #game-container {
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    }
-
-    h2 {
-      margin-top: 0;
-      font-size: 20px;
-      border-bottom: 1px solid #555;
-      padding-bottom: 10px;
-    }
-  </style>
+  <script type="module" src="/src/render/render.js" defer></script>
 </head>
 
 <body>
-  <div id="sidebar">
-    <h2>Animation Viewer</h2>
 
-    <label for="asset-type">Asset Type</label>
-    <select id="asset-type">
-      <option value="character">Character</option>
-      <option value="stage">Stage</option>
-    </select>
+  <div id="app">
+    <div id="game-state-debug">
+      <p>Status: <span id="status">Idle</span></p>
+      <p>HP: <span id="hp">100</span></p>
+      <p>Combo: <span id="combo">0</span></p>
+    </div>
 
-    <label for="asset-name">Asset Name</label>
-    <select id="asset-name">
-      <option value="Officer">Officer</option>
-      <option value="Girl">Girl</option>
-      <option value="Man">Man</option>
-    </select>
-
-    <label for="animation">Animation</label>
-    <select id="animation">
-      <option value="idle">Idle</option>
-      <option value="static">Static Image</option>
-    </select>
-
-    <button id="play-btn">Play Animation</button>
+    <div id="battle-stage"></div>
   </div>
 
-  <div id="main-view">
-    <div id="game-container"></div>
-  </div>
-
-  <script type="module" src="./AnimationViewerApp.js"></script>
 </body>
 
 </html>
