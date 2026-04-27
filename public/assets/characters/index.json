@@ -12,6 +12,10 @@
                     "columns": 14,
                     "frames": 181
                 }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
             }
         },
         "officer": {
@@ -26,6 +30,10 @@
                     "columns": 10,
                     "frames": 100
                 }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
             }
         },
         "girl": {
@@ -40,6 +48,10 @@
                     "columns": 7,
                     "frames": 41
                 }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
             }
         },
         "tiger": {
@@ -54,6 +66,10 @@
                     "columns": 9,
                     "frames": 68
                 }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
             }
         }
     },

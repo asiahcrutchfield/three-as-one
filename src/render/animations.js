@@ -2,7 +2,10 @@ let currentAnimationFrameId = null;
 
 // Character animations
 export function renderCharacter(container, characterData, characterId, animationName) {
-    container.innerHTML = '';
+    const existingChar = container.querySelector('.character-sprite');
+    if (existingChar) {
+        existingChar.remove();
+    }
 
     if (currentAnimationFrameId) {
         cancelAnimationFrame(currentAnimationFrameId);
@@ -84,3 +87,21 @@ export function renderCharacter(container, characterData, characterId, animation
 }
 
 // Enemy animations
+export function renderEnemy(container, enemyData, enemyId, animationName) {
+    const existingEnemy = container.querySelector('.enemy-sprite');
+    if (existingEnemy) {
+        existingEnemy.remove();
+    }
+
+    const enemyEl = document.createElement('div');
+    enemyEl.className = 'enemy-sprite';
+
+    enemyEl.style.position = 'absolute';
+    enemyEl.style.bottom = '0px';
+    enemyEl.style.right = '25px';
+    enemyEl.style.width = '80px';
+    enemyEl.style.height = '180px';
+    enemyEl.style.backgroundColor = '#d32f2f'; // Tall red rectangle for testing
+
+    container.appendChild(enemyEl);
+}
