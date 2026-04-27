@@ -1,11 +1,12 @@
-let currentAnimationInterval = null;
+let currentAnimationFrameId = null;
 
+// Character animations
 export function renderCharacter(container, characterData, characterId, animationName) {
     container.innerHTML = '';
 
-    if (currentAnimationInterval) {
-        clearInterval(currentAnimationInterval);
-        currentAnimationInterval = null;
+    if (currentAnimationFrameId) {
+        cancelAnimationFrame(currentAnimationFrameId);
+        currentAnimationFrameId = null;
     }
 
     const charInfo = characterData.characters[characterId];
@@ -22,9 +23,6 @@ export function renderCharacter(container, characterData, characterId, animation
         return;
     }
 
-    console.log('Rendering:', characterId, animationName);
-    console.log('Animation info:', animInfo);
-
     const charEl = document.createElement('div');
     charEl.className = 'character-sprite';
 
@@ -39,6 +37,7 @@ export function renderCharacter(container, characterData, characterId, animation
     charEl.style.backgroundPosition = '0px 0px';
     charEl.style.backgroundSize = 'auto';
     charEl.style.transformOrigin = 'bottom left';
+
     const scale = animInfo.scale || 1;
     charEl.style.transform = `scale(${scale})`;
 
@@ -47,18 +46,34 @@ export function renderCharacter(container, characterData, characterId, animation
     const img = new Image();
 
     img.onload = () => {
-        console.log('Image loaded:', img.width, img.height);
+        const columns = animInfo.columns;
+        const totalFrames = animInfo.frames;
+        const frameDuration = 1000 / animInfo.fps;
 
-        const totalFrames = Math.floor(img.width / animInfo.frameWidth);
         let currentFrame = 0;
-        const intervalTime = 1000 / animInfo.fps;
+        let lastTime = 0;
 
-        if (totalFrames > 1) {
-            currentAnimationInterval = setInterval(() => {
-                currentFrame = (currentFrame + 1) % totalFrames;
-                charEl.style.backgroundPosition = `-${currentFrame * animInfo.frameWidth}px 0px`;
-            }, intervalTime);
+        function showFrame(frameIndex) {
+            const col = frameIndex % columns;
+            const row = Math.floor(frameIndex / columns);
+
+            charEl.style.backgroundPosition =
+                `-${col * animInfo.frameWidth}px -${row * animInfo.frameHeight}px`;
         }
+
+        showFrame(currentFrame);
+
+        function animate(time) {
+            if (time - lastTime >= frameDuration) {
+                currentFrame = (currentFrame + 1) % totalFrames;
+                showFrame(currentFrame);
+                lastTime = time;
+            }
+
+            currentAnimationFrameId = requestAnimationFrame(animate);
+        }
+
+        currentAnimationFrameId = requestAnimationFrame(animate);
     };
 
     img.onerror = () => {
@@ -67,3 +82,5 @@ export function renderCharacter(container, characterData, characterId, animation
 
     img.src = animInfo.src;
 }
+
+// Enemy animations
