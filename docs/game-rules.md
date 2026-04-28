@@ -83,7 +83,7 @@ Meltdown is triggered when the tiger reaches 0 HP.
 
 ### Effects
 
-- Lasts for 2 rounds
+- Lasts for 3 rounds
 - Girl becomes inactive
 - Player is forced to switch to another character
 
@@ -106,14 +106,15 @@ During meltdown:
 ### Combo Interaction
 
 - Combo is NOT reset on meltdown
-- Combo gain is slightly increased during meltdown
+- Combo gain is slightly reduced during meltdown
 - Taking heavy damage still reduces combo as normal
 
 ### Stabilize (Optional Action)
 
 - Ends meltdown early
 - Cost:
-  - 15 HP from all allies
+  - 20 HP from all allies
+    - If the sum of all allies HP is less than 20 x number of undefeated allies, then stabilize cannot be used
 - Removes all unstable effects
 - Girl stays inactive
 
@@ -142,73 +143,91 @@ During meltdown:
 
 #### Defensive moves
 - Block:
-  - Reduces damage taken by 50%
+  - Tiger protects girl
+  - Base: 50% damage reduction
+    - Happy: 70%
+    - Neutral: 50%
+    - Worried: 30%
+    - Sad: 20% 
 
 - Dodge:
-  - 30% chance to completely avoid the next attack
+  - Base: 2.5 seconds
+    - Happy: 3 seconds
+    - Neutral: 2.5 seconds
+    - Worried: 2 seconds
+    - Sad: 1.5 seconds
 
 - Counter:
+  - Base: 1.25x damage & 2 seconds
   - Successful:
     - Happy: 
       - 1.5x damage
       - +0.5 combo
-      - Easier timing window
+      - 2.5 seconds
     - Neutral: 
       - 1.25x damage
       - +0.25 combo
-      - Normal timing window
+      - 2 seconds
     - Worried: 
       - 1x damage
       - +0.125 combo
-      - Harder timing window
+      - 1.5 seconds
     - Sad:
-      - 0.75x damage
+      - 1.25x damage
       - +0.0625 combo
-      - Hardest timing window
+      - 1 second
   - Failed:
-    - Reset combo multiplier to x1.0
-    - Take 10% extra damage from counter
+    - Lose 0.5 combo
+    - Take +10% damage
 
 #### Specials
 - Comfort:
-  - Heals 25 HP of animal's health
-  - Can only be used every other turn
+  - Girl hugs tiger
+  - Base: heals 25% of tiger's max HP
+    - Happy: 30%
+    - Neutral: 25%
+    - Worried: 20%
+    - Sad: 15%
+  - 3 turn cooldown
 
 - Tiger's Roar:
-  - Causes enemy to skip next turn
-  - Base damage: 15
-  - Damage changes based on emotion
-    - Happy: 20
-    - Neutral: 15
-    - Worried: 10
-    - Sad: 5
+  - Enemy deals 0 damage next turn but can still use defensive and status moves
+  - Base damage: 15% max HP
+  - Emotion bonus stays
+    - Happy: +20%
+    - Neutral: +15%
+    - Worried: +10%
+    - Sad: +5%
   - 1 time use per battle
 
 #### Assists
 
 Active assist:
+- Name: Good Vibes
 - Heals active and passive characters
+  - Active character: heal 20% of max hp
+  - Inactive character: heal 15% of max hp
 - Effect influenced by emotional state:
   - Happy
-    - Active + 20% HP
-    - Passive + 10% HP
+    - Active character heal + 25%
+    - Inactive character heal + 15%
   - Neutral
-    - Active + 15% HP
-    - Passive + 7.5% HP
+    - Active character heal + 20%
+    - Inactive character heal + 15%
   - Worried
-    - Active + 10% HP
-    - Passive + 5% HP
+    - Active character heal + 15%
+    - Inactive character heal + 10%
   - Sad
-    - Active + 5% HP
-    - Passive + 2.5% HP
+    - Active character heal + 10%
+    - Inactive character heal + 5%
 - 3 turn cooldown
 
 Passive assist:
 - Inactive characters recover additional HP
-  - Happy: +10%
-  - Neutral: +7.5%
-  - Worried: +5%
-  - Sad: +2.5%
+  - Happy: 4%
+  - Neutral: 2%
+  - Worried: 1.5%
+  - Sad: 1%
   - Meltdown: 0%
 
 #### Stage
@@ -218,114 +237,136 @@ Paradise: public/assests/stages/paradise.png
 
 ### Abilities
 
-Baton Strike:
-- Range: close
-- Damage: 15
-- If enemy is suppressed → +5 damage
-
-Gun Shot:
-- Range: long
-- Damage: 10
-- Reduces enemy damage next turn
-
 #### Offensive moves
 
 Baton Strike:
 - Range: close
-- Damage: 15
-- If enemy is suppressed → +5 damage
+- Damage: 14
+- If enemy is suppressed → +6 damage
 
 Gun Shot:
 - Range: long
-- Damage: 10
-- Reduces enemy damage next turn
+- Damage: 9
+- Applies “Marked” instead of damage reduction
+  - Marked:
+    - Next hit against enemy deals +25% damage
+      - If no gun shot on next turn, then marked status is removed
+    - Consumed on hit
 
 #### Defensive moves
 
 Block:
-- Reduces damage by 70% (strongest)
-- +0.5 combo
+- Reduces damage by 70%
+- Combo +0.15
+- Cannot be used twice in a row
 
 Counter:
-- Always 1.25x damage (consistent, not risky)
-- Smaller reward, safer timing
+- Easier timing window than others
+- Damage: 1.1x
+- Combo gain: +0.25
 
 Dodge:
-- Standard timing
-- Slightly harder than Girl
+- Slightly harder timing than Girl
+- Success: no damage +0.25 combo
+- Failure: full damage
 
 #### Specials
 
 Suppress:
 - Enemy deals 50% damage next turn
-- Lasts 2 turns
+- Lasts 1 turn
 
-Command:
+Backup:
 - Next character switch is free
-- +1 combo
+- +0.5 combo
+- Once per battle
 
 #### Assists
 
 Active assist:
-- Protects active member from next attack
-- 3 turn cooldown
+- Name: Tactical Focus
+- Slows the decision timer by 60% for 1 turn
+- Player gets more time to react
+- Reveals enemy's next action
+- Costs: 
+  - 1 combo to activate
+  - Enemy deals 50% damage next turn
+  - Cannot be used twice in a row
+
 
 Passive assist:
-- Reduces damage taken by the active character by 5
+- Name: Tactical Support
+- Reduces damage taken by the active character by 3%
 
 #### Stage
 Taipei: public/assests/stages/ximending.png
 
 ### Man
 
-- If his health gets goes to 25% or below, attack increases by 10%
-- If health is below 10%, attack increases by 15%
+- HP ≤ 25% → +10% damage
+- HP ≤ 10% → +20% damage
 
 #### Abilities
 
 #### Offensive moves
 
 Heavy Swing:
-- Range: close
-- Damage: 30
-- High counter risk
+  - Range: close
+  - Damage: 18
+  - 3-hit chain with input timing
+  - Each hit increases risk (ex: press "A" within 0.5s after the previous hit. But can be any random button of [W, A, S, D, ←, →, ↑, ↓])
+  - Successful: +0.75 combo
+  - Total damage ~30
+  - High counter risk
 
-Throw Object:
-- Range: long
-- Damage: 18
-- Safe but weaker scaling
+Bottle Throw:
+  - Range: long
+  - Damage: 12
+  - No combo gain
+  - Slight delay before hit
+  - If used twice in a row → reduced accuracy / damage
 
 #### Defensive moves
 
 Counter:
-- 2.0x damage (STRONGEST)
-- Hardest timing
-- +1 combo
+  - 1.75x damage (instead of 2.0x)
+  - Hardest timing
+  - +0.75 combo (not +1)
 
 Block:
-- Only reduces 40% damage
+  - Reduces 40% damage
+  - +0.15 combo
 
 Dodge:
-- Standard timing
+  - Slightly harder timing than Officer
+  - Standard timing
 
 #### Specials
 
 Overexert:
-- Deals 40 damage
-- Takes 15 self-damage
+  - Deals 40 damage
+  - Takes 15 self-damage
+  - Cannot reduce HP below 1
+  - If HP ≤ 15 → cannot be used
+  - Grants +0.25 combo (reward aggression)
 
 All In:
-- Consumes combo
-- Damage = 20 × combo
-- Resets combo to x1
+  - Consumes all combo
+  - Damage = 18 × combo (slightly reduced from 20)
+    - Max multiplier: x4
+  - Resets combo to x1
 
 #### Assists
 
 Active assist:
-- Unleashes attack that removes 20% of enemy's current HP. 
+  - Name: Improv
+  - Removes 15% of enemy CURRENT HP
+  - Does not affect bosses
+  - No combo gain
 
 Passive assist:
-- Increases active character damage by 5%
+  - Name: Taunt
+  - Grants attack boost of 5%
 
 #### Stage
 New Orleans: public/assests/stages/mardi_gras.png
@@ -351,6 +392,7 @@ New Orleans: public/assests/stages/mardi_gras.png
   - At 3 Pressure → next attack deals heavy bonus damage
   - Pressure resets after empowered attack
 - Encourages switching between defense types
+- Loses Pressure if player uses counter or dodge
 
 ---
 
@@ -360,7 +402,7 @@ New Orleans: public/assests/stages/mardi_gras.png
   - Combo cannot increase for 1 turn
   - Combo is not reduced
 - Has weaker direct damage
-- Occasionally applies small combo reduction instead of full disruption
+- Occasionally delays combo gain instead of blocking it
 
 ---
 
@@ -369,17 +411,31 @@ New Orleans: public/assests/stages/mardi_gras.png
 - Applies **Mark** to the Tiger:
   - Marked Tiger takes increased damage on next attack
 - Applies pressure through timing rather than constant damage
+- Mark can be cleansed by switching
 
 ---
 
-### Tank
-- High HP, low damage
-- Above 50% HP:
-  - Reduces incoming damage
-- Below 50% HP:
-  - Loses damage reduction
-  - Gains increased attack power
-- Shifts from defensive to aggressive mid-fight
+### Controller
+- Manipulates the flow of time during battle
+- Focuses on disrupting player reaction timing and decision-making
+
+Abilities:
+
+- Speed Up:
+  - Reduces player decision timer by 30–50% for 1 turn
+  - Forces faster reactions
+
+- Slow Down:
+  - Increases player decision timer
+  - BUT reduces combo gain by 50% during that turn
+
+- Delay Strike:
+  - Attack lands AFTER player’s next action
+  - Forces prediction instead of reaction
+
+- Fake Telegraph:
+  - Shows one attack type
+  - Executes a different one
 
 ---
 
@@ -392,8 +448,139 @@ New Orleans: public/assests/stages/mardi_gras.png
     - Can also be attacked by inactive characters
     - Can be targeted by active assists
     - Cannot be attacked by the active character
-- Inactive enemies do not directly deal damage
+- Inactive enemies do not directly deal damage active character
 - Rotation order is predictable
+
+---
+
+### Trinity Breaker (Final Boss)
+The Trinity Breaker represents the culmination of all combat systems.
+
+The battle is split into 3 simultaneous lanes:
+- Girl/Tiger lane
+- Officer lane
+- Man lane
+
+Each character fights independently:
+- No assists
+- No switching
+- Each lane has its own turn flow and timer
+
+---
+
+### Core Mechanic: Sync Meter
+
+- All lanes contribute to a shared Sync Meter
+
+#### Sync Gain:
+- Successful counter: +1
+- Fast action: +0.5
+- Winning a lane exchange (correct response): +0.5
+
+#### Sync Loss:
+- Failed counter: -1
+- Timeout: -1
+- Heavy damage taken: -0.5
+
+---
+
+### Team Attack
+
+- When Sync Meter is full:
+  - All 3 characters perform a **Team Attack**
+  - Deals heavy damage directly to the boss core
+
+- After activation:
+  - Sync resets to 0
+
+---
+
+### Boss Structure
+
+The Trinity Breaker has:
+
+- Lane Projections (one per character)
+- A shared Core HP
+
+#### Lane Projections:
+- Each lane has a projection that:
+  - Attacks independently
+  - Applies pressure specific to that character
+
+#### Core:
+- Cannot be damaged directly
+- Only takes damage from Team Attacks
+
+---
+
+### Lane Behaviors
+
+Each lane combines mechanics from previous enemies:
+
+#### Girl Lane
+- Hunter influence:
+  - Applies Mark to Tiger
+- Disruptor influence:
+  - Applies combo pressure
+
+#### Officer Lane
+- Controller influence:
+  - Manipulates timer speed
+  - Introduces fake telegraphs
+
+#### Man Lane
+- Breaker influence:
+  - Punishes repeated defensive actions
+  - Builds pressure against blocking
+
+---
+
+### Multi-Threat Turns
+
+Each turn, projections may:
+- Telegraph multiple threats simultaneously
+- Example:
+  - Heavy attack
+  - Combo disruption
+  - Timer pressure
+
+Player must prioritize response.
+
+Unaddressed threats still resolve.
+
+---
+
+### Phase System
+
+#### Phase 1
+- Moderate speed
+- Clear telegraphs
+- Focus on learning lane separation
+
+#### Phase 2
+- Faster timers
+- More fake telegraphs
+- Increased combo disruption
+
+#### Phase 3 (Final Phase)
+- Very fast timers
+- Increased damage
+- Higher meltdown frequency
+- Maximum multi-threat pressure
+
+---
+
+### Victory Condition
+
+- Reduce Core HP to 0 using Team Attacks
+
+---
+
+### Defeat Condition
+
+- All three characters are defeated
+
+---
 
 ## BATTLES
 
@@ -461,6 +648,7 @@ New Orleans: public/assests/stages/mardi_gras.png
 #### Combo Loss
 
 - Failed counter: -0.5
+- Faild dodge: -0.5
 - Heavy damage: -0.5
 - Timeout: -0.5
 - Active character defeated: reset to x1.0
