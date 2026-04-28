@@ -11,6 +11,7 @@
   <script type="module" src="/assets/ui/health_bar/health_bar.js"></script>
   <script type="module" src="/assets/ui/combo_meter/combo_meter.js"></script>
   <script type="module" src="/assets/ui/action_buttons/action_buttons.js"></script>
+  <script type="module" src="/assets/ui/switch/switch.js"></script>
   <script type="module" src="/src/render/render.js" defer></script>
 </head>
 
@@ -19,8 +20,14 @@
   <div id="app">
     <div id="battle-ui">
       <div id="player-hud">
-        <health-bar id="player-hp" hp="100" max-hp="100" name="Girl"></health-bar>
-        <combo-meter id="combo" value="1.00"></combo-meter>
+        <div class="active-character-ui">
+          <health-bar id="player-hp" hp="100" max-hp="100" name="Girl"></health-bar>
+          <combo-meter id="combo" value="1.00"></combo-meter>
+        </div>
+        <div class="assists-ui" style="display: flex; gap: 10px; margin-top: 10px;">
+          <health-bar id="assist1-hp" is-assist="true" hp="150" max-hp="150" image="/assets/characters/officer/portrait/officer_portrait.png"></health-bar>
+          <health-bar id="assist2-hp" is-assist="true" hp="120" max-hp="120" image="/assets/characters/man/portrait/man_portrait.png"></health-bar>
+        </div>
       </div>
       
       <div id="enemy-hud">
@@ -29,6 +36,7 @@
     </div>
 
     <action-buttons></action-buttons>
+    <character-switch style="position: absolute; bottom: 20px; right: 20px; z-index: 40;"></character-switch>
 
     <div class="enemy"></div>
     <div id="battle-stage"></div>

@@ -6,7 +6,7 @@ class HealthBar extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['hp', 'max-hp', 'name', 'type'];
+        return ['hp', 'max-hp', 'name', 'type', 'image'];
     }
 
     async connectedCallback() {
@@ -25,6 +25,7 @@ class HealthBar extends HTMLElement {
                 this.hpText = this.shadowRoot.querySelector('.hp-text');
                 this.nameText = this.shadowRoot.querySelector('.name');
                 this.container = this.shadowRoot.querySelector('.health-bar-container');
+                this.portraitImg = this.shadowRoot.querySelector('.portrait-img');
                 
                 this.initialized = true;
                 this.updateDisplay();
@@ -47,12 +48,20 @@ class HealthBar extends HTMLElement {
         const maxHp = parseFloat(this.getAttribute('max-hp')) || 100;
         const name = this.getAttribute('name') || 'Unknown';
         const type = this.getAttribute('type');
+        const image = this.getAttribute('image');
 
         const percentage = Math.max(0, Math.min(100, (hp / maxHp) * 100));
 
         this.nameText.textContent = name;
         this.hpText.textContent = `${Math.floor(hp)} / ${maxHp}`;
         this.barInner.style.width = `${percentage}%`;
+
+        if (image) {
+            this.portraitImg.src = image;
+            this.portraitImg.style.display = 'block';
+        } else {
+            this.portraitImg.style.display = 'none';
+        }
 
         if (type === 'enemy') {
             this.container.classList.add('enemy');

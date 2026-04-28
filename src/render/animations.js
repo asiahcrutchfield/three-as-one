@@ -1,37 +1,30 @@
-let currentAnimationFrameId = null;
+const activeAnimations = new Map();
 
-// Character animations
-export function renderCharacter(container, characterData, characterId, animationName) {
-    const existingChar = container.querySelector('.character-sprite');
-    if (existingChar) {
-        existingChar.remove();
-    }
+function cancelAllAnimations() {
+    activeAnimations.forEach(id => cancelAnimationFrame(id));
+    activeAnimations.clear();
+}
 
-    if (currentAnimationFrameId) {
-        cancelAnimationFrame(currentAnimationFrameId);
-        currentAnimationFrameId = null;
-    }
-
+function createAnimSprite(container, characterData, characterId, animationName, leftOffset, zIndex) {
     const charInfo = characterData.characters[characterId];
-
     if (!charInfo) {
         console.error(`Character "${characterId}" not found`);
         return;
     }
 
     const animInfo = charInfo.animations[animationName];
-
     if (!animInfo) {
         console.error(`Animation "${animationName}" not found for "${characterId}"`);
         return;
     }
 
     const charEl = document.createElement('div');
-    charEl.className = 'character-sprite';
-
+    charEl.className = `character-sprite-part ${characterId}`;
+    
     charEl.style.position = 'absolute';
     charEl.style.bottom = '0px';
-    charEl.style.left = '25px';
+    charEl.style.left = leftOffset;
+    charEl.style.zIndex = zIndex;
 
     charEl.style.width = `${animInfo.frameWidth}px`;
     charEl.style.height = `${animInfo.frameHeight}px`;
@@ -47,7 +40,6 @@ export function renderCharacter(container, characterData, characterId, animation
     container.appendChild(charEl);
 
     const img = new Image();
-
     img.onload = () => {
         const columns = animInfo.columns;
         const totalFrames = animInfo.frames;
@@ -59,9 +51,7 @@ export function renderCharacter(container, characterData, characterId, animation
         function showFrame(frameIndex) {
             const col = frameIndex % columns;
             const row = Math.floor(frameIndex / columns);
-
-            charEl.style.backgroundPosition =
-                `-${col * animInfo.frameWidth}px -${row * animInfo.frameHeight}px`;
+            charEl.style.backgroundPosition = `-${col * animInfo.frameWidth}px -${row * animInfo.frameHeight}px`;
         }
 
         showFrame(currentFrame);
@@ -72,11 +62,12 @@ export function renderCharacter(container, characterData, characterId, animation
                 showFrame(currentFrame);
                 lastTime = time;
             }
-
-            currentAnimationFrameId = requestAnimationFrame(animate);
+            const frameId = requestAnimationFrame(animate);
+            activeAnimations.set(characterId, frameId);
         }
 
-        currentAnimationFrameId = requestAnimationFrame(animate);
+        const frameId = requestAnimationFrame(animate);
+        activeAnimations.set(characterId, frameId);
     };
 
     img.onerror = () => {
@@ -86,7 +77,42 @@ export function renderCharacter(container, characterData, characterId, animation
     img.src = animInfo.src;
 }
 
-// Enemy animations
+export function renderCharacter(container, characterData, characterId, animationName) {
+    const existingChars = container.querySelectorAll('.character-sprite');
+    existingChars.forEach(el => el.remove());
+    cancelAllAnimations();
+
+    const charContainer = document.createElement('div');
+    charContainer.className = 'character-sprite';
+    charContainer.style.position = 'absolute';
+    charContainer.style.bottom = '0px';
+    charContainer.style.left = '25px';
+
+    container.appendChild(charContainer);
+    createAnimSprite(charContainer, characterData, characterId, animationName, '0px', 1);
+}
+
+export function renderDuo(container, characterData, backId, frontId, animationName) {
+    const existingChars = container.querySelectorAll('.character-sprite');
+    existingChars.forEach(el => el.remove());
+    cancelAllAnimations();
+
+    const duoContainer = document.createElement('div');
+    duoContainer.className = 'character-sprite';
+    duoContainer.style.position = 'absolute';
+    duoContainer.style.bottom = '0px';
+    duoContainer.style.left = '25px';
+
+    container.appendChild(duoContainer);
+    
+    // Render back character (Tiger)
+    createAnimSprite(duoContainer, characterData, backId, animationName, '0px', 1);
+    
+    // Render front character (Girl) positioned at ~25% from left
+    // Since Tiger scaled width is 1024 * 0.4 = ~409px, 25% is ~100px.
+    createAnimSprite(duoContainer, characterData, frontId, animationName, '100px', 2);
+}
+
 export function renderEnemy(container, enemyData, enemyId, animationName) {
     const existingEnemy = container.querySelector('.enemy-sprite');
     if (existingEnemy) {
