@@ -1,26 +1,38 @@
 export const battles = [
     {
         id: 1,
-        enemies: ["striker"]
+        label: "Battle 1",
+        enemies: ["striker"],
+        description: "Teaches basic close/long/status telegraphs."
     },
     {
         id: 2,
-        enemies: ["breaker"]
+        label: "Battle 2",
+        enemies: ["breaker"],
+        description: "Punishes blocking too much."
     },
     {
         id: 3,
-        enemies: ["hunter"]
+        label: "Battle 3",
+        enemies: ["disruptor"],
+        description: "Messes with combo/momentum."
     },
     {
         id: 4,
-        enemies: ["disruptor"]
+        label: "Battle 4",
+        enemies: ["controller"],
+        description: "Manipulates timer pressure."
     },
     {
         id: 5,
-        enemies: ["tank"]
+        label: "Battle 5",
+        enemies: ["hunter"],
+        description: "Pressures Girl/Tiger mechanics."
     },
     {
         id: "boss",
-        enemies: ["striker", "breaker", "hunter"]
+        label: "Final Boss",
+        enemies: ["trinity_breaker"],
+        description: "2 simultaneous threats + sync/team attack payoff."
     }
 ];
