@@ -1,6 +1,7 @@
 import { renderCharacter, renderDuo, renderEnemy } from './animations.js';
 import { gameState } from '../game/state.js';
 import { playerAttack, enemyAttack } from '../game/combat.js';
+import { enemies } from '../data/enemies.js';
 
 function updateDebugUI() {
     const playerHpEl = document.getElementById('player-hp');
@@ -126,52 +127,87 @@ async function init() {
     }
 
     document.addEventListener('character-switch', (e) => {
+        if (gameState.switchesRemaining <= 0) {
+            addLog(`Cannot switch: Switch limit reached.`);
+            return;
+        }
+
         const newId = e.detail.id;
         if (gameState.player.id !== newId) {
+            gameState.switchesRemaining--;
             gameState.player.id = newId;
+            gameState.combo = Math.min(3, gameState.combo + 1.0); // Game rule: switching gives +1.0 combo
             updateCharacterUI();
-            addLog(`Switched to ${characterData.characters[newId].name}`);
+            addLog(`Switched to ${characterData.characters[newId].name}. Combo +1.0!`);
+            updateDebugUI();
         }
     });
+
+    function startRound() {
+        if (gameState.status !== "Player Turn") return;
+        
+        // Enemy decides what to do next
+        const enemyObj = enemies[gameState.enemy.id];
+        gameState.enemyIntent = enemyObj.behavior();
+        
+        const telegraphUI = document.getElementById('enemy-telegraph');
+        if (telegraphUI) {
+            telegraphUI.textContent = `Prepares: ${gameState.enemyIntent.label}`;
+            telegraphUI.style.display = 'block';
+        }
+        
+        addLog(`Enemy prepares: ${gameState.enemyIntent.label}`);
+    }
 
     // Run once on init to set up correct actions based on default state
     setTimeout(() => {
         updateCharacterUI();
         updateDebugUI();
+        startRound();
     }, 100);
 
     function handleEnemyTurn() {
         if (gameState.turn === "enemy") {
-            setTimeout(() => {
-                const playerHpBefore = gameState.player.hp;
-                const enemyHpBefore = gameState.enemy.hp;
+            const telegraphUI = document.getElementById('enemy-telegraph');
+            if (telegraphUI) telegraphUI.style.display = 'none';
 
+            setTimeout(() => {
                 const activeDefenseBefore = gameState.activeDefense;
 
-                enemyAttack(gameState);
+                const result = enemyAttack(gameState);
 
-                const enemyDamage = playerHpBefore - gameState.player.hp;
-                if (activeDefenseBefore === 'block') {
-                    addLog(`Enemy attacked but it was partially blocked!`);
+                if (result.intentType === "status") {
+                    addLog(`Enemy used Status! Damage increased for next attack.`);
+                    flashElement('.enemy-sprite', 'feedback-block');
+                } else if (activeDefenseBefore === 'block') {
+                    addLog(`Enemy attacked but it was partially blocked! Taken ${result.playerDamageTaken}.`);
                     flashElement('.character-sprite', 'feedback-block');
                 } else if (activeDefenseBefore === 'counter') {
-                    // Handled below
-                } else if (enemyDamage > 0) {
-                    addLog(`Enemy attacked for ${enemyDamage} damage.`);
+                    if (result.counterSucceeded) {
+                        addLog(`Player countered for ${result.enemyDamageTaken} damage!`);
+                        flashElement('.character-sprite', 'feedback-counter');
+                        setTimeout(() => {
+                            flashElement('.enemy-sprite', 'feedback-attack');
+                        }, 100);
+                    } else if (result.intentType === "long") {
+                        addLog(`Counter failed! Enemy used a long attack. Taken ${result.playerDamageTaken}.`);
+                        flashElement('.character-sprite', 'feedback-attack');
+                    }
+                } else if (result.playerDamageTaken > 0) {
+                    addLog(`Enemy attacked for ${result.playerDamageTaken} damage.`);
                     flashElement('.character-sprite', 'feedback-attack');
-                }
-
-                const counterDamage = enemyHpBefore - gameState.enemy.hp;
-                if (counterDamage > 0) {
-                    addLog(`Player countered for ${counterDamage} damage!`);
-                    flashElement('.character-sprite', 'feedback-counter');
-                    setTimeout(() => {
-                        flashElement('.enemy-sprite', 'feedback-attack');
-                    }, 100);
                 }
 
                 addLog(`Player HP: ${gameState.player.hp}/${gameState.player.maxHp}`);
                 updateDebugUI();
+                
+                if (gameState.status === "Player Turn") {
+                    setTimeout(() => {
+                        startRound();
+                    }, 500);
+                } else {
+                    addLog(`Battle Over: ${gameState.status}`);
+                }
             }, 800);
         }
     }

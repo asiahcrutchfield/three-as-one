@@ -3,9 +3,32 @@ export const enemies = {
         id: "striker",
         hp: 100,
         type: "balanced",
+        
+        moves: [
+          {
+            id: "close_attack",
+            label: "Close Attack",
+            type: "close",
+            damage: 12
+          },
+          {
+            id: "long_attack",
+            label: "Long Attack",
+            type: "long",
+            damage: 8
+          },
+          {
+            id: "status",
+            label: "Status",
+            type: "status",
+            effect: "damage_up"
+          }
+        ],
 
-        behavior: (state) => {
-            return Math.random() < 0.5 ? "attack_close" : "attack_range";
+        behavior: function() {
+            // randomly pick a move
+            const move = this.moves[Math.floor(Math.random() * this.moves.length)];
+            return move;
         }
     },
 

@@ -107,3 +107,22 @@ action-buttons {
     box-shadow: 0 0 20px #39ff14 !important;
     filter: brightness(1.2);
 }
+
+.telegraph-box {
+    position: absolute;
+    bottom: 200px;
+    right: 0px;
+    background: rgba(200, 30, 30, 0.85);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: bold;
+    font-size: 14px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 2px solid rgba(255, 100, 100, 0.8);
+    z-index: 100;
+    pointer-events: none;
+    animation: shake 2s ease-in-out infinite;
+}

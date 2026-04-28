@@ -439,9 +439,20 @@ New Orleans: public/assests/stages/mardi_gras.png
 
 #### Combo Gain
 
-- Successful counter: +0.5
+- Successful counter:
+  - Perfect: +0.5
+  - Good: +0.25
+
 - Successful dodge: +0.25
-- Successful block: +0.25
+
+- Successful block:
+  - +0.15 (reduced gain compared to other defensive options)
+
+- Offensive action (attack):
+  - Deals damage based on combo multiplier
+  - Builds combo at a steady rate (+0.25)
+  - Does not mitigate incoming damage
+
 - Manual switch: +0.5
 - Active assist: +0.5
 - Fast action (first 50% of timer): +0.25
@@ -449,7 +460,7 @@ New Orleans: public/assests/stages/mardi_gras.png
 
 #### Combo Loss
 
-- Failed counter: -1.0
+- Failed counter: -0.5
 - Heavy damage: -0.5
 - Timeout: -0.5
 - Active character defeated: reset to x1.0
@@ -473,13 +484,30 @@ New Orleans: public/assests/stages/mardi_gras.png
 - x2.0 → 25 damage → 50
 - x3.0 → 25 damage → 75
 
+#### Momentum Design
+
+The combo system represents combat momentum.
+
+- Offensive actions build momentum steadily
+- Defensive actions trade safety for slower momentum growth
+- High-risk actions (counters) accelerate momentum significantly
+
+This creates a core decision loop:
+
+- Play safe → survive longer, slower combo growth
+- Take risks → faster combo growth, higher reward, higher punishment
+
+The player is not choosing the "correct" action,
+but choosing their level of risk and tempo.
+
 ### Defensive Moves
 
 - There are 3 kinds of defenses: counter, dodge and block
-  - block lowers damage taken by entity from anywhere between 50% - 75%. It needs a cooldown of 1 turn
-    - reduces 50–75%
-    - +0.5 combo
-    - enables stronger next attack 
+  - Block:
+    - Reduces damage taken by 50%–75% (depends on character)
+    - Grants reduced combo gain (+0.15)
+    - Does NOT boost next attack
+    - Slows overall combo growth compared to offensive or counter play
   - dodge allows an entity to evade all damage. It must be properly timed
   - Counter (see below)
 
@@ -506,7 +534,7 @@ Each counter has 3 outcomes:
 #### Failed Counter
 - Takes full damage
 - No counter damage
-- Small combo loss
+- -0.5 combo
 
 ---
 

@@ -15,5 +15,9 @@ export const gameState = {
 
     combo: 1.0,
 
-    turn: "player"
+    turn: "player",
+
+    switchesRemaining: 1,
+    enemyIntent: null,
+    enemyModifiers: { damageBoost: 0 }
 };
