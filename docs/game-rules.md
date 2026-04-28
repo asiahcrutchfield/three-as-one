@@ -373,214 +373,280 @@ New Orleans: public/assests/stages/mardi_gras.png
 
 ## ENEMIES
 
+---
+
 ### Striker
-- Balanced enemy
+
+**Role:** Balanced / Tutorial Enemy
+
 - Uses both close-range and long-range attacks
 - Occasionally uses a status move (small buff or debuff)
 - Clearly telegraphs attack type before acting:
   - Close-range → counterable
   - Long-range → cannot be countered
-  - Status → indicated before use
+  - Status → clearly indicated
+
+**Purpose:**
+- Teaches core combat loop:
+  - read → decide → act
 
 ---
 
 ### Breaker
+
+**Role:** Anti-Block / Pressure Builder
+
 - Uses fast close-range attacks
 - Counters deal reduced damage against it
-- Gains **Pressure** when player blocks:
-  - +1 Pressure per block
-  - At 3 Pressure → next attack deals heavy bonus damage
-  - Pressure resets after empowered attack
-- Encourages switching between defense types
-- Loses Pressure if player uses counter or dodge
+
+**Pressure Mechanic:**
+- Gains **+1 Pressure** when player blocks
+- Loses Pressure when player:
+  - counters
+  - dodges
+- At **3 Pressure**:
+  - Next attack becomes **Breaker Slam**
+  - Deals heavy bonus damage
+  - Pressure resets to 0
+
+**Purpose:**
+- Punishes passive defense
+- Encourages switching between defensive options
 
 ---
 
 ### Disruptor
+
+**Role:** Combo Disruption
+
 - Uses status moves frequently
-- Applies **Combo Lock**:
+- Has weaker direct damage
+
+**Abilities:**
+- **Combo Lock**
   - Combo cannot increase for 1 turn
   - Combo is not reduced
-- Has weaker direct damage
-- Occasionally delays combo gain instead of blocking it
+- **Combo Delay**
+  - Combo gain is delayed instead of blocked
+- **Combo Drain**
+  - Reduces combo slightly
+
+**Purpose:**
+- Breaks player momentum
+- Forces recovery and adaptation
 
 ---
 
 ### Hunter
-- Strong against girl's tiger companion
-- Applies **Mark** to the Tiger:
-  - Marked Tiger takes increased damage on next attack
-- Applies pressure through timing rather than constant damage
-- Mark can be cleansed by switching
+
+**Role:** Tiger Pressure / Targeted Threat
+
+- Strong against Girl's Tiger companion
+
+**Mark Mechanic:**
+- Applies **Mark** to the Tiger
+- Marked Tiger:
+  - Takes increased damage on next hit
+- Mark is consumed after attack
+- Mark can be removed by switching
+
+**Behavior:**
+- Focuses pressure through timing and targeting
+- Less constant damage, more threat spikes
+
+**Purpose:**
+- Forces player to manage Tiger health
+- Encourages switching and defensive planning
 
 ---
 
 ### Controller
+
+**Role:** Time Manipulation / Decision Pressure
+
 - Manipulates the flow of time during battle
-- Focuses on disrupting player reaction timing and decision-making
+- Disrupts player reaction timing and decision-making
+- Uses deceptive telegraphs and delayed attacks to punish mistakes
 
-Abilities:
+---
 
-- Speed Up:
-  - Reduces player decision timer by 30–50% for 1 turn
-  - Forces faster reactions
+#### Abilities
 
-- Slow Down:
-  - Increases player decision timer
-  - BUT reduces combo gain by 50% during that turn
+- **Snap Strike**
+  - Range: close
+  - Counterable
+  - Deals moderate damage
+  - On hit: slightly reduces the next decision timer
+  - Purpose: fast punishment for hesitation
 
-- Delay Strike:
-  - Attack lands AFTER player’s next action
-  - Forces prediction instead of reaction
+- **Time Shot**
+  - Range: long
+  - Cannot be countered
+  - Deals moderate damage
+  - Purpose: safe pressure that forces block/dodge decisions
 
-- Fake Telegraph:
-  - Shows one attack type
-  - Executes a different one
+- **Delay Strike**
+  - Range: close
+  - Counterable
+  - Deals higher damage
+  - Lands after the player’s next action
+  - Cannot be used twice in a row
+  - Purpose: forces prediction instead of reaction
+
+- **Speed Up**
+  - Status
+  - Reduces player decision timer by ~30–50% for 1 turn
+  - Purpose: increases pressure and forces faster decisions
+
+- **Fake Telegraph**
+  - Displays one attack type, but performs another
+  - Always wraps a real attack (Snap Strike or Time Shot)
+  - Example:
+    - Shows close-range → resolves as long-range
+    - Shows long-range → resolves as close-range
+  - Purpose: breaks player trust in telegraphs
+
+---
+
+#### Behavior
+
+- Mixes:
+  - fast attacks (Snap Strike)
+  - safe pressure (Time Shot)
+  - delayed attacks (Delay Strike)
+  - time manipulation (Speed Up)
+  - deception (Fake Telegraph)
+- Avoids repeating Delay Strike consecutively
+
+---
+
+#### Purpose
+
+- Tests reaction speed and composure
+- Disrupts rhythm and timing
+- Forces defensive play (cannot safely spam attack)
+- Introduces uncertainty without randomness
+
+---
+
+#### Player Impact
+
+The player must:
+- react quickly (Speed Up)
+- choose correct defense (close vs long)
+- predict delayed attacks (Delay Strike)
+- question telegraphs (Fake Telegraph)
+
+The Controller turns combat from:
+> reaction  
+into:
+> reaction + prediction + trust management
 
 ---
 
 ### Mob
+
+**Role:** Multi-Entity / Chaos Control
+
 - 1 active enemy
-- 1–2 inactive enemies that rotate in every few turns
-- Inactive enemies can:
-  - Apply buffs to the active enemy
-  - Attack inactive characters
-    - Can also be attacked by inactive characters
-    - Can be targeted by active assists
-    - Cannot be attacked by the active character
-- Inactive enemies do not directly deal damage active character
+- 1–2 inactive enemies rotate in periodically
+
+**Inactive Enemies Can:**
+- Apply buffs to the active enemy
+- Apply pressure to inactive characters
+- Be targeted by assists
+- Interact with inactive characters
+
+**Restrictions:**
+- Cannot be directly attacked by the active character
+- Do not deal direct damage to the active character
+
+**Behavior:**
 - Rotation order is predictable
+
+**Purpose:**
+- Introduces multi-target awareness
+- Forces prioritization and planning
 
 ---
 
 ### Trinity Breaker (Final Boss)
+
+**Role:** System Mastery / Multi-Threat Boss
+
 The Trinity Breaker represents the culmination of all combat systems.
 
-The battle is split into 3 simultaneous lanes:
-- Girl/Tiger lane
+---
+
+#### Structure
+
+The battle is split into **3 simultaneous lanes**:
+- Girl / Tiger lane
 - Officer lane
 - Man lane
 
-Each character fights independently:
+---
+
+#### Rules
+
+- Each character fights independently
 - No assists
 - No switching
-- Each lane has its own turn flow and timer
+- Each lane has its own:
+  - turn flow
+  - decision timer
 
 ---
 
-### Core Mechanic: Sync Meter
+#### Core Mechanic: Dual Threat
 
-- All lanes contribute to a shared Sync Meter
+Each turn, the boss presents **2 simultaneous threats**:
 
-#### Sync Gain:
-- Successful counter: +1
-- Fast action: +0.5
-- Winning a lane exchange (correct response): +0.5
+- One **direct threat**:
+  - Close attack (counterable)
+  - Long attack (not counterable)
+  - Delayed attack
 
-#### Sync Loss:
-- Failed counter: -1
-- Timeout: -1
-- Heavy damage taken: -0.5
-
----
-
-### Team Attack
-
-- When Sync Meter is full:
-  - All 3 characters perform a **Team Attack**
-  - Deals heavy damage directly to the boss core
-
-- After activation:
-  - Sync resets to 0
-
----
-
-### Boss Structure
-
-The Trinity Breaker has:
-
-- Lane Projections (one per character)
-- A shared Core HP
-
-#### Lane Projections:
-- Each lane has a projection that:
-  - Attacks independently
-  - Applies pressure specific to that character
-
-#### Core:
-- Cannot be damaged directly
-- Only takes damage from Team Attacks
-
----
-
-### Lane Behaviors
-
-Each lane combines mechanics from previous enemies:
-
-#### Girl Lane
-- Hunter influence:
-  - Applies Mark to Tiger
-- Disruptor influence:
-  - Applies combo pressure
-
-#### Officer Lane
-- Controller influence:
-  - Manipulates timer speed
-  - Introduces fake telegraphs
-
-#### Man Lane
-- Breaker influence:
-  - Punishes repeated defensive actions
-  - Builds pressure against blocking
-
----
-
-### Multi-Threat Turns
-
-Each turn, projections may:
-- Telegraph multiple threats simultaneously
-- Example:
-  - Heavy attack
+- One **system threat**:
   - Combo disruption
   - Timer pressure
+  - Tiger pressure
+  - Fake telegraph
 
-Player must prioritize response.
+Player can only fully respond to one.
 
 Unaddressed threats still resolve.
 
 ---
 
-### Phase System
+#### Phase Behavior
 
-#### Phase 1
-- Moderate speed
-- Clear telegraphs
-- Focus on learning lane separation
+**Phase 1 (High HP):**
+- Simple direct attacks
+- Light combo/tiger pressure
 
-#### Phase 2
-- Faster timers
-- More fake telegraphs
-- Increased combo disruption
+**Phase 2 (Mid HP):**
+- Introduces timer manipulation
+- More frequent disruption
 
-#### Phase 3 (Final Phase)
-- Very fast timers
-- Increased damage
-- Higher meltdown frequency
-- Maximum multi-threat pressure
+**Phase 3 (Low HP):**
+- Adds delayed attacks
+- Introduces fake telegraphs
+- Maximum pressure and unpredictability
 
 ---
 
-### Victory Condition
+#### Purpose
 
-- Reduce Core HP to 0 using Team Attacks
+- Tests:
+  - reaction speed
+  - decision-making under pressure
+  - system mastery
 
----
-
-### Defeat Condition
-
-- All three characters are defeated
-
----
+- Forces:
+  - prioritization
+  - risk management
+  - composure under chaos
 
 ## BATTLES
 

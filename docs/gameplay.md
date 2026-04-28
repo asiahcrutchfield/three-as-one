@@ -1,110 +1,201 @@
-You are managing a 3-character team through a short combat run.
+# Gameplay
 
-In each battle, you:
-- Control one active character at a time
-- React to enemy attacks in real-time
-- Build combo through skillful play
-- Decide when to switch characters
-- Manage risk (HP, tiger, meltdown)
-- Try to win efficiently to get a higher grade
+You manage a 3-character team through a short combat run.
 
-Your goal:
-Survive all battles → defeat the final boss → get the highest rank possible
+Each battle is about reading enemy intent, choosing your risk level, building momentum, and surviving long enough to reach the final boss.
 
-# Gameplay Loop
+## Core Loop
 
-1. Start Run
+1. Enemy telegraphs its next action
+2. Player chooses one action before the timer ends:
+   - Attack
+   - Block
+   - Dodge
+   - Counter
+   - Special
+   - Assist
+   - Switch
+3. Action resolves
+4. Combo changes based on risk:
+   - Attack: steady combo gain
+   - Block: safest, slowest combo gain
+   - Counter: highest reward, highest risk
+   - Timeout / failed counter / failed dodge: combo loss
+5. Enemy action resolves
+6. Player adapts to HP, combo, tiger state, cooldowns, and switch availability
+7. Repeat until victory or defeat
 
-2. Battle 1
-   - Learn enemy patterns (Striker)
-   - Build basic combo
+## Run Structure
 
-3. Choose Reward
-   - +HP
-   - +Damage
-   - +Combo gain bonus
+1. Battle 1 — Striker
+   - Teaches close / long / status telegraphs
+   - Teaches basic combo momentum
 
-4. Battle 2
-   - New enemy type introduced (Breaker)
+2. Choose Reward
+   - HP boost
+   - Damage boost
+   - Combo boost
+   - Timer boost
+   - Sync boost
 
-5. Choose Reward
+3. Battle 2 — Breaker
+   - Punishes repeated blocking
+   - Teaches defense variety
 
-6. Battle 3
-   - System pressure (Hunter or Disruptor)
+4. Choose Reward
 
-7. Choose Reward
+5. Battle 3 — Disruptor
+   - Attacks combo momentum
+   - Teaches recovery after momentum loss
 
-8. Battle 4
-   - Mixed enemies or Mob
+6. Choose Reward
 
-9. Choose Reward
+7. Battle 4 — Controller
+   - Manipulates the decision timer
+   - Teaches time pressure and fast adaptation
 
-10. Battle 5
-   - Harder version (faster, more pressure)
+8. Choose Reward
 
-11. Final Boss Battle
+9. Battle 5 — Hunter
+   - Pressures the Tiger
+   - Teaches tiger protection, switching, and meltdown awareness
 
-12. Results Screen
-   - Show score + grade (S/A/B/C)
+10. Final Boss — Trinity Breaker
+   - Tests all systems
+   - Uses multi-threat pressure and Sync Meter
 
-13. Replay (try to improve performance)
+11. Results Screen
+   - Score
+   - Grade
+   - Rewards earned
+   - Replay option
 
-# Gameplay Example
+## Player Decision Philosophy
 
-Each battle is a series of fast decisions:
+The player is not just choosing the “correct” action.
 
-1. Enemy telegraphs attack
-2. Player quickly reads:
-   - close-range?
-   - long-range?
-   - status?
+They are choosing tempo:
 
-3. Player chooses action within 7 seconds:
-   - Attack (build pressure)
-   - Counter (high risk/reward)
-   - Dodge (safe)
-   - Block (safe + combo)
-   - Special / Assist
-   - Switch character
+- Attack = steady momentum
+- Block = safe but slower momentum
+- Counter = risky but explosive momentum
+- Dodge = avoid damage with moderate reward
+- Assist = solve bad situations
+- Switch = change tools and reset positioning
 
-4. Action resolves:
-   - damage dealt / avoided
-   - combo increases or decreases
+## Character Roles
 
-5. Enemy acts
+### Girl / Tiger
+- Adaptive offense and support
+- Stronger when Tiger is healthy
+- Tiger HP affects Girl’s emotional state
+- If Tiger reaches 0 HP, meltdown begins
 
-6. Player adapts:
-   - maintain combo
-   - manage HP
-   - protect tiger
-   - decide whether to stabilize meltdown
+### Officer
+- Control and safety
+- Best at reducing danger
+- Can slow the timer with Tactical Focus
+- Helps the player read and survive dangerous turns
 
-7. Repeat until battle ends
+### Man
+- High-risk burst damage
+- Strongest punish options
+- Weakest safety
+- Gets stronger at low HP
 
-# Boss Loop
+## Meltdown
 
-Each turn:
+Meltdown occurs when Tiger HP reaches 0.
 
-1. Boss telegraphs 2–3 simultaneous threats:
-   - Big attack
-   - Combo disruption
-   - Tiger pressure
+During meltdown:
+- Girl becomes inactive
+- Player is forced to another character
+- Timer pressure increases
+- Long-range actions may become unstable
+- Passive healing stops
+- Player can stabilize at a cost
 
-2. Player must choose ONE response:
-   - counter the big attack
-   - prevent combo disruption
-   - protect the tiger
+Meltdown should feel dangerous, but not like instant failure.
 
-3. Unaddressed threats still happen (reduced effect)
+## Enemy Progression
 
-4. Player builds Sync Meter through good play
+### Striker
+Basic enemy.
+Teaches attack types and defensive responses.
 
-5. When full:
-   → unleash TEAM ATTACK (big damage spike)
+### Breaker
+Punishes repeated blocking.
+Forces the player to counter, dodge, or switch.
 
-6. Boss phases increase speed + pressure
+### Disruptor
+Attacks combo gain.
+Forces the player to rebuild momentum.
 
-7. Final phase:
-   - faster timer
-   - higher risk
-   - survival + execution test
+### Controller
+Manipulates the clock.
+Forces faster decisions or lowers combo gain during slowed turns.
+
+### Hunter
+Targets the Tiger system.
+Forces protection, switching, and emotional-state management.
+
+## Boss Loop — Trinity Breaker
+
+The final boss breaks the normal battle structure.
+
+The fight is split into 3 simultaneous lanes:
+- Girl / Tiger lane
+- Officer lane
+- Man lane
+
+Rules:
+- No assists
+- No switching
+- Each character fights independently
+- All lanes contribute to one shared Sync Meter
+
+Each lane presents pressure based on previous enemies:
+- Girl lane: Hunter + Disruptor pressure
+- Officer lane: Controller pressure
+- Man lane: Breaker pressure
+
+## Sync Meter
+
+The Sync Meter builds through strong play:
+
+- Successful counter
+- Fast action
+- Winning a lane exchange
+- Maintaining pressure
+
+The Sync Meter decreases from:
+- Failed counters
+- Timeouts
+- Heavy damage
+
+When full:
+- All 3 characters perform a Team Attack
+- Team Attack damages the boss core
+- Sync resets
+
+## Final Boss Victory
+
+The boss core cannot be damaged normally.
+
+To win:
+1. Survive lane pressure
+2. Build Sync
+3. Trigger Team Attack
+4. Repeat until boss core HP reaches 0
+
+## Results
+
+After each battle, show:
+- HP bonus
+- Combo bonus
+- Counter bonus
+- Penalties
+- Final score
+- Rank
+
+Higher ranks give better reward choices.

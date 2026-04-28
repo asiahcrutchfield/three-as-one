@@ -1,0 +1,47 @@
+.timer-container {
+    width: 200px;
+    background: rgba(20, 20, 30, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    margin: 10px auto;
+}
+
+.timer-text {
+    font-family: 'Inter', sans-serif;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 2px black;
+}
+
+.timer-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.timer-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff3333, #ffcc00, #33cc33);
+    border-radius: 4px;
+    transform-origin: left;
+    transition: width 0.1s linear;
+}
+
+.fast-action .timer-bar-fill {
+    background: linear-gradient(90deg, #33cc33, #00ffcc);
+}
+
+.slow-action .timer-bar-fill {
+    background: linear-gradient(90deg, #ff3333, #ff6600);
+}

@@ -53,9 +53,9 @@ class CharacterSwitch extends HTMLElement {
         
         this.slots.forEach(slot => {
             if (slot.getAttribute('data-id') === activeId) {
-                slot.classList.add('active');
+                slot.style.display = 'none';
             } else {
-                slot.classList.remove('active');
+                slot.style.display = '';
             }
         });
     }

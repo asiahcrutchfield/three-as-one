@@ -1,379 +1,280 @@
-# Three as One — Gray Box Test Spec
+# Three as One — Updated Playtest Spec (Combat-Active Version)
 
 ## Goal
 
-This gray-box test exists to answer one question:
+This playtest exists to answer one question:
 
-**Is the core battle loop fun when the player is given a random active character and must adapt to the enemy using that character’s tools and assists?**
+**Is the core battle loop fun when enemies actively pressure the player with real attacks, timing disruption, and decision-making under a timer?**
 
-This test is not meant to prove:
-- final story
-- final art direction
-- final progression
-- grading system
-- multiple cycle persistence
-- final balancing
+This test focuses on:
+- reacting to enemy telegraph
+- defending against real damage
+- decision-making under a timer
+- combo as momentum
+- block vs dodge vs counter decisions
+- character identity
+- enemy identity
 
-It is only meant to test:
-- moment-to-moment decision making
-- clarity of roles
-- reaction to enemy intent
-- usefulness of assists
-- whether a "bad" random character can still create interesting choices
+This test is NOT meant to validate:
+- final boss multi-lane system
+- full progression balancing
+- reward tuning
+- perfect numbers
 
 ---
 
 ## Core Test Pillars
 
-The gray-box should focus on 4 things:
-
-1. **Enemy Intent**
-   - The player should always know what the enemy is about to do.
-   - The player should feel like they are reacting to a visible threat.
-
-2. **Character Contrast**
-   - Each active character should feel immediately different.
-   - The player should understand the role of the character within a few seconds.
-
-3. **Assist Value**
-   - Assists should feel like the solution to a bad matchup.
-   - The player should want to save or spend assists strategically.
-
-4. **Short Tactical Loop**
-   - A single battle should be fast.
-   - The loop should feel readable, snappy, and replayable.
+### 1. Enemy Intent Clarity
+- Player must understand what the enemy is about to do
+- Telegraph must match:
+  - close attack (counterable)
+  - long attack (not counterable)
+  - delayed attack
+  - fake telegraph (intentional deception)
 
 ---
 
-## What the Gray Box Should Include
+### 2. Real Threat (NEW — CRITICAL)
 
-### 1. One Battle Screen
+Enemies must:
+- deal actual damage
+- force defensive decisions
+- punish wrong choices
 
-Only one screen is needed.
+Player should NOT be able to:
+- spam attack safely
+- ignore enemy behavior
 
-It should contain:
-- one active player character
-- one enemy
-- two inactive allies shown as support characters
-- visible enemy intent
-- visible HP values
-- visible assist availability
-- action buttons or key prompts
-
-No menus beyond:
-- restart
-- next test
-- return to title (optional)
+Goal:
+- Player feels:
+  > “I need to respond or I will get punished”
 
 ---
 
-### 2. One Battle = One Test
+### 3. Time Pressure
 
-A single battle should be self-contained.
+- Each turn has a visible countdown timer (~7 seconds)
 
-A battle begins with:
-- one randomly chosen active character
-- one randomly chosen enemy
+Rules:
+- Fast action (first half of timer):
+  → +0.25 combo
+- Timeout:
+  - Player turn is skipped
+  - No combo gain
+  - Combo -0.5
+  - Counts as a Timeout penalty in battle summary
+  - Enemy acts normally after timeout
 
-A battle ends when:
-- enemy HP reaches 0
-- OR all player characters are defeated
-
-No grading system needed in the gray-box version.
-
-At most, show:
-- Victory
-- Defeat
-- Battle duration
-- Assists used
+Goal:
+- Player feels urgency, not confusion
 
 ---
 
-### 3. Enemy Intent System
+### 4. Defensive System (Block / Dodge / Counter)
 
-Before the player acts, the enemy should clearly show what it intends to do next.
+Player must actively choose defense:
 
-Examples:
-- **Strike** → basic attack
-- **Heavy Strike** → high damage next turn
-- **Brace** → increase defense
-- **Charge** → preparing strong attack
-- **Expose** → becomes vulnerable next turn
+#### Block
+- Reduces damage
+- Small combo gain
+- Safest option
 
-The player should always feel:
-> "I know what is coming. What is my best response with this character?"
+#### Dodge
+- Avoids damage if successful
+- Medium reward
+- Failure = full damage + combo loss
 
-This is the heart of the gray-box test.
+#### Counter
+- Only works vs close attacks
+- High reward, high risk
 
----
+Outcomes:
 
-### 4. Active Character Structure
+- Perfect → no damage + big counter + combo gain  
+- Good → reduced damage + smaller reward  
+- Fail → full damage + combo loss  
 
-Only one character is active at a time.
-
-The active character gets:
-- 3 abilities
-- access to inactive allies’ assists
-
-Each active character should have a simple, readable role.
-
-#### Girl
-Role:
-- unstable offense/support hybrid
-
-Gameplay feel:
-- variable power
-- can support or attack
-- strongest when the animal is healthy
-- weakest when the animal is damaged
-- only the animal has health
-- the girl has only her emotional state
-
-Gray-box version:
-- keep emotion system simplified
-- do not use full meltdown yet unless the base loop feels good first
-
-#### Officer
-Role:
-- control / mitigation
-
-Gameplay feel:
-- safest character
-- reduces risk
-- best at answering dangerous enemy intent
-
-#### Man
-Role:
-- high damage / risk
-
-Gameplay feel:
-- quickest kills
-- biggest punish
-- least safe
+Goal:
+- Player chooses **risk level**, not just “correct answer”
 
 ---
 
-### 5. Assists
+### 5. Combo System (Momentum)
 
-Assists are one of the main reasons the loop can feel interesting.
+Combo represents momentum.
 
-Each inactive ally provides:
-- one passive effect
-- one active assist
+Gain:
+- Attack
+- Successful defense
+- Fast decisions
 
-In the gray box, active assists should:
-- be powerful
-- be limited
-- have visible cooldowns
+Loss:
+- Mistakes
+- Timeouts
+- Heavy damage
 
-Assists should feel like:
-> "I didn’t get the right character, but I can still make this work."
+Effect:
+- Increases damage output
 
-That is the fantasy being tested.
-
----
-
-## What the Gray Box Should NOT Include Yet
-
-To keep the test clean, do not include:
-
-- cycle grading
-- multi-cycle progression
-- reward systems
-- boss fights
-- full passive stacking complexity
-- multiple forms of hidden randomness
-- advanced meltdown consequences
-- five enemy types
-- multiple background transitions within one battle
-
-The gray-box should feel like a controlled lab test.
+Goal:
+- Player feels:
+  > “I’m building something”  
+  > “I lost momentum because I messed up”
 
 ---
 
-## Recommended Character Ability Set for Gray Box
+### 6. Enemy Identity (UPDATED)
 
-### Girl
-- **Pounce** → attack based on current animal/emotion state
-- **Comfort** → heal animal
-- **Encourage** → next action is stronger
+Each enemy must actively pressure the player in a different way:
 
-### Officer
-- **Attack** → moderate damage
-- **Suppress** → reduce enemy damage next turn
-- **Guard** → reduce incoming damage this round
+#### Striker
+- Mix of close + long attacks
+- Teaches reading + defense basics
 
-### Man
-- **Attack** → high damage
-- **Overexert** → very high damage + self damage
-- **Push Through** → enhanced repeat attack or second hit
+#### Breaker
+- Punishes blocking
+- Builds pressure → big hit
+- Forces dodge/counter
 
----
+#### Disruptor
+- Attacks combo
+- Slows momentum
+- Forces recovery play
 
-## Recommended Assist Set for Gray Box
+#### Controller
+- Uses:
+  - fast attacks
+  - delayed attacks
+  - fake telegraphs
+- Manipulates reaction timing
 
-### Girl Assist
-- heal active character
+#### Hunter
+- Targets Tiger
+- Applies mark → burst damage
+- Forces switching and protection
 
-### Officer Assist
-- block or heavily reduce next enemy hit
-
-### Man Assist
-- flat burst damage
-
-These should be simple and readable.
-
-Do not use percentage-based enemy HP damage in gray-box unless necessary.
-
----
-
-## Recommended Enemy Set for Gray Box
-
-Only use 3 enemy types in the first test.
-
-### Blitzer
-Purpose:
-- fast pressure enemy
-
-Intent examples:
-- Strike
-- Double Strike
-
-Why:
-- tests whether player can survive speed and react quickly
-
-### Tank
-Purpose:
-- defense / endurance enemy
-
-Intent examples:
-- Brace
-- Heavy Slam
-
-Why:
-- tests whether player can break through defense or pace resources
-
-### Charger
-Purpose:
-- telegraphed threat enemy
-
-Intent examples:
-- Charge
-- Charge
-- Heavy Strike
-
-Why:
-- tests whether the player can prepare correctly for known danger
+Goal:
+- Player changes behavior per enemy
 
 ---
 
-## Functional Requirements
+## Test Format
 
-### Battle Start
-On battle start:
-- randomly choose 1 active character
-- randomly choose 1 enemy
-- show both immediately
-- show enemy intent immediately
+Run short **active combat tests**, not passive ones.
 
-### Turn Flow
-Each round should follow this order:
-
-1. Show enemy intent
-2. Player chooses:
-   - one ability
-   - or one assist
-3. Resolve player action
-4. Resolve enemy action
-5. Apply end-of-round effects
-6. Update enemy intent
-7. Repeat
-
-### HP Rules
-- HP cannot go below 0
-- defeat triggers immediately when HP reaches 0
-
-### Defeat Rules
-- Enemy HP = 0 → Victory
-- Character HP = 0 → remove character from play
-- If active character dies, randomly select new active character from living characters
-- If no living characters remain → Defeat
+Each test:
+- 1 active character
+- 2 inactive assists
+- 1 enemy with full abilities
+- enemy must:
+  - attack
+  - apply effects
+  - punish mistakes
 
 ---
 
-## Aesthetic Goals of the Gray Box
+## Test Cases
 
-The gray-box should not be pretty, but it should be **clear and dramatic**.
+1. Girl vs Striker  
+   → Can player read attacks?
 
-### Visual Priority
-The player should be able to instantly identify:
-- who is active
-- who is inactive
-- what the enemy is doing
-- what their choices are
-- which resources are on cooldown
+2. Man vs Breaker  
+   → Does blocking get punished?
 
-### Layout
-Suggested layout:
+3. Officer vs Disruptor  
+   → Does combo disruption feel impactful?
 
-- Enemy on right
-- Active character on the left
-- Inactive allies at upper left
-- Enemy intent at top center
-- HP bars directly under portraits
-- Ability buttons at bottom center
-- Assist buttons above or beside abilities
+4. Any vs Controller  
+   → Do fake telegraphs + delays cause mistakes?
 
-### Color Language
-Use color only for meaning:
-- red = damage / danger
-- blue = defense / guard
-- green = healing / support
-- yellow = buff / assist available
-- gray = unavailable / cooldown
+5. Girl vs Hunter  
+   → Does tiger pressure force switching?
 
-### Motion / Feedback
-Even in gray-box, include:
-- hit flash
-- small shake on damage
-- floating damage text
-- clear cooldown feedback
-- brief delay between player action and enemy action
+---
 
-These are required for feel.
+## Battle Structure
+
+Each battle must include:
+
+- Enemy that actively attacks
+- Visible intent (range/type)
+- Timer
+- HP changes (both sides)
+- Real consequences for mistakes
+
+Turn flow:
+
+1. Enemy selects ability
+2. Enemy telegraphs intent
+3. Timer starts
+4. Player chooses action
+5. Player action resolves
+6. Enemy action resolves
+7. Combo updates
+8. Repeat
+
+---
+
+## Assist System
+
+Inactive characters provide:
+- 1 active assist (strong effect)
+- 1 passive assist (small bonus)
+
+Goal:
+- Assists help recover from bad situations
 
 ---
 
 ## Success Criteria
 
-The gray-box test is successful if the player feels:
+Playtest succeeds if player feels:
 
-1. "I understand what the enemy is about to do."
-2. "This character feels different from the others."
-3. "Assists help me solve bad situations."
-4. "Even when I get a bad matchup, I still have interesting choices."
-5. "I want to play another battle immediately."
-
-If those five things are not true, the loop is not ready.
+- “I understand what the enemy is doing”
+- “I had to react quickly”
+- “I got punished when I made mistakes”
+- “Different enemies forced different decisions”
+- “Different characters feel different”
+- “I want to try again and improve”
 
 ---
 
 ## Failure Signs
 
-The gray-box test is failing if:
-- the player always picks the same action
-- enemy turns feel automatic and uninteresting
-- active character randomness feels annoying instead of tense
-- assists feel optional rather than strategic
-- one character always feels bad to get
-- battles feel like watching numbers go down
+Playtest fails if:
+
+- enemy does not pressure player
+- player can ignore enemy behavior
+- player spams attack safely
+- timer feels meaningless
+- enemies feel the same
+- combat feels passive
+- player doesn’t know why they lost
 
 ---
 
-## Final Rule for This Test
+## Implementation Notes
 
-This gray-box is not trying to prove the full game.
+- Enemy MUST return full ability objects (not strings)
+- Fake telegraph must:
+  - display incorrect intent
+  - resolve correctly
+- Delay strike must:
+  - hit after player action
+- Damage must be applied every turn if not avoided
 
-It is trying to prove one fantasy:
+Focus on:
+- pressure
+- clarity
+- responsiveness
 
-**"I got a difficult situation, but I adapted and survived using the tools of three linked characters."**
+NOT:
+- balance perfection
+- architecture
+
+Refer: 
+- docs/game-rules.md
+- data/enemies.js
+- src/data/enemies.js
+- src/data/characters.js

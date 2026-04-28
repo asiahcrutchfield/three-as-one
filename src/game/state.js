@@ -14,6 +14,20 @@ export const gameState = {
     },
 
     combo: 1.0,
-
-    turn: "player"
+    turn: "player",
+    
+    // Playtest Combat State Variables
+    lastPlayerAction: null,
+    activeDefense: null,
+    enemyIntent: null,
+    switchesRemaining: 1,
+    
+    // Status Effects
+    pendingAttacks: [],
+    timerMultiplier: 1.0,
+    comboLocked: false,
+    comboDelayed: false,
+    delayedComboGain: 0,
+    tigerMarked: false,
+    enemyDamageMultiplier: 1.0
 };
