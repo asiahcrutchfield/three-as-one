@@ -1,13 +1,26 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+a {
+    display: inline;
+}
+
 html,
 body {
+    padding: 0;
     margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+    width: 100dvw;
+    height: 100dvh;
     background: #111;
+    overflow: hidden;
 }
 
 #app {
+    border: 3px solid green;
+    /* testing */
     position: relative;
     width: 100vw;
     height: 100vh;
@@ -42,8 +55,9 @@ body {
     position: absolute;
     inset: 0;
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: contain;
     background-position: center bottom;
+    image-rendering: pixelated;
 }
 
 /* Main combat floor */
@@ -67,11 +81,10 @@ body {
 #battle-lane::after {
     content: "";
     position: absolute;
-    left: 8%;
-    right: 8%;
-    bottom: 0;
+    inset: auto 0 var(--floor-y, 0px) 0;
+    /* top right bottom left */
     height: 3px;
-    background: rgba(255, 255, 255, 0.25);
+    background: red;
 }
 
 /* Slots */
@@ -92,6 +105,7 @@ body {
     bottom: 0;
     transform-origin: bottom center;
     image-rendering: pixelated;
+    bottom: var(--floor-y, 0px);
 }
 
 /* Player characters face right */
@@ -119,4 +133,18 @@ body {
     background: rgba(0, 0, 0, 0.35);
     filter: blur(3px);
     z-index: -1;
+}
+
+/* 
+===
+UI
+===
+*/
+#battle-ui {
+    border: 3px solid red;
+    /* testing purposes */
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }

@@ -1,0 +1,56 @@
+{
+    "taipei": {
+        "name": "Taipei Street",
+        "layers": {
+            "ground": "/assets/stages/taipei/battle-lane.png"
+        },
+        "lane": {
+            "bottom": 110,
+            "height": 360
+        },
+        "dimensions": {
+            "w": 1660,
+            "h": 358
+        },
+        "floor": {
+            "fromBottom": 200
+        },
+        "scale": 1.0
+    },
+    "nola_street": {
+        "name": "NOLA Street",
+        "layers": {
+            "ground": "/assets/stages/nola/battle-lane.png"
+        },
+        "lane": {
+            "bottom": 95,
+            "height": 340
+        },
+        "floor": {
+            "fromBottom": 200
+        },
+        "dimensions": {
+            "w": 1344,
+            "h": 768
+        },
+        "scale": 1.0
+    },
+    "paradise": {
+        "name": "Paradise",
+        "layers": {
+            "ground": "/assets/stages/paradise/battle-lane.png"
+        },
+        "lane": {
+            "bottom": 95,
+            "height": 340
+        },
+        "dimensions": {
+            "w": 1660,
+            "h": 359
+        },
+        "floor": {
+            "fromBottom": 200
+        },
+        "scale": 1.0
+    }
+}

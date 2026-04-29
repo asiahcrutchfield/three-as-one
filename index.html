@@ -8,6 +8,8 @@
 
   <link rel="stylesheet" href="style.css">
 
+  <script type="module" src="src/main.js"></script>
+
   <!-- !!!!!!!! DO NOT DELETE THIS!!!!!!!!! for vibe jam 2026 entry !!!!!!!!-->
   <script async src="https://vibej.am/2026/widget.js"></script>
   <!-- !!!!!!!! DO NOT DELETE THIS!!!!!!!!! for vibe jam 2026 entry !!!!!!!!-->
@@ -16,27 +18,37 @@
 <body>
   <a href="/src/testing/index.html">Testing Ground</a>
   <div id="app">
+    <!-- UI Container -->
+    <div id="battle-ui">
 
-    <div id="battle-stage">
-      <div id="stage-background">
-        <div class="stage-layer sky-layer"></div>
-        <div class="stage-layer far-layer"></div>
-        <div class="stage-layer mid-layer"></div>
-        <div class="stage-layer ground-layer"></div>
+      <div id="battle-stage">
+        <div id="stage-background">
+          <div class="stage-layer sky-layer"></div>
+          <div class="stage-layer far-layer"></div>
+          <div class="stage-layer mid-layer"></div>
+          <div class="stage-layer ground-layer"></div>
+        </div>
+
+        <div id="battle-lane">
+          <div id="player-slot">
+            <div class="combatant player-combatant">
+            </div>
+          </div>
+
+          <div id="player-attack-slot"></div>
+          <div id="enemy-attack-slot"></div>
+
+          <div id="enemy-slot">
+            <div class="combatant enemy-combatant">
+            </div>
+          </div>
+        </div>
+
+        <div id="stage-foreground">
+          <div class="stage-layer foreground-layer"></div>
+        </div>
       </div>
 
-      <div id="battle-lane">
-        <div id="player-slot"></div>
-
-        <div id="player-attack-slot"></div>
-        <div id="enemy-attack-slot"></div>
-
-        <div id="enemy-slot"></div>
-      </div>
-
-      <div id="stage-foreground">
-        <div class="stage-layer foreground-layer"></div>
-      </div>
     </div>
 
   </div>
