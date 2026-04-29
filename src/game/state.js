@@ -7,6 +7,11 @@ export const gameState = {
         maxHp: 100
     },
 
+    tiger: {
+        hp: 100,
+        maxHp: 100
+    },
+
     enemy: {
         id: "striker",
         hp: 100,

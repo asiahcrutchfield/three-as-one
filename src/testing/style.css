@@ -26,7 +26,8 @@
     overflow: visible;
 }
 
-.character-sprite, .character-sprite-part {
+.character-sprite,
+.character-sprite-part {
     outline: 3px solid lime;
     z-index: 10;
     image-rendering: pixelated;
@@ -78,16 +79,37 @@ action-buttons {
 }
 
 @keyframes shake {
-    0% { margin-left: 0; }
-    25% { margin-left: -5px; }
-    50% { margin-left: 5px; }
-    75% { margin-left: -5px; }
-    100% { margin-left: 0; }
+    0% {
+        margin-left: 0;
+    }
+
+    25% {
+        margin-left: -5px;
+    }
+
+    50% {
+        margin-left: 5px;
+    }
+
+    75% {
+        margin-left: -5px;
+    }
+
+    100% {
+        margin-left: 0;
+    }
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.2;
+    }
 }
 
 .feedback-attack {
@@ -120,9 +142,31 @@ action-buttons {
     font-weight: bold;
     font-size: 14px;
     text-transform: uppercase;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     border: 2px solid rgba(255, 100, 100, 0.8);
     z-index: 100;
     pointer-events: none;
     animation: shake 2s ease-in-out infinite;
+}
+
+.timer-bonus-popup {
+    position: absolute;
+    color: #7cff9b;
+    font-weight: 800;
+    font-size: 18px;
+    text-shadow: 0 0 8px black;
+    animation: timerBonusFloat 0.8s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes timerBonusFloat {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-24px);
+    }
 }
