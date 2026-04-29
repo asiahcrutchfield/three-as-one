@@ -8,7 +8,10 @@
                     "frameWidth": 448,
                     "frameHeight": 672,
                     "fps": 30,
-                    "scale": 0.3,
+                    "scale": {
+                        "min": 0.4,
+                        "max": 0.6
+                    },
                     "columns": 14,
                     "frames": 181
                 }
@@ -26,7 +29,10 @@
                     "frameWidth": 512,
                     "frameHeight": 768,
                     "fps": 30,
-                    "scale": 0.4,
+                    "scale": {
+                        "min": 0.4,
+                        "max": 0.6
+                    },
                     "columns": 10,
                     "frames": 100
                 }
@@ -44,7 +50,10 @@
                     "frameWidth": 512,
                     "frameHeight": 768,
                     "fps": 30,
-                    "scale": 0.4,
+                    "scale": {
+                        "min": 0.4,
+                        "max": 0.6
+                    },
                     "columns": 7,
                     "frames": 41
                 }
@@ -62,7 +71,10 @@
                     "frameWidth": 1024,
                     "frameHeight": 643,
                     "fps": 30,
-                    "scale": 0.4,
+                    "scale": {
+                        "min": 0.3,
+                        "max": 0.5
+                    },
                     "columns": 9,
                     "frames": 68
                 }

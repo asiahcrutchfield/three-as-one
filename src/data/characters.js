@@ -3,7 +3,7 @@ export const characters = {
         id: "girl",
         name: "Girl",
         role: "adaptive",
-        stage: "public/assets/stages/paradise.png",
+        stage: "/assets/stages/paradise/battle_lane.png",
 
         stats: {
             maxHp: 100,
@@ -151,7 +151,7 @@ export const characters = {
         id: "officer",
         name: "Officer",
         role: "control",
-        stage: "public/assets/stages/ximending.png",
+        stage: "/assets/stages/taipei/battle_lane.png",
 
         stats: {
             maxHp: 150
@@ -242,7 +242,7 @@ export const characters = {
         id: "man",
         name: "Man",
         role: "high-risk",
-        stage: "public/assets/stages/mardi_gras.png",
+        stage: "/assets/stages/nola/battle_lane.png",
 
         stats: {
             maxHp: 120

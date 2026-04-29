@@ -21,9 +21,10 @@ body {
 #app {
     border: 3px solid green;
     /* testing */
-    position: relative;
     width: 100vw;
     height: 100vh;
+    display: grid;
+    place-items: center;
     overflow: hidden;
 }
 
@@ -55,7 +56,7 @@ body {
     position: absolute;
     inset: 0;
     background-repeat: no-repeat;
-    background-size: contain;
+    background-size: cover;
     background-position: center bottom;
     image-rendering: pixelated;
 }
@@ -94,34 +95,46 @@ body {
 #enemy-slot {
     position: relative;
     height: 100%;
+
     display: flex;
     align-items: flex-end;
     justify-content: center;
+
+    transform: translateY(calc(-1 * var(--floor-y, 0px)));
 }
 
-/* Sprite containers */
-.combatant {
+#player-slot,
+#enemy-slot {
+    border: 3px solid purple;
+}
+
+#player-attack-slot,
+#enemy-attack-slot {
+    border: 3px dotted red;
+}
+
+.sprite {
     position: absolute;
     bottom: 0;
+    left: 50%;
     transform-origin: bottom center;
     image-rendering: pixelated;
-    bottom: var(--floor-y, 0px);
+
+    transform: translateX(-50%) scale(var(--character-viewport-scale, 1));
 }
 
-/* Player characters face right */
+.enemy-combatant {
+    border: 3px solid red;
+    transform: translateX(-50%) scaleX(-1) scale(var(--character-viewport-scale, 1));
+}
+
 .player-combatant {
-    left: 50%;
+    border: 3px solid green;
     transform: translateX(-50%);
 }
 
-/* Enemies face left */
-.enemy-combatant {
-    right: 50%;
-    transform: translateX(50%) scaleX(-1);
-}
-
 /* Ground shadow */
-.combatant::after {
+.sprite::after {
     content: "";
     position: absolute;
     left: 50%;
@@ -142,9 +155,13 @@ UI
 */
 #battle-ui {
     border: 3px solid red;
-    /* testing purposes */
+    /* testing */
     position: relative;
-    width: 100%;
-    height: 100%;
+    aspect-ratio: 16 / 9;
+
+    width: min(100vw, calc(100vh * 16 / 9));
+    height: min(100vh, calc(100vw * 9 / 16));
+
     overflow: hidden;
+    background: #777;
 }

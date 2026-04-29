@@ -15,7 +15,8 @@ export const stages = {
             w: 1660,
             h: 358
         },
-        scale: 1.0
+        fitmode: "width",
+        worldScale: 0.8
     },
     nola: {
         name: "NOLA Street",
@@ -33,7 +34,8 @@ export const stages = {
             w: 1344,
             h: 768
         },
-        scale: 1.0
+        fitmode: "width",
+        worldScale: 0.8
     },
     paradise: {
         name: "Paradise",
@@ -51,6 +53,7 @@ export const stages = {
             w: 1660,
             h: 359
         },
-        scale: 1.0
+        fitmode: "width",
+        worldScale: 1
     }
 };
