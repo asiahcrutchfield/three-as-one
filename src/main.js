@@ -8,4 +8,4 @@ renderStage(stages.paradise);
 
 const characterIndex = await loadCharacterIndex();
 
-renderCharacter(characterIndex, "officer", "idle", "player-slot", "player");
+renderCharacter(characterIndex, "girl", "idle", "player-slot", "player");
