@@ -20,7 +20,7 @@ function createAnimSprite(container, characterData, characterId, animationName, 
 
     const charEl = document.createElement('div');
     charEl.className = `character-sprite-part ${characterId}`;
-    
+
     charEl.style.position = 'absolute';
     charEl.style.bottom = '0px';
     charEl.style.left = leftOffset;
@@ -104,13 +104,13 @@ export function renderDuo(container, characterData, backId, frontId, animationNa
     duoContainer.style.left = '25px';
 
     container.appendChild(duoContainer);
-    
+
     // Render back character (Tiger)
     createAnimSprite(duoContainer, characterData, backId, animationName, '0px', 1);
-    
+
     // Render front character (Girl) positioned at ~25% from left
     // Since Tiger scaled width is 1024 * 0.4 = ~409px, 25% is ~100px.
-    createAnimSprite(duoContainer, characterData, frontId, animationName, '100px', 2);
+    createAnimSprite(duoContainer, characterData, frontId, animationName, '25px', 2);
 }
 
 export function renderEnemy(container, enemyData, enemyId, animationName) {
@@ -130,4 +130,4 @@ export function renderEnemy(container, enemyData, enemyId, animationName) {
     enemyEl.style.backgroundColor = '#d32f2f'; // Tall red rectangle for testing
 
     container.appendChild(enemyEl);
-}
+}

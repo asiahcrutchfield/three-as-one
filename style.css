@@ -1,0 +1,122 @@
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #111;
+}
+
+#app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#battle-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #777;
+}
+
+/* Background layers */
+#stage-background,
+#stage-foreground {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+#stage-background {
+    z-index: 0;
+}
+
+#stage-foreground {
+    z-index: 30;
+}
+
+.stage-layer {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center bottom;
+}
+
+/* Main combat floor */
+#battle-lane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 110px;
+
+    height: 360px;
+    z-index: 10;
+
+    display: grid;
+    grid-template-columns: 34% 16% 16% 34%;
+    align-items: end;
+
+    pointer-events: none;
+}
+
+/* Temporary debug line */
+#battle-lane::after {
+    content: "";
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Slots */
+#player-slot,
+#player-attack-slot,
+#enemy-attack-slot,
+#enemy-slot {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+/* Sprite containers */
+.combatant {
+    position: absolute;
+    bottom: 0;
+    transform-origin: bottom center;
+    image-rendering: pixelated;
+}
+
+/* Player characters face right */
+.player-combatant {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Enemies face left */
+.enemy-combatant {
+    right: 50%;
+    transform: translateX(50%) scaleX(-1);
+}
+
+/* Ground shadow */
+.combatant::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    width: 65%;
+    height: 14px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.35);
+    filter: blur(3px);
+    z-index: -1;
+}
