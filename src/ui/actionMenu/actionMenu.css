@@ -56,11 +56,19 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0;
 }
 
 /* submenu above, main menu middle, timer below */
 #action-sub {
     order: 1;
+    gap: 8px;
+    margin-bottom: 8px;
+    transform-origin: center bottom;
+}
+
+#action-sub.is-entering {
+    animation: actionSubPopup 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 #action-main {
@@ -83,6 +91,65 @@
 #action-main li:active {
     transform: translateY(1px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.24);
+}
+
+.action-main-item.is-active,
+.action-sub-item.is-active {
+    background: rgba(40, 40, 40, 0.96);
+    border-color: rgba(255, 214, 92, 0.92);
+    box-shadow: 0 0 0 1px rgba(255, 214, 92, 0.2), 0 10px 22px rgba(0, 0, 0, 0.28);
+    transform: translateY(-1px);
+}
+
+.action-sub-item {
+    min-width: clamp(110px, 10vw, 146px);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.action-preview-tooltip {
+    order: 0;
+    width: 100%;
+    max-width: 520px;
+    padding: 9px 12px 10px;
+    margin-bottom: 8px;
+
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    background: rgba(0, 0, 0, 0.82);
+    color: white;
+}
+
+.action-preview-tooltip-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 3px;
+}
+
+.action-preview-tooltip-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #ffd65c;
+}
+
+.action-preview-tooltip-meta {
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    color: rgba(255, 255, 255, 0.78);
+    text-align: right;
+}
+
+.action-preview-tooltip-body {
+    font-size: 12px;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.86);
 }
 
 .action-main-icon {
@@ -117,6 +184,7 @@
 #timing-layer {
     order: 3;
     width: 100%;
+    margin-top: 0;
 }
 
 #battle-timer {
@@ -150,4 +218,16 @@
     font-weight: 700;
     font-size: 12px;
     white-space: nowrap;
+}
+
+@keyframes actionSubPopup {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.97);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }

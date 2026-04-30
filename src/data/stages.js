@@ -40,7 +40,8 @@ export const stages = {
     paradise: {
         name: "Paradise",
         layers: {
-            ground: "/assets/stages/paradise/battle_lane2.png"
+            ground: "/assets/stages/paradise/battle_lane2.png",
+            far: "/assets/stages/paradise/background.png"
         },
         lane: {
             bottom: 95,
