@@ -1,0 +1,129 @@
+/* ===== HUD LAYER ===== */
+#hud-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* ===== PANEL ===== */
+.hud-panel {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+
+    min-width: 260px;
+    max-width: 320px;
+
+    outline: 1px solid white;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+
+    font-family: system-ui, sans-serif;
+}
+
+/* enemy (mirror) */
+#enemy-hud {
+    left: auto;
+    right: 16px;
+}
+
+/* ===== MAIN FRAME ===== */
+.stat-frame {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* ===== TOP ROW ===== */
+.info-frame {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+#enemy-hud .info-frame {
+    flex-direction: row-reverse;
+}
+
+#enemy-hud .name-frame {
+    align-items: flex-end;
+}
+
+#enemy-hud .portrait-slot {
+    flex-direction: row-reverse;
+}
+
+#enemy-hud .portrait-slot img {
+    flex-direction: row-reverse;
+}
+
+#enemy-hud .name-frame {
+    flex-direction: column-reverse;
+}
+
+/* ===== PORTRAIT ===== */
+.portrait-slot {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+
+    overflow: hidden;
+}
+
+.portrait-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+}
+
+/* ===== NAME + SPECIAL ===== */
+.name-frame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+
+    flex: 1;
+}
+
+.name {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.special-stat {
+    font-size: 12px;
+    color: gold;
+}
+
+.hidden {
+    display: none;
+}
+
+/* ===== HP BAR (FULL WIDTH UNDER EVERYTHING) ===== */
+.hp-bar {
+    width: 100%;
+}
+
+/* ===== HP TRACK ===== */
+.stat-track {
+    width: 100%;
+    padding: 4px 6px;
+
+    background: #222;
+
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* ===== OPTIONAL FILL BAR (if you keep it) ===== */
+.stat-fill {
+    height: 4px;
+    background: limegreen;
+    border-radius: 999px;
+    margin-top: 4px;
+}
