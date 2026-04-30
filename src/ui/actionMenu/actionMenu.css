@@ -231,3 +231,7 @@
         transform: translateY(0) scale(1);
     }
 }
+
+#battle-timer.hidden {
+    display: none;
+}

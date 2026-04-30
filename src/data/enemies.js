@@ -1,4 +1,48 @@
 export const enemies = {
+  familiar: {
+    id: "familiar",
+    name: "Familiar",
+    hp: 100,
+    type: "balanced",
+
+    abilities: [
+      {
+        id: "close_attack",
+        label: "Pressure Rush",
+        type: "attack",
+        range: "close",
+        damage: 12,
+        counterable: true,
+        description: "A direct close-range strike."
+      },
+      {
+        id: "long_attack",
+        label: "Distant Check",
+        type: "attack",
+        range: "long",
+        damage: 8,
+        counterable: false,
+        description: "A safer ranged attack."
+      },
+      {
+        id: "focus",
+        label: "Focus",
+        type: "status",
+        range: "status",
+        effect: "enemy_damage_up",
+        description: "Increases the next Familiar attack damage."
+      }
+    ],
+
+    behavior() {
+      const roll = Math.random();
+
+      if (roll < 0.4) return this.abilities.find(a => a.id === "close_attack");
+      if (roll < 0.8) return this.abilities.find(a => a.id === "long_attack");
+      return this.abilities.find(a => a.id === "focus");
+    }
+  },
+
   striker: {
     id: "striker",
     name: "Striker",

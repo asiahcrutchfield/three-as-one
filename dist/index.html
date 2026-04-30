@@ -1,28 +1,122 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three As One - Combat Prototype</title>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background-color: #222;
-        color: white;
-        font-family: sans-serif;
-      }
-      #game-container {
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-      }
-    </style>
-    <script type="module" crossorigin src="/assets/index-BdNdyHCt.js"></script>
-  </head>
-  <body>
-    <div id="game-container"></div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>As One</title>
+
+
+
+  <!-- !!!!!!!! DO NOT DELETE THIS!!!!!!!!! for vibe jam 2026 entry !!!!!!!!-->
+  <script async src="https://vibej.am/2026/widget.js"></script>
+  <!-- !!!!!!!! DO NOT DELETE THIS!!!!!!!!! for vibe jam 2026 entry !!!!!!!!-->
+  <script type="module" crossorigin src="/assets/index-BBYpKPSX.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DP_D27Pc.css">
+</head>
+
+<body>
+  <a href="/src/testing/index.html">Testing Ground</a>
+  <div id="app">
+    <div id="battle-ui">
+
+      <div id="battle-stage">
+        <div id="stage-background">
+          <div class="stage-layer sky-layer"></div>
+          <div class="stage-layer far-layer"></div>
+          <div class="stage-layer mid-layer"></div>
+          <div class="stage-layer ground-layer"></div>
+        </div>
+
+        <div id="hud-layer">
+        </div>
+
+        <div id="enemy-intent-preview" class="ui-preview-panel" aria-label="Enemy intent preview">
+          <span class="intent-preview-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="presentation">
+              <path d="M4 17.5 9.5 6l2.3 5.2L16 4l4 13.5-4.4-3.2-3.3 5.2-2.7-6.1L4 17.5Z" />
+            </svg>
+          </span>
+          <span class="intent-preview-name">Pressure Rush</span>
+        </div>
+
+        <div id="enemy-status-preview" class="ui-preview-panel hidden" aria-label="Enemy status preview">
+          <div class="ui-preview-kicker">Enemy Status</div>
+          <div class="state-chip-row">
+            <span class="state-chip">Pressure +1</span>
+            <span class="state-chip">Fake Telegraph</span>
+            <span class="state-chip warning">Damage Up</span>
+          </div>
+        </div>
+
+        <div id="sync-preview" class="ui-preview-panel" aria-label="Boss sync preview">
+          <div class="ui-preview-kicker">Sync Meter</div>
+          <div class="sync-preview-row">
+            <span class="sync-preview-value">72%</span>
+            <span class="sync-preview-note">Boss Only</span>
+          </div>
+          <div class="sync-preview-bar">
+            <div class="sync-preview-fill" style="width: 72%;"></div>
+          </div>
+        </div>
+
+        <div id="action-layer">
+        </div>
+
+        <div class="combat-callout player">Fast Action! +0.25</div>
+        <div class="combat-callout enemy">Tiger Marked</div>
+
+        <div id="results-preview" class="ui-preview-panel" aria-label="Results preview">
+          <div class="ui-preview-kicker">Battle Summary</div>
+          <div class="reward-grade-stamp battle-grade-stamp">A</div>
+          <div class="results-preview-grid">
+            <div><span>HP Bonus</span><strong>+22</strong></div>
+            <div><span>Combo Bonus</span><strong>+15</strong></div>
+            <div><span>Counters</span><strong>+6</strong></div>
+            <div><span>Penalties</span><strong>-5</strong></div>
+          </div>
+          <div class="results-preview-rank">
+            <span>Final Score</span>
+            <strong>138</strong>
+          </div>
+        </div>
+
+        <div id="rewards-preview" class="ui-preview-panel" aria-label="Reward selection preview">
+          <div class="ui-preview-kicker">Reward Choice</div>
+          <div class="reward-preview-list">
+            <div class="reward-preview-item is-active">
+              <span class="reward-preview-name">Timer Boost</span>
+              <span class="reward-preview-desc">+1 sec on decision timer</span>
+            </div>
+            <div class="reward-preview-item">
+              <span class="reward-preview-name">Combo Boost</span>
+              <span class="reward-preview-desc">Start next battle at x1.25</span>
+            </div>
+            <div class="reward-preview-item">
+              <span class="reward-preview-name">Tiger Guard</span>
+              <span class="reward-preview-desc">Tiger takes less pressure damage</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="battle-lane">
+          <div id="player-slot">
+          </div>
+
+          <div id="attack-slot"></div>
+
+          <div id="enemy-slot">
+          </div>
+        </div>
+
+        <div id="stage-foreground">
+          <div class="stage-layer foreground-layer"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</body>
+
 </html>

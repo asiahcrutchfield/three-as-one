@@ -1,15 +1,22 @@
 #action-timer-preview {
+    --window-start: 65%;
+    --window-size: 20%;
+    --perfect-start: 74%;
+    --perfect-size: 8%;
+    --cursor-position: 100%;
     position: absolute;
     left: calc(17% - 112px);
     top: calc(110px + (360px / 2));
     z-index: 24;
 
-    width: 34px;
-    height: 134px;
+    width: 48px;
+    height: 150px;
 
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
+    gap: 10px;
     transform: translateY(-50%);
 
     background:
@@ -19,13 +26,38 @@
         inset 0 0 0 1px rgba(255, 255, 255, 0.24),
         0 0 18px rgba(255, 214, 92, 0.16);
     overflow: hidden;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.action-timer-preview-window,
+.action-timer-preview-perfect {
+    position: absolute;
+    left: 4px;
+    right: 4px;
     pointer-events: none;
+}
+
+.action-timer-preview-window {
+    bottom: var(--window-start);
+    height: var(--window-size);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 214, 92, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(255, 214, 92, 0.12);
+}
+
+.action-timer-preview-perfect {
+    bottom: var(--perfect-start);
+    height: var(--perfect-size);
+    border: 1px solid rgba(133, 255, 160, 0.72);
+    background: rgba(133, 255, 160, 0.18);
 }
 
 .action-timer-preview-fill {
     position: absolute;
     inset: auto 0 0 0;
     height: 0;
+    opacity: 0.72;
     background: linear-gradient(
         180deg,
         rgba(255, 80, 92, 0.88) 0%,
@@ -38,15 +70,60 @@
     transition: height 0.15s linear;
 }
 
+.action-timer-preview-cursor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--cursor-position) - 1px);
+    height: 2px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+    z-index: 1;
+}
+
 .action-timer-preview-value {
     position: relative;
-    z-index: 1;
+    z-index: 2;
     color: white;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 700;
     line-height: 1;
     writing-mode: vertical-rl;
     text-orientation: mixed;
     letter-spacing: 0.08em;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.action-timer-preview-key {
+    position: relative;
+    z-index: 2;
+    min-width: 28px;
+    padding: 5px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: rgba(0, 0, 0, 0.58);
+    color: #fff3b4;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+    box-shadow: 0 0 10px rgba(255, 214, 92, 0.28);
+}
+
+#action-timer-preview.hidden {
+    display: none;
+}
+
+#action-timer-preview.is-armed {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+        0 0 20px rgba(255, 214, 92, 0.24);
+}
+
+#action-timer-preview.is-wrong {
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 160, 160, 0.6),
+        0 0 18px rgba(255, 96, 96, 0.34);
 }

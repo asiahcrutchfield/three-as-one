@@ -154,7 +154,7 @@ export const characters = {
         stage: "/assets/stages/taipei/battle_lane.png",
 
         stats: {
-            maxHp: 150
+            maxHp: 100
         },
 
         abilities: {
@@ -182,8 +182,8 @@ export const characters = {
                 },
 
                 counter: {
-                    dmg: 1.1,
-                    combo: 0.25,
+                    dmg: 1.25,
+                    combo: 0.5,
                     easier: true
                 },
 
@@ -245,7 +245,7 @@ export const characters = {
         stage: "/assets/stages/nola/battle_lane.png",
 
         stats: {
-            maxHp: 120
+            maxHp: 100
         },
 
         passive(user) {
@@ -273,8 +273,8 @@ export const characters = {
 
             defense: {
                 counter: {
-                    dmg: 1.75,
-                    combo: 0.75,
+                    dmg: 2.0,
+                    combo: 1.0,
                     hardest: true
                 },
 
@@ -305,6 +305,7 @@ export const characters = {
         assist: {
             active: {
                 id: "improv",
+                name: "Improv",
                 effect(target) {
                     if (!target.isBoss) {
                         target.hp -= Math.floor(target.hp * 0.15);

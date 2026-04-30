@@ -2,29 +2,6 @@ import html from "./ActionMenu.html?raw";
 import { createSubMenu } from "/src/ui/actionMenu/SubMenu/SubMenu.js";
 import { createTimer } from "/src/ui/actionMenu/Timer/Timer.js";
 
-const actionData = {
-    attack: [
-        { label: "Heavy Swing", title: "Heavy Swing", type: "Close", cost: "1/Battle", damage: "18", desc: "Big damage, slower timed strike. Best when momentum is high." },
-        { label: "Quick Jab", title: "Quick Jab", type: "Close", damage: "8", desc: "Fast, reliable hit. Lower damage but easier to commit under pressure." },
-        { label: "Gun Shot", title: "Gun Shot", type: "Long", cost: "1 Combo", damage: "10", desc: "Safe ranged attack. Weaker than close attacks, but avoids counter risk." }
-    ],
-    defend: [
-        { label: "Block", title: "Block", type: "Defense", desc: "Safest defense. Reduces damage, but gives the weakest momentum gain." },
-        { label: "Dodge", title: "Dodge", type: "Defense", desc: "Avoids all damage if timed correctly. Harder against close-range pressure." },
-        { label: "Counter", title: "Counter", type: "Defense", damage: "Var", desc: "Highest reward defensive option. Only works against close-range attacks." }
-    ],
-    assist: [
-        { label: "Tactical Focus", title: "Tactical Focus", type: "Assist", cost: "CD 1T", desc: "Slows the decision clock for a turn and helps stabilize dangerous situations." },
-        { label: "Rush Cover", title: "Rush Cover", type: "Assist", cost: "1 Combo", desc: "Creates a safe opening, but gives up some offensive tempo." },
-        { label: "Tiger Support", title: "Tiger Support", type: "Assist", cost: "CD 1T", desc: "Stabilizes the Girl/Tiger lane and helps recover from pressure." }
-    ],
-    switch: [
-        { label: "Officer", title: "Switch: Officer", type: "Switch", desc: "Safer, more stable defense profile. Better for surviving pressure." },
-        { label: "Man", title: "Switch: Man", type: "Switch", desc: "Explosive counter damage, but the riskiest timing windows." },
-        { label: "Girl", title: "Switch: Girl", type: "Switch", desc: "Adaptive offense and support, strongly affected by Tiger state." }
-    ]
-};
-
 export async function createActionMenu() {
     const template = document.createElement("template");
     template.innerHTML = html.trim();
@@ -37,9 +14,18 @@ export async function createActionMenu() {
     const tooltipBody = actionMenu.querySelector(".action-preview-tooltip-body");
     const tooltip = actionMenu.querySelector("#action-preview-tooltip");
     const mainItems = [...actionMenu.querySelectorAll(".action-main-item")];
+    const timerRoot = timer.querySelector("#battle-timer");
+    const timerNumber = timer.querySelector(".timer-number");
+    let menuData = {
+        attack: [],
+        defend: [],
+        assist: [],
+        switch: []
+    };
     let hoverTimer = null;
     let tooltipHideTimer = null;
     let activeMenuKey = null;
+    let isLocked = false;
 
     function clearPreview() {
         activeMenuKey = null;
@@ -64,11 +50,13 @@ export async function createActionMenu() {
     function readItemData(item) {
         if (item.dataset) {
             return {
+                id: item.dataset.itemId || "",
                 title: item.dataset.title || "",
                 desc: item.dataset.desc || "",
                 type: item.dataset.type || "",
                 cost: item.dataset.cost || "",
-                damage: item.dataset.damage || ""
+                damage: item.dataset.damage || "",
+                disabled: item.dataset.disabled === "true"
             };
         }
 
@@ -100,14 +88,28 @@ export async function createActionMenu() {
                 setActiveSubItem(item);
                 setTooltip(item);
             });
+
+            item.addEventListener("click", () => {
+                const data = readItemData(item);
+                if (data.disabled || isLocked) return;
+
+                actionMenu.dispatchEvent(new CustomEvent("actionselected", {
+                    bubbles: true,
+                    detail: {
+                        menuKey: activeMenuKey,
+                        itemId: data.id,
+                        item: (menuData[activeMenuKey] || []).find((entry) => entry.id === data.id) || data
+                    }
+                }));
+            });
         });
     }
 
     function renderSubmenu(menuKey) {
-        const items = actionData[menuKey] || [];
+        const items = menuData[menuKey] || [];
         activeMenuKey = menuKey;
         subMenu.innerHTML = items.map((item, index) => `
-            <li class="action-sub-item${index === 0 ? " is-active" : ""}" data-title="${item.title}" data-desc="${item.desc}" data-type="${item.type || ""}" data-cost="${item.cost || ""}" data-damage="${item.damage || ""}">
+            <li class="action-sub-item${index === 0 ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}" data-item-id="${item.id || ""}" data-title="${item.title}" data-desc="${item.desc}" data-type="${item.type || ""}" data-cost="${item.cost || ""}" data-damage="${item.damage || ""}" data-disabled="${item.disabled ? "true" : "false"}" aria-disabled="${item.disabled ? "true" : "false"}">
                 ${item.label}
             </li>
         `).join("");
@@ -125,9 +127,15 @@ export async function createActionMenu() {
 
     mainItems.forEach((item) => {
         item.addEventListener("mouseenter", () => {
+            if (isLocked) return;
             window.clearTimeout(hoverTimer);
             hoverTimer = window.setTimeout(() => {
                 if (activeMenuKey === item.dataset.action) return;
+                const items = menuData[item.dataset.action] || [];
+                if (!items.length) {
+                    clearPreview();
+                    return;
+                }
                 mainItems.forEach((main) => main.classList.toggle("is-active", main === item));
                 renderSubmenu(item.dataset.action);
             }, 70);
@@ -139,7 +147,38 @@ export async function createActionMenu() {
 
     actionMenu.insertBefore(subMenu, actionMenu.querySelector("#action-main"));
     actionMenu.append(timer);
+    actionMenu.setMenuData = (nextData) => {
+        menuData = {
+            attack: nextData?.attack || [],
+            defend: nextData?.defend || [],
+            assist: nextData?.assist || [],
+            switch: nextData?.switch || []
+        };
+
+        mainItems.forEach((item) => {
+            const items = menuData[item.dataset.action] || [];
+            item.classList.toggle("is-disabled", !items.length || items.every((entry) => entry.disabled));
+        });
+
+        clearPreview();
+    };
+    actionMenu.setLocked = (locked) => {
+        isLocked = locked;
+        actionMenu.classList.toggle("is-locked", locked);
+        if (locked) clearPreview();
+    };
+    actionMenu.setTurnTimer = ({ durationMs = 0, remainingMs = 0, visible = true } = {}) => {
+        const pct = durationMs > 0 ? Math.max(0, Math.min(100, (remainingMs / durationMs) * 100)) : 0;
+        if (timerRoot) {
+            timerRoot.style.setProperty("--timer-pct", `${pct}%`);
+            timerRoot.classList.toggle("hidden", !visible);
+        }
+        if (timerNumber) {
+            timerNumber.textContent = `${Math.max(0, remainingMs / 1000).toFixed(1)}`;
+        }
+    };
     clearPreview();
+    actionMenu.setTurnTimer({ visible: false });
 
     return actionMenu;
 }

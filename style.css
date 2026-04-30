@@ -19,8 +19,6 @@ body {
 }
 
 #app {
-    border: 3px solid green;
-    /* testing */
     width: 100vw;
     height: 100vh;
     display: grid;
@@ -105,11 +103,9 @@ body {
 
 #player-slot,
 #enemy-slot {
-    border: 3px solid purple;
 }
 
 #attack-slot {
-    border: 3px dotted red;
     width: 100%;
 }
 
@@ -159,12 +155,10 @@ body {
 }
 
 .enemy-combatant {
-    border: 3px solid red;
     transform: translateX(-50%) scaleX(-1) scale(var(--character-viewport-scale, 1));
 }
 
 .player-combatant {
-    border: 3px solid green;
     transform: translateX(-50%) scale(var(--character-viewport-scale, 1));
 }
 
@@ -202,8 +196,6 @@ UI
 ===
 */
 #battle-ui {
-    border: 3px solid red;
-    /* testing */
     position: relative;
     aspect-ratio: 16 / 9;
 
@@ -617,5 +609,211 @@ UI
     100% {
         opacity: 1;
         transform: rotate(12deg) scale(1);
+    }
+}
+
+.combat-unit,
+.sprite,
+.combatant,
+#player-slot,
+#enemy-slot {
+    will-change: transform, filter, opacity;
+}
+
+.combat-flash--damage {
+    animation: combatDamageFlash 0.42s ease;
+}
+
+.combat-flash--defense {
+    animation: combatDefenseFlash 0.36s ease;
+}
+
+.combat-flash--counter {
+    animation: combatCounterFlash 0.42s ease;
+}
+
+.combat-shake {
+    animation: combatShake 0.28s ease;
+}
+
+.battle-float {
+    position: absolute;
+    left: 50%;
+    bottom: 72%;
+    z-index: 40;
+    transform: translateX(-50%);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.72);
+    animation: battleFloatRise 0.9s ease forwards;
+    pointer-events: none;
+}
+
+.battle-float--damage {
+    color: #ff9090;
+}
+
+.battle-float--defense {
+    color: #9ad7ff;
+}
+
+.battle-float--counter {
+    color: #84ff9f;
+}
+
+.battle-float--heal {
+    color: #7dffa1;
+}
+
+.battle-float--text {
+    color: #ffe9a2;
+    font-size: 16px;
+}
+
+#game-over-popup {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    display: grid;
+    place-items: center;
+    background: rgba(0, 0, 0, 0.62);
+}
+
+#game-over-popup.hidden {
+    display: none;
+}
+
+.game-over-card {
+    min-width: 280px;
+    padding: 18px 20px 20px;
+    outline: 1px solid rgba(255, 255, 255, 0.78);
+    background: rgba(0, 0, 0, 0.88);
+    color: white;
+    text-align: center;
+}
+
+.game-over-title {
+    margin-bottom: 8px;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #ffd65c;
+}
+
+.game-over-copy {
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.game-over-button {
+    padding: 9px 14px;
+    border: 1px solid rgba(255, 214, 92, 0.82);
+    background: rgba(255, 214, 92, 0.12);
+    color: white;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#timing-debug {
+    position: absolute;
+    left: 16px;
+    bottom: 148px;
+    z-index: 78;
+    min-width: 170px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.82);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    pointer-events: none;
+}
+
+#timing-debug.hidden {
+    display: none;
+}
+
+@keyframes combatDamageFlash {
+    0% {
+        filter: brightness(1) saturate(1);
+        opacity: 1;
+    }
+
+    22% {
+        filter: brightness(1.35) saturate(1.25) drop-shadow(0 0 12px rgba(255, 82, 82, 0.68));
+        opacity: 0.56;
+    }
+
+    100% {
+        filter: brightness(1) saturate(1);
+        opacity: 1;
+    }
+}
+
+@keyframes combatDefenseFlash {
+    0% {
+        filter: brightness(1);
+    }
+
+    35% {
+        filter: brightness(1.22) drop-shadow(0 0 12px rgba(104, 193, 255, 0.72));
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+@keyframes combatCounterFlash {
+    0% {
+        filter: brightness(1);
+    }
+
+    30% {
+        filter: brightness(1.24) drop-shadow(0 0 14px rgba(104, 255, 154, 0.76));
+    }
+
+    100% {
+        filter: brightness(1);
+    }
+}
+
+@keyframes combatShake {
+    0%,
+    100% {
+        transform: translateY(calc(-1 * var(--floor-y, 0px)));
+    }
+
+    20% {
+        transform: translate(-5px, calc(-1 * var(--floor-y, 0px)));
+    }
+
+    45% {
+        transform: translate(4px, calc(-1 * var(--floor-y, 0px)));
+    }
+
+    70% {
+        transform: translate(-2px, calc(-1 * var(--floor-y, 0px)));
+    }
+}
+
+@keyframes battleFloatRise {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+    }
+
+    15% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -28px);
     }
 }

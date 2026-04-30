@@ -76,3 +76,8 @@
 .assist-preview-group.hidden {
     display: none;
 }
+
+.assist-preview-card.is-defeated {
+    filter: grayscale(1);
+    opacity: 0.42;
+}
