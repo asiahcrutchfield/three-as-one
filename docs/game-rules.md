@@ -572,11 +572,11 @@ Instead of fighting each character in separate lanes, the boss forces the player
 
 #### Structure
 
-- The player fights the boss directly
-- Only one character is active at a time
-- The boss can force character switches
-- Characters attack the boss directly
-- The boss has one shared HP pool
+- The player fights the boss directly  
+- Only one character is active at a time  
+- The boss can force character switches  
+- Characters attack the boss directly  
+- The boss has one shared HP pool  
 
 ---
 
@@ -586,9 +586,21 @@ The boss can force the active character to switch out.
 
 When this happens:
 
-- The current active character becomes inactive
-- A different non-defeated character becomes active
-- The player must adapt to the new character’s timing, abilities, and risk profile
+- The current active character becomes inactive  
+- A different non-defeated character becomes active  
+- The player must adapt to the new character’s timing, abilities, and risk profile  
+
+---
+
+#### Random Boss Switching
+
+During the final boss battle, the boss can force character switches at variable intervals.
+
+- Boss switching does not occur every turn  
+- Switch frequency increases as boss HP decreases  
+- Boss can only switch to a non-defeated character  
+
+This creates unpredictability while remaining readable over time.
 
 ---
 
@@ -596,10 +608,10 @@ When this happens:
 
 During the final boss:
 
-- Normal assists cannot be used
-- Girl does not have an assist during the boss fight
-- Girl can still use **Comfort** to heal the tiger
-- Girl can use her normal abilities
+- Normal assists cannot be used  
+- Girl does not have an assist during the boss fight  
+- Girl can still use **Comfort** to heal the tiger  
+- Girl can use her normal abilities  
 
 ---
 
@@ -610,11 +622,11 @@ Girl can assist **Officer** or **Man** during the boss fight.
 Her boss assist uses her active assist effect:
 
 **Good Vibes**
-- Heals the active character
-- Can only be used once per boss fight
-- After use, the boss gains a **1 boss-switch cooldown**
-- This means the boss cannot force another character switch immediately after Good Vibes is used
-- Good Vibes cannot be used twice in a row because it is one-time use only
+- Heals the active character  
+- Can only be used once per boss fight  
+- After use, the boss gains a **1 boss-switch cooldown**  
+- This prevents immediate forced switching after healing  
+- Cannot be used twice  
 
 ---
 
@@ -622,8 +634,8 @@ Her boss assist uses her active assist effect:
 
 After Girl uses Good Vibes:
 
-- Boss switch is disabled for 1 boss action
-- After that, the boss can switch characters again
+- Boss switching is disabled for 1 boss action  
+- After that, switching resumes normally  
 
 ---
 
@@ -633,54 +645,81 @@ The boss tests whether the player can adapt when control changes.
 
 The player must manage:
 
-- Girl / Tiger emotion state
-- Officer’s stable defensive tools
-- Man’s high-risk offense
-- Boss-forced switches
-- Limited healing
-- Combo momentum
+- Girl / Tiger emotion state  
+- Officer’s defensive stability  
+- Man’s high-risk offense  
+- Boss-forced switches  
+- Limited healing  
+- Combo momentum  
 
 ---
 
 #### Phase Behavior
 
 **Phase 1 (High HP):**
-- Basic close and long attacks
-- Rare boss switch
-- Clear telegraphs
+- Boss fights within character-associated stages  
+- Basic close and long attacks  
+- Rare boss switching  
+- Clear telegraphs  
+
+---
 
 **Phase 2 (Mid HP):**
-- More frequent boss switching
-- Adds timing disruption
-- Begins using pressure-style attacks
+- Boss switching becomes more frequent  
+- Introduces timing disruption  
+- Begins using pressure-style attacks  
+- Switching may occur at irregular intervals  
 
-**Phase 3 (Low HP):**
-- Faster decision pressure
-- More deceptive telegraphs
-- Boss switches become more threatening
-- Player must use each character efficiently
+---
+
+**Phase 3 (Low HP): Convergence Arena**
+
+When boss HP reaches a threshold:
+
+- The stage changes to the **Convergence Arena**  
+- The fight continues immediately (no reset)  
+
+---
+
+#### Convergence Arena Rules
+
+- The stage is no longer tied to the active character  
+- Character switching still occurs  
+- **Switching does NOT change the stage**  
+- All characters fight in the same space  
+- The player loses environmental familiarity  
+
+---
+
+#### Phase 3 Behavior
+
+- Faster decision pressure  
+- More deceptive telegraphs  
+- Boss switching becomes more frequent and threatening  
+- Player must adapt to character changes without visual context shifts  
 
 ---
 
 #### Purpose
 
 - Tests:
-  - character mastery
-  - adaptability
-  - resource management
-  - timing under pressure
+  - character mastery  
+  - adaptability  
+  - resource management  
+  - timing under pressure  
 
 - Forces:
-  - learning all characters
-  - surviving bad matchups
-  - deciding when to use Girl’s one boss assist
-  - staying composed when the boss changes control
+  - learning all characters  
+  - surviving bad matchups  
+  - deciding when to use Girl’s one boss assist  
+  - staying composed when the boss removes environmental comfort  
 
 ---
 
 #### Theme
 
 > You don’t get to stay comfortable.  
+> Even the world stops changing for you.  
 > You have to adapt.
 
 ## BATTLES

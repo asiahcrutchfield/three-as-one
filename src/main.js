@@ -13,11 +13,16 @@ import { createAssists } from "./ui/assists/Assists.js";
 import { createComboMeter } from "./ui/combo/Combo.js";
 import { createActionTimer } from "./ui/actionTimer/ActionTimer.js";
 import { buildActionMenuData, resolvePlayerAction } from "./game/charAbilities.js";
+import { getConvergenceStageOverride, maybeForceBossSwitch, syncConvergenceState } from "./game/convergence.js";
 import { chooseEnemyIntent, evaluateDefenseTiming, getDefenseTimingConfig, resolveEnemyTurn } from "./game/enemyAbilities.js";
-import { createBattleState } from "./game/state.js";
+import { createBattleState, createEnemyState, resetBattleStats } from "./game/state.js";
 import { applyComboChange, getPlayerTurnDuration, healInactiveCharacters, resolveDefeatState, tickCooldowns } from "./game/statusEffect.js";
-import { playCombatFeedback, wait } from "./game/visualFeedback.js";
-import { createBattleUI, showGameOver, updateBattleUI } from "./render/renderUI.js";
+import { playBattleFinishSequence, playCombatFeedback, resetCombatantDefeatState, wait } from "./game/visualFeedback.js";
+import { createBattleUI, hideProgressionPanels, playBattleTransition, showBattleSummary, showGameOver, showRewardChoices, updateBattleUI } from "./render/renderUI.js";
+import { showBattleIntro } from "./render/renderUI.js";
+import { enemyAliases, enemies } from "./data/enemies.js";
+import { battles } from "./data/battles.js";
+import { getRewardsForGrade, rewards as progressionRewards } from "./data/progression.js";
 
 const hudLayer = document.querySelector("#hud-layer");
 const actionLayer = document.querySelector("#action-layer");
@@ -38,10 +43,8 @@ async function initBattle() {
     battleStage.appendChild(actionTimer);
     actionLayer.appendChild(actionMenu);
 
-    renderStage(stages.paradise);
-
     const characterIndex = await loadCharacterIndex();
-    const battleState = createBattleState();
+    const battleState = createBattleState(battles[0].enemies[0]);
     const ui = createBattleUI({
         playerHUD,
         enemyHUD,
@@ -52,14 +55,132 @@ async function initBattle() {
     });
     let resolvingTurn = false;
     let renderedPlayerId = null;
+    let renderedEnemyId = null;
+    let renderedStageKey = null;
     let activeTurnTimer = null;
+    let activeDefenseTimer = null;
+    let isPaused = false;
+    let endSequenceRunning = false;
     const timingKeys = ["W", "A", "S", "D"];
     const timingDebug = document.createElement("div");
     timingDebug.id = "timing-debug";
     timingDebug.className = "hidden";
     battleStage.appendChild(timingDebug);
 
-    renderStaticCombatant("/assets/enemies/familiar/familiar.png", "enemy-slot", "enemy");
+    function getCurrentBattleConfig() {
+        return battles[battleState.run.battleIndex];
+    }
+
+    function getCurrentEncounterId() {
+        return getCurrentBattleConfig()?.enemies?.[battleState.run.enemyIndex] ?? "familiar";
+    }
+
+    function computeBattleSummary() {
+        const teamHp = ["girl", "officer", "man"].reduce((sum, id) => sum + battleState.roster[id].hp, 0);
+        const teamMaxHp = ["girl", "officer", "man"].reduce((sum, id) => sum + battleState.roster[id].maxHp, 0);
+        const hpBonus = Math.round((teamHp / teamMaxHp) * 40);
+        const comboBonus = Math.round(battleState.maxComboReached * 12);
+        const counterBonus = battleState.stats.counters * 6;
+        const penaltyTotal = battleState.stats.penalties * 5 + battleState.stats.timeouts * 4 + battleState.stats.defeats * 8;
+        const finalScore = hpBonus + comboBonus + counterBonus - penaltyTotal;
+
+        let grade = "D";
+        if (finalScore >= 70) grade = "S";
+        else if (finalScore >= 52) grade = "A";
+        else if (finalScore >= 38) grade = "B";
+        else if (finalScore >= 24) grade = "C";
+
+        return {
+            hpBonus,
+            comboBonus,
+            counterBonus,
+            penaltyTotal,
+            finalScore,
+            grade
+        };
+    }
+
+    function hydrateEnemy(enemyId) {
+        battleState.enemy = createEnemyState(enemyId);
+        syncConvergenceState(battleState);
+        renderedEnemyId = null;
+    }
+
+    async function startCurrentEncounter({ resetStats: shouldResetStats = false, withTransition = false } = {}) {
+        if (shouldResetStats) {
+            resetBattleStats(battleState);
+        }
+
+        battleState.battleOver = false;
+        battleState.outcome = null;
+        battleState.currentDefense = null;
+        battleState.activeTimingResult = null;
+        hydrateEnemy(getCurrentEncounterId());
+        resetCombatantDefeatState("enemy-slot");
+        battleState.enemyIntent = chooseEnemyIntent(battleState);
+        hideProgressionPanels(ui);
+        syncBattleUI();
+        syncPauseUI();
+        updateMenuLock();
+        if (withTransition) {
+            await playBattleTransition(ui, { holdMs: 1000 });
+        }
+        const battleConfig = getCurrentBattleConfig();
+        const waveCount = battleConfig?.enemies?.length ?? 1;
+        const waveLabel = waveCount > 1 ? `Wave ${battleState.run.enemyIndex + 1}` : battleState.enemy.name;
+        await showBattleIntro(ui, {
+            title: battleConfig?.label ?? "Battle",
+            subtitle: waveLabel
+        });
+        startPlayerTurnTimer();
+    }
+
+    function applyRewardById(rewardId) {
+        const reward = progressionRewards.find((entry) => entry.id === rewardId);
+        if (!reward) return;
+        reward.effect(battleState);
+        battleState.run.rewards.push(reward.id);
+    }
+
+    async function advanceToNextBattle() {
+        battleState.run.completedBattles += 1;
+        battleState.run.battleIndex += 1;
+        battleState.run.enemyIndex = 0;
+        await startCurrentEncounter({ resetStats: true, withTransition: true });
+    }
+
+    async function continueAfterVictory() {
+        const currentBattle = getCurrentBattleConfig();
+        const hasMoreEnemiesInBattle = battleState.run.enemyIndex < currentBattle.enemies.length - 1;
+
+        if (hasMoreEnemiesInBattle) {
+            battleState.run.enemyIndex += 1;
+            await startCurrentEncounter({ resetStats: false, withTransition: true });
+            return;
+        }
+
+        const summary = computeBattleSummary();
+        const hasMoreBattles = battleState.run.battleIndex < battles.length - 1;
+        const rewardChoices = hasMoreBattles ? getRewardsForGrade(summary.grade) : [];
+
+        showBattleSummary(ui, summary);
+        showRewardChoices(ui, rewardChoices, {
+            finalBattle: !hasMoreBattles,
+            onSelect: (rewardId) => {
+                if (rewardId && rewardId !== "continue") {
+                    applyRewardById(rewardId);
+                }
+
+                if (hasMoreBattles) {
+                    void advanceToNextBattle();
+                } else {
+                    battleState.run.completedBattles += 1;
+                    hideProgressionPanels(ui);
+                    showGameOver(ui, "victory");
+                }
+            }
+        });
+    }
 
     function renderActiveCharacter() {
         if (!battleState.activeCharacterId) return;
@@ -75,14 +196,56 @@ async function initBattle() {
         renderCharacter(characterIndex, battleState.activeCharacterId, "idle", "player-slot", "player");
     }
 
+    function renderEnemy() {
+        if (!battleState.enemy.id) return;
+        if (renderedEnemyId === battleState.enemy.id) return;
+
+        renderedEnemyId = battleState.enemy.id;
+        const enemyTemplate = enemies[enemyAliases[battleState.enemy.id] ?? battleState.enemy.id] ?? enemies.familiar;
+        renderStaticCombatant(enemyTemplate.spritePath, "enemy-slot", "enemy");
+    }
+
+    function getStageForCharacter(characterId) {
+        const bossStageOverride = getConvergenceStageOverride(battleState);
+        if (bossStageOverride && stages[bossStageOverride]) {
+            return { key: bossStageOverride, config: stages[bossStageOverride] };
+        }
+
+        if (characterId === "girl") return { key: "paradise", config: stages.paradise };
+        if (characterId === "officer") return { key: "taipei", config: stages.taipei };
+        if (characterId === "man") return { key: "nola", config: stages.nola };
+        return { key: "paradise", config: stages.paradise };
+    }
+
+    function renderActiveStage() {
+        const { key, config } = getStageForCharacter(battleState.activeCharacterId);
+        if (!config) return;
+
+        const animate = renderedStageKey !== null && renderedStageKey !== key;
+        renderedStageKey = key;
+        renderStage(config, { animate });
+    }
+
     function syncBattleUI() {
+        syncConvergenceState(battleState);
+        renderActiveStage();
         renderActiveCharacter();
+        renderEnemy();
         updateBattleUI(battleState, ui, buildActionMenuData(battleState));
     }
 
     function setTimingDebug(lines = [], visible = true) {
         timingDebug.innerHTML = lines.map((line) => `<div>${line}</div>`).join("");
         timingDebug.classList.toggle("hidden", !visible);
+    }
+
+    function syncPauseUI() {
+        ui.pauseOverlay.classList.toggle("hidden", !isPaused);
+        ui.pauseButton.textContent = isPaused ? "Resume" : "Pause";
+    }
+
+    function updateMenuLock() {
+        ui.actionMenu.setLocked(isPaused || resolvingTurn || battleState.battleOver);
     }
 
     function stopTurnTimer() {
@@ -93,23 +256,25 @@ async function initBattle() {
         return snapshot;
     }
 
-    function startPlayerTurnTimer() {
+    function startPlayerTurnTimer(initialRemainingMs = null) {
         stopTurnTimer();
 
         const durationMs = getPlayerTurnDuration(battleState);
         battleState.playerTurnScale = 1;
-        const startTime = performance.now();
+        let remainingMs = initialRemainingMs ?? durationMs;
+        let startTime = performance.now();
         let rafId = null;
         let settled = false;
+        let paused = false;
 
         function tick(now) {
-            if (settled) return;
+            if (settled || paused) return;
 
             const elapsed = now - startTime;
-            const remainingMs = Math.max(0, durationMs - elapsed);
-            ui.actionMenu.setTurnTimer({ durationMs, remainingMs, visible: true });
+            const liveRemainingMs = Math.max(0, remainingMs - elapsed);
+            ui.actionMenu.setTurnTimer({ durationMs, remainingMs: liveRemainingMs, visible: true });
 
-            if (remainingMs <= 0) {
+            if (liveRemainingMs <= 0) {
                 settled = true;
                 ui.actionMenu.setTurnTimer({ durationMs, remainingMs: 0, visible: true });
                 activeTurnTimer = null;
@@ -121,21 +286,41 @@ async function initBattle() {
         }
 
         activeTurnTimer = {
+            pause() {
+                if (settled || paused) return remainingMs;
+                paused = true;
+                if (rafId) window.cancelAnimationFrame(rafId);
+                remainingMs = Math.max(0, remainingMs - (performance.now() - startTime));
+                ui.actionMenu.setTurnTimer({ durationMs, remainingMs, visible: true });
+                return remainingMs;
+            },
+            resume() {
+                if (settled || !paused) return;
+                paused = false;
+                startTime = performance.now();
+                rafId = window.requestAnimationFrame(tick);
+            },
             stop() {
                 if (settled) return null;
                 settled = true;
                 if (rafId) window.cancelAnimationFrame(rafId);
-                const elapsed = performance.now() - startTime;
-                const remainingMs = Math.max(0, durationMs - elapsed);
+                const liveRemainingMs = paused
+                    ? remainingMs
+                    : Math.max(0, remainingMs - (performance.now() - startTime));
                 return {
                     durationMs,
-                    remainingMs,
-                    isFast: remainingMs >= durationMs / 2
+                    remainingMs: liveRemainingMs,
+                    isFast: liveRemainingMs >= durationMs / 2
                 };
             }
         };
 
-        rafId = window.requestAnimationFrame(tick);
+        ui.actionMenu.setTurnTimer({ durationMs, remainingMs, visible: true });
+        if (!isPaused) {
+            rafId = window.requestAnimationFrame(tick);
+        } else {
+            paused = true;
+        }
     }
 
     function getRandomTimingKey() {
@@ -148,11 +333,14 @@ async function initBattle() {
 
         return await new Promise((resolve) => {
             const durationMs = config.durationMs;
-            const startTime = performance.now();
+            let remainingMs = durationMs;
+            let startTime = performance.now();
             const expectedKey = getRandomTimingKey();
             let rafId = null;
             let settled = false;
+            let paused = false;
             let lastPressedKey = null;
+            let displayedRemainingRatio = 1;
 
             setTimingDebug([
                 `Defense: ${battleState.currentDefense}`,
@@ -165,10 +353,12 @@ async function initBattle() {
                 if (settled) return;
                 settled = true;
                 if (rafId) window.cancelAnimationFrame(rafId);
+                activeDefenseTimer = null;
 
-                const elapsedMs = Math.min(durationMs, performance.now() - startTime);
+                const elapsedMs = Math.min(durationMs, durationMs - remainingMs + (paused ? 0 : (performance.now() - startTime)));
                 const elapsedRatio = Math.max(0, Math.min(1, elapsedMs / durationMs));
-                const remainingRatio = Math.max(0, Math.min(1, 1 - elapsedRatio));
+                const exactRemainingRatio = Math.max(0, Math.min(1, 1 - elapsedRatio));
+                const remainingRatio = pressed ? displayedRemainingRatio : exactRemainingRatio;
 
                 window.removeEventListener("keydown", handleKeydown);
                 actionTimer.setState({ visible: false, keyLabel: "" });
@@ -185,6 +375,7 @@ async function initBattle() {
             }
 
             function handleKeydown(event) {
+                if (isPaused) return;
                 if (event.repeat) return;
                 const pressedKey = event.key.toUpperCase();
                 if (!["W", "A", "S", "D"].includes(pressedKey)) return;
@@ -195,7 +386,7 @@ async function initBattle() {
                         `Defense: ${battleState.currentDefense}`,
                         `Prompt: ${expectedKey}`,
                         `Pressed: ${pressedKey} (wrong)`,
-                        `Cursor: ${(Math.max(0, Math.min(1, 1 - ((performance.now() - startTime) / durationMs))) * 100).toFixed(1)}`
+                        `Cursor: ${(displayedRemainingRatio * 100).toFixed(1)}`
                     ]);
                     return;
                 }
@@ -203,15 +394,16 @@ async function initBattle() {
             }
 
             function tick(now) {
-                if (settled) return;
+                if (settled || paused) return;
 
                 const elapsed = now - startTime;
-                const remainingMs = Math.max(0, durationMs - elapsed);
-                const remainingRatio = Math.max(0, Math.min(1, remainingMs / durationMs));
+                const liveRemainingMs = Math.max(0, remainingMs - elapsed);
+                const remainingRatio = Math.max(0, Math.min(1, liveRemainingMs / durationMs));
+                displayedRemainingRatio = remainingRatio;
 
                 actionTimer.setState({
                     durationMs,
-                    remainingMs,
+                    remainingMs: liveRemainingMs,
                     visible: true,
                     armed: true,
                     keyLabel: expectedKey,
@@ -229,7 +421,8 @@ async function initBattle() {
                     `Perfect: ${config.perfectWindowStart !== undefined ? `${(config.perfectWindowStart * 100).toFixed(0)}-${(config.perfectWindowEnd * 100).toFixed(0)}` : "--"}`
                 ]);
 
-                if (remainingMs <= 0) {
+                if (liveRemainingMs <= 0) {
+                    remainingMs = 0;
                     finish(false, false);
                     return;
                 }
@@ -237,27 +430,100 @@ async function initBattle() {
                 rafId = window.requestAnimationFrame(tick);
             }
 
+            activeDefenseTimer = {
+                pause() {
+                    if (settled || paused) return remainingMs;
+                    paused = true;
+                    if (rafId) window.cancelAnimationFrame(rafId);
+                    remainingMs = Math.max(0, remainingMs - (performance.now() - startTime));
+                    actionTimer.setState({
+                        durationMs,
+                        remainingMs,
+                        visible: true,
+                        armed: true,
+                        keyLabel: expectedKey,
+                        windowStart: config.goodWindowStart ?? null,
+                        windowEnd: config.goodWindowEnd ?? null,
+                        perfectStart: config.perfectWindowStart ?? null,
+                        perfectEnd: config.perfectWindowEnd ?? null
+                    });
+                    return remainingMs;
+                },
+                resume() {
+                    if (settled || !paused) return;
+                    paused = false;
+                    startTime = performance.now();
+                    rafId = window.requestAnimationFrame(tick);
+                },
+                cancel() {
+                    finish(false, false);
+                }
+            };
+
             window.addEventListener("keydown", handleKeydown);
-            rafId = window.requestAnimationFrame(tick);
+            if (!isPaused) {
+                rafId = window.requestAnimationFrame(tick);
+            } else {
+                paused = true;
+            }
         });
+    }
+
+    function togglePause() {
+        if (battleState.battleOver) return;
+
+        isPaused = !isPaused;
+        syncPauseUI();
+
+        if (isPaused) {
+            activeTurnTimer?.pause?.();
+            activeDefenseTimer?.pause?.();
+        } else {
+            activeTurnTimer?.resume?.();
+            activeDefenseTimer?.resume?.();
+        }
+
+        updateMenuLock();
     }
 
     async function finishBattleIfNeeded() {
         resolveDefeatState(battleState);
 
         if (!battleState.battleOver) return false;
+        if (endSequenceRunning) return true;
+        endSequenceRunning = true;
 
         stopTurnTimer();
         ui.actionMenu.setTurnTimer({ durationMs: getPlayerTurnDuration(battleState), remainingMs: 0, visible: true });
         actionTimer.setState({ visible: false });
-        ui.actionMenu.setLocked(true);
-        showGameOver(ui, battleState.outcome);
+        updateMenuLock();
+        const outcome = battleState.outcome;
+        await playBattleFinishSequence(outcome);
+        await showBattleIntro(ui, {
+            kicker: "",
+            title: "Battle Over",
+            subtitle: "",
+            durationMs: 650
+        });
+        await showBattleIntro(ui, {
+            kicker: "",
+            title: outcome === "victory" ? "Victory" : "Defeat",
+            subtitle: outcome === "victory" ? battleState.enemy.name : "Your Team Has Fallen",
+            durationMs: 900
+        });
+        endSequenceRunning = false;
+        if (outcome === "victory") {
+            await continueAfterVictory();
+        } else {
+            showGameOver(ui, outcome);
+        }
         return true;
     }
 
     async function endRoundAndResume() {
 
         resolveDefeatState(battleState);
+        const phaseChanged = syncConvergenceState(battleState);
         const healed = healInactiveCharacters(battleState);
         tickCooldowns(battleState);
 
@@ -270,10 +536,15 @@ async function initBattle() {
             return;
         }
 
+        if (phaseChanged && battleState.enemy.id === "convergence" && battleState.enemy.phase === 3) {
+            syncBattleUI();
+            await playCombatFeedback([{ kind: "text", slotId: "enemy-slot", label: "Convergence Arena" }]);
+        }
+
         battleState.enemyIntent = chooseEnemyIntent(battleState);
         syncBattleUI();
-        ui.actionMenu.setLocked(false);
         resolvingTurn = false;
+        updateMenuLock();
         startPlayerTurnTimer();
     }
 
@@ -323,6 +594,19 @@ async function initBattle() {
         syncBattleUI();
         await playCombatFeedback(enemyResult.feedback);
 
+        const forcedSwitch = maybeForceBossSwitch(battleState);
+        if (forcedSwitch) {
+            renderedPlayerId = null;
+            syncBattleUI();
+            await playCombatFeedback([
+                {
+                    kind: "text",
+                    slotId: "player-slot",
+                    label: `Forced Switch: ${forcedSwitch.to[0].toUpperCase()}${forcedSwitch.to.slice(1)}`
+                }
+            ]);
+        }
+
         await endRoundAndResume();
     }
 
@@ -330,7 +614,7 @@ async function initBattle() {
         if (resolvingTurn || battleState.battleOver) return;
 
         resolvingTurn = true;
-        ui.actionMenu.setLocked(true);
+        updateMenuLock();
         battleState.stats.timeouts += 1;
         applyComboChange(battleState, -0.5);
         battleState.currentDefense = null;
@@ -349,7 +633,7 @@ async function initBattle() {
 
     async function runBattleExchange(item, timingSnapshot) {
         resolvingTurn = true;
-        ui.actionMenu.setLocked(true);
+        updateMenuLock();
 
         if (timingSnapshot?.isFast) {
             applyComboChange(battleState, 0.25);
@@ -372,14 +656,24 @@ async function initBattle() {
         await runEnemyPhase();
     }
 
-    battleState.enemyIntent = chooseEnemyIntent(battleState);
-    syncBattleUI();
-    startPlayerTurnTimer();
+    await startCurrentEncounter({ resetStats: true, withTransition: false });
 
     actionMenu.addEventListener("actionselected", async (event) => {
-        if (resolvingTurn || battleState.battleOver) return;
+        if (isPaused || resolvingTurn || battleState.battleOver) return;
         const timingSnapshot = stopTurnTimer();
         await runBattleExchange(event.detail.item, timingSnapshot);
+    });
+
+    ui.pauseButton.addEventListener("click", () => {
+        togglePause();
+    });
+
+    window.addEventListener("keydown", (event) => {
+        if (event.repeat) return;
+        if (event.key === "Escape") {
+            event.preventDefault();
+            togglePause();
+        }
     });
 }
 

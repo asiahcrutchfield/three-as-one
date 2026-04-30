@@ -1,4 +1,10 @@
-export function renderStage(stage) {
+let activeStage = null;
+let worldShiftTimeoutId = null;
+let resizeBound = false;
+
+export function renderStage(stage, { animate = false } = {}) {
+    activeStage = stage;
+
     setLayerImage(".sky-layer", stage.layers.sky);
     setLayerImage(".far-layer", stage.layers.far);
     setLayerImage(".mid-layer", stage.layers.mid);
@@ -7,9 +13,18 @@ export function renderStage(stage) {
 
     updateStageFloor(stage);
 
-    window.addEventListener("resize", () => {
-        updateStageFloor(stage);
-    });
+    if (animate) {
+        pulseWorldShift();
+    }
+
+    if (!resizeBound) {
+        resizeBound = true;
+        window.addEventListener("resize", () => {
+            if (activeStage) {
+                updateStageFloor(activeStage);
+            }
+        });
+    }
 }
 
 function setLayerImage(selector, imagePath) {
@@ -65,4 +80,21 @@ function updateStageFloor(stage) {
         groundLayer.style.backgroundSize = `${stageWidth}px auto`;
         groundLayer.style.backgroundPosition = "center bottom";
     }
+}
+
+function pulseWorldShift() {
+    const battleStage = document.querySelector("#battle-stage");
+    if (!battleStage) return;
+
+    battleStage.classList.remove("world-shift");
+    void battleStage.offsetWidth;
+    battleStage.classList.add("world-shift");
+
+    if (worldShiftTimeoutId) {
+        window.clearTimeout(worldShiftTimeoutId);
+    }
+
+    worldShiftTimeoutId = window.setTimeout(() => {
+        battleStage.classList.remove("world-shift");
+    }, 380);
 }

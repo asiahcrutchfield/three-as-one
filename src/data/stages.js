@@ -2,14 +2,14 @@ export const stages = {
     taipei: {
         name: "Taipei Street",
         layers: {
-            ground: "/assets/stages/taipei/battle_lane.png"
+            ground: "/assets/stages/taipei/battle_lane2.jpg"
         },
         lane: {
             bottom: 110,
             height: 358
         },
         floor: {
-            fromBottom: 250
+            fromBottom: 125
         },
         dimensions: {
             w: 1660,
@@ -22,7 +22,7 @@ export const stages = {
         name: "NOLA Street",
         layers: {
             ground: "/assets/stages/nola/battle_lane.png",
-            far: "/assets/stages/nola/background.png"
+            far: "/assets/stages/nola/background.jpg"
         },
         lane: {
             bottom: 95,
@@ -54,6 +54,25 @@ export const stages = {
         dimensions: {
             w: 1660,
             h: 359
+        },
+        fitmode: "width",
+        worldScale: 1
+    },
+    boss: {
+        name: "Convergence Arena",
+        layers: {
+            ground: "/assets/stages/boss/battle_lane.png"
+        },
+        lane: {
+            bottom: 110,
+            height: 380
+        },
+        floor: {
+            fromBottom: 150
+        },
+        dimensions: {
+            w: 1672,
+            h: 941
         },
         fitmode: "width",
         worldScale: 1

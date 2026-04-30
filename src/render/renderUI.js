@@ -1,4 +1,6 @@
 import { characters } from "../data/characters.js";
+import { enemyAliases, enemies } from "../data/enemies.js";
+import { getConvergenceStatusChips } from "../game/convergence.js";
 import {
     getCharacterHp,
     getCharacterMaxHp,
@@ -43,6 +45,67 @@ function getIntentIconSvg(intent) {
     return `<svg viewBox="0 0 24 24" role="presentation"><path d="M12 3 15 9l6 1-4.5 4.2 1.1 6L12 17l-5.6 3.2 1.1-6L3 10l6-1 3-6Z" /></svg>`;
 }
 
+function getEnemyTemplate(enemyId) {
+    return enemies[enemyAliases[enemyId] ?? enemyId] ?? enemies.familiar;
+}
+
+function getIntentModifierChips(intent) {
+    if (!intent) return [];
+
+    const shownRange = intent.shownRange || intent.range || intent.type;
+    const chips = [];
+
+    if (intent.fake) {
+        chips.push({ label: "Fake", tone: "warning" });
+    } else if (shownRange === "close" && intent.type === "attack") {
+        chips.push({ label: "Counter", tone: "good" });
+    } else if (shownRange === "long" && intent.type === "attack") {
+        chips.push({ label: "No Counter", tone: "neutral" });
+    } else if (shownRange === "status" || intent.type === "status") {
+        chips.push({ label: "Status", tone: "neutral" });
+    }
+
+    if (intent.delayed) {
+        chips.push({ label: "Delayed", tone: "info" });
+    }
+
+    return chips;
+}
+
+function getEnemyStatusChips(state) {
+    const chips = [];
+
+    if ((state.enemy.pressure ?? 0) > 0) {
+        chips.push({ label: `Pressure ${state.enemy.pressure}`, tone: "warning" });
+    }
+
+    if (state.enemy.nextAttackMultiplier > 1) {
+        chips.push({ label: "Damage Up", tone: "warning" });
+    }
+
+    if ((state.enemy.switchCooldown ?? 0) > 0) {
+        chips.push({ label: "Switch Lock", tone: "neutral" });
+    }
+
+    if ((state.enemy.supportStacks ?? 0) > 0) {
+        chips.push({ label: `Support ${state.enemy.supportStacks}`, tone: "info" });
+    }
+
+    if ((state.enemy.inactiveBodies ?? 0) > 0 && state.enemy.id === "pull") {
+        chips.push({ label: `Bodies ${state.enemy.inactiveBodies}`, tone: "neutral" });
+    }
+
+    if (state.enemy.pendingIntent) {
+        chips.push({ label: "Delayed", tone: "warning" });
+    }
+
+    getConvergenceStatusChips(state).forEach((label) => {
+        chips.push({ label, tone: "neutral" });
+    });
+
+    return chips;
+}
+
 function hidePreviewNoise() {
     document.querySelector("#sync-preview")?.classList.add("hidden");
     document.querySelector("#results-preview")?.classList.add("hidden");
@@ -51,10 +114,48 @@ function hidePreviewNoise() {
 }
 
 export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actionMenu, battleStage }) {
+    const resultsPreview = document.querySelector("#results-preview");
+    const rewardsPreview = document.querySelector("#rewards-preview");
+    resultsPreview?.classList.add("hidden");
+    rewardsPreview?.classList.add("hidden");
     hidePreviewNoise();
 
     const enemyIntent = document.querySelector("#enemy-intent-preview");
     const enemyStatus = document.querySelector("#enemy-status-preview");
+    const pauseButton = document.createElement("button");
+    pauseButton.id = "pause-button";
+    pauseButton.type = "button";
+    pauseButton.textContent = "Pause";
+    battleStage.appendChild(pauseButton);
+
+    const pauseOverlay = document.createElement("div");
+    pauseOverlay.id = "pause-overlay";
+    pauseOverlay.className = "hidden";
+    pauseOverlay.innerHTML = `
+        <div class="pause-card">
+            <div class="pause-title">Paused</div>
+            <div class="pause-copy">Timers and inputs are frozen for testing.</div>
+        </div>
+    `;
+    battleStage.appendChild(pauseOverlay);
+
+    const battleIntro = document.createElement("div");
+    battleIntro.id = "battle-intro-overlay";
+    battleIntro.className = "hidden";
+    battleIntro.innerHTML = `
+        <div class="battle-intro-card">
+            <div class="battle-intro-kicker">Battle Start</div>
+            <div class="battle-intro-title">Battle 1</div>
+            <div class="battle-intro-copy">Familiar</div>
+        </div>
+    `;
+    battleStage.appendChild(battleIntro);
+
+    const battleTransition = document.createElement("div");
+    battleTransition.id = "battle-transition-overlay";
+    battleTransition.className = "hidden";
+    battleStage.appendChild(battleTransition);
+
     const gameOver = document.createElement("div");
     gameOver.id = "game-over-popup";
     gameOver.className = "hidden";
@@ -79,7 +180,13 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
         actionMenu,
         enemyIntent,
         enemyStatus,
-        gameOver
+        resultsPreview,
+        rewardsPreview,
+        battleIntro,
+        battleTransition,
+        gameOver,
+        pauseButton,
+        pauseOverlay
     };
 }
 
@@ -101,6 +208,8 @@ export function updateBattleUI(state, ui, menuData) {
     const comboValue = ui.comboMeter.querySelector(".combo-preview-value");
     const intentIcon = ui.enemyIntent?.querySelector(".intent-preview-icon");
     const intentName = ui.enemyIntent?.querySelector(".intent-preview-name");
+    const intentMeta = ui.enemyIntent?.querySelector(".intent-preview-meta");
+    const enemyTemplate = getEnemyTemplate(state.enemy.id);
 
     if (activeId === "girl") {
         const emotion = getGirlEmotion(state);
@@ -123,7 +232,10 @@ export function updateBattleUI(state, ui, menuData) {
     setBar(enemyTrack, state.enemy.hp, state.enemy.maxHp);
 
     if (enemyName) enemyName.textContent = state.enemy.name;
-    if (enemyPortrait) enemyPortrait.src = "/assets/enemies/familiar/familiar.png";
+    if (enemyPortrait) {
+        enemyPortrait.src = enemyTemplate.portraitPath;
+        enemyPortrait.alt = `${state.enemy.name} portrait`;
+    }
 
     const inactiveIds = getInactiveCharacterIds(state);
     const playerCards = [...ui.assists.querySelectorAll("#player-assist-preview .assist-preview-card")];
@@ -154,14 +266,20 @@ export function updateBattleUI(state, ui, menuData) {
 
     if (intentIcon) intentIcon.innerHTML = getIntentIconSvg(state.enemyIntent);
     if (intentName) intentName.textContent = state.enemyIntent?.label || "Intent Hidden";
+    if (intentMeta) {
+        intentMeta.innerHTML = getIntentModifierChips(state.enemyIntent)
+            .map((chip) => `<span class="intent-chip ${chip.tone}">${chip.label}</span>`)
+            .join("");
+    }
 
     if (ui.enemyStatus) {
-        if (state.enemy.nextAttackMultiplier > 1) {
+        const chips = getEnemyStatusChips(state);
+        if (chips.length) {
             ui.enemyStatus.classList.remove("hidden");
             ui.enemyStatus.innerHTML = `
                 <div class="ui-preview-kicker">Enemy Status</div>
                 <div class="state-chip-row">
-                    <span class="state-chip warning">Damage Up</span>
+                    ${chips.map((chip) => `<span class="state-chip ${chip.tone}">${chip.label}</span>`).join("")}
                 </div>
             `;
         } else {
@@ -175,11 +293,133 @@ export function updateBattleUI(state, ui, menuData) {
 export function showGameOver(ui, outcome) {
     const title = ui.gameOver.querySelector(".game-over-title");
     const copy = ui.gameOver.querySelector(".game-over-copy");
+    const button = ui.gameOver.querySelector(".game-over-button");
 
     if (title) title.textContent = outcome === "victory" ? "Victory" : "Game Over";
     if (copy) copy.textContent = outcome === "victory"
         ? "The enemy has been defeated."
         : "All available characters have fallen.";
+    if (button) button.textContent = "Start Again";
 
     ui.gameOver.classList.remove("hidden");
+}
+
+export function showBattleIntro(ui, { title, subtitle, kicker = "Battle Start", durationMs = 1200 } = {}) {
+    const overlay = ui.battleIntro;
+    if (!overlay) return Promise.resolve();
+
+    const kickerEl = overlay.querySelector(".battle-intro-kicker");
+    const titleEl = overlay.querySelector(".battle-intro-title");
+    const copyEl = overlay.querySelector(".battle-intro-copy");
+
+    if (kickerEl) {
+        kickerEl.textContent = kicker;
+        kickerEl.classList.toggle("hidden", !kicker);
+    }
+    if (titleEl) titleEl.textContent = title ?? "Battle";
+    if (copyEl) {
+        copyEl.textContent = subtitle ?? "";
+        copyEl.classList.toggle("hidden", !subtitle);
+    }
+
+    overlay.classList.remove("hidden");
+    overlay.classList.remove("is-entering", "is-leaving");
+    void overlay.offsetWidth;
+    overlay.classList.add("is-entering");
+
+    return new Promise((resolve) => {
+        window.setTimeout(() => {
+            overlay.classList.remove("is-entering");
+            overlay.classList.add("is-leaving");
+
+            window.setTimeout(() => {
+                overlay.classList.add("hidden");
+                overlay.classList.remove("is-leaving");
+                resolve();
+            }, 320);
+        }, durationMs);
+    });
+}
+
+export function playBattleTransition(ui, { holdMs = 1000 } = {}) {
+    const overlay = ui.battleTransition;
+    if (!overlay) return Promise.resolve();
+
+    overlay.classList.remove("hidden", "is-fade-in", "is-fade-out");
+    void overlay.offsetWidth;
+    overlay.classList.add("is-fade-out");
+
+    return new Promise((resolve) => {
+        window.setTimeout(() => {
+            overlay.classList.remove("is-fade-out");
+
+            window.setTimeout(() => {
+                overlay.classList.add("is-fade-in");
+
+                window.setTimeout(() => {
+                    overlay.classList.add("hidden");
+                    overlay.classList.remove("is-fade-in");
+                    resolve();
+                }, 360);
+            }, holdMs);
+        }, 360);
+    });
+}
+
+export function hideProgressionPanels(ui) {
+    ui.resultsPreview?.classList.add("hidden");
+    ui.rewardsPreview?.classList.add("hidden");
+}
+
+export function showBattleSummary(ui, summary) {
+    if (!ui.resultsPreview) return;
+
+    ui.resultsPreview.innerHTML = `
+        <div class="ui-preview-kicker">Battle Summary</div>
+        <div class="reward-grade-stamp battle-grade-stamp">${summary.grade}</div>
+        <div class="results-preview-grid">
+            <div><span>HP Bonus</span><strong>+${summary.hpBonus}</strong></div>
+            <div><span>Combo Bonus</span><strong>+${summary.comboBonus}</strong></div>
+            <div><span>Counters</span><strong>+${summary.counterBonus}</strong></div>
+            <div><span>Penalties</span><strong>-${summary.penaltyTotal}</strong></div>
+        </div>
+        <div class="results-preview-rank">
+            <span>Final Score</span>
+            <strong>${summary.finalScore}</strong>
+        </div>
+    `;
+
+    ui.resultsPreview.classList.remove("hidden");
+}
+
+export function showRewardChoices(ui, rewards, { onSelect, finalBattle = false } = {}) {
+    if (!ui.rewardsPreview) return;
+
+    const title = finalBattle ? "Run Complete" : "Reward Choice";
+    const items = rewards.length
+        ? rewards.map((reward, index) => `
+            <button type="button" class="reward-preview-item ${index === 0 ? "is-active" : ""}" data-reward-id="${reward.id}">
+                <span class="reward-preview-name">${reward.label}</span>
+                <span class="reward-preview-desc">${reward.description}</span>
+            </button>
+        `).join("")
+        : `
+            <button type="button" class="reward-preview-item is-active" data-reward-id="continue">
+                <span class="reward-preview-name">${finalBattle ? "Victory" : "Continue"}</span>
+                <span class="reward-preview-desc">${finalBattle ? "The run is complete." : "Move on to the next battle."}</span>
+            </button>
+        `;
+
+    ui.rewardsPreview.innerHTML = `
+        <div class="ui-preview-kicker">${title}</div>
+        <div class="reward-preview-list">${items}</div>
+    `;
+
+    ui.rewardsPreview.classList.remove("hidden");
+
+    ui.rewardsPreview.querySelectorAll("[data-reward-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+            onSelect?.(button.dataset.rewardId);
+        });
+    });
 }

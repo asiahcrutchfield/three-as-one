@@ -1,5 +1,6 @@
-import { enemies } from "../data/enemies.js";
+import { enemyAliases, enemies } from "../data/enemies.js";
 import { characters } from "../data/characters.js";
+import { chooseConvergenceIntent, syncConvergenceState } from "./convergence.js";
 import {
     applyComboChange,
     damageCharacter,
@@ -45,7 +46,17 @@ function getFailedCounterPenalty(activeId) {
 }
 
 export function chooseEnemyIntent(state) {
-    const template = enemies[state.enemy.id];
+    if (state.enemy.pendingIntent) {
+        const pending = { ...state.enemy.pendingIntent, releasedFromDelay: true };
+        state.enemy.pendingIntent = null;
+        return pending;
+    }
+
+    const template = enemies[enemyAliases[state.enemy.id] ?? state.enemy.id];
+    if (template.id === "convergence") {
+        syncConvergenceState(state);
+        return chooseConvergenceIntent(state, template);
+    }
     const picked = template.behavior?.(state) ?? template.abilities[0];
     return { ...picked };
 }
@@ -245,6 +256,7 @@ export function resolveEnemyTurn(state, timingResult = null) {
     if (intent.type === "status") {
         if (state.currentDefense === "block" && timingResult?.success) {
             feedback.push({ kind: "defense", slotId: getCurrentPlayerSlotId(), label: "Guarded" });
+            state.lastResolvedDefense = "block";
             state.currentDefense = null;
             state.enemy.nextAttackMultiplier = 1;
             return { feedback };
@@ -252,9 +264,42 @@ export function resolveEnemyTurn(state, timingResult = null) {
 
         if (intent.effect === "enemy_damage_up") {
             state.enemy.nextAttackMultiplier *= 1.5;
+            state.enemy.supportStacks = Math.min(3, (state.enemy.supportStacks ?? 0) + (state.enemy.id === "pull" ? 1 : 0));
             feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Damage Up" });
         }
+        if (intent.effect === "queue_measured_strike") {
+            state.enemy.pendingIntent = {
+                id: "measured_strike_release",
+                label: "Measured Strike",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 12,
+                counterable: true,
+                delayed: true,
+                description: "A delayed strike finally lands."
+            };
+            feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Timing Set" });
+        }
+        if (intent.effect === "inactive_pressure") {
+            let pressureHits = 0;
+            ["girl", "officer", "man"].forEach((id) => {
+                if (id === state.activeCharacterId) return;
+                const dealt = damageCharacter(state, id, 6);
+                if (dealt > 0) pressureHits += dealt;
+            });
+            applyComboChange(state, -0.25);
+            feedback.push({ kind: "text", slotId: getCurrentPlayerSlotId(), label: "Bench Pressure" });
+            if (pressureHits > 0) {
+                feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Backline Hit" });
+            }
+        }
+        if (intent.effect === "boss_switch_ready") {
+            state.enemy.switchCooldown = 1;
+            feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Phase Shift" });
+        }
 
+        state.lastResolvedDefense = state.currentDefense;
         state.currentDefense = null;
         return { feedback };
     }
@@ -268,7 +313,8 @@ export function resolveEnemyTurn(state, timingResult = null) {
     const slotId = getCurrentPlayerSlotId();
     const enemySlotId = getCurrentEnemySlotId();
     const passives = getPassiveBonuses(state);
-    let damage = Math.round(intent.damage * state.enemy.nextAttackMultiplier * (1 - passives.damageReduction));
+    const supportMultiplier = 1 + ((state.enemy.supportStacks ?? 0) * 0.15);
+    let damage = Math.round(intent.damage * state.enemy.nextAttackMultiplier * supportMultiplier * (1 - passives.damageReduction));
 
     if (state.enemy.noDamageNextTurn) {
         damage = 0;
@@ -276,6 +322,7 @@ export function resolveEnemyTurn(state, timingResult = null) {
     }
 
     if (state.currentDefense === "block") {
+        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
         const reduction = getBlockReduction(state);
         const success = timingResult?.success;
         const reductionMultiplier = success ? reduction : reduction * 0.45;
@@ -287,18 +334,23 @@ export function resolveEnemyTurn(state, timingResult = null) {
             feedback.push({ kind: "text", slotId, label: "Late Block" });
         }
         if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+        state.lastResolvedDefense = "block";
     } else if (state.currentDefense === "dodge") {
+        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
         if (timingResult?.success) {
             applyComboChange(state, 0.25);
-            feedback.push({ kind: "defense", slotId, label: "Dodge" });
+            feedback.push({ kind: "dodge", slotId, label: "Dodge" });
+            state.lastResolvedDefense = "dodge";
         } else {
             const dealt = damageCharacter(state, activeId, damage);
             applyComboChange(state, -0.5);
             state.stats.penalties += 1;
             feedback.push({ kind: "text", slotId, label: "Dodge Failed" });
             if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+            state.lastResolvedDefense = "dodge";
         }
     } else if (state.currentDefense === "counter") {
+        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
         if (timingResult?.success && intent.range === "close" && intent.counterable) {
             const counterValues = getCounterValues(state);
             const baseMultiplier = timingResult?.outcome === "perfect" ? counterValues.dmg : Math.max(1, counterValues.dmg - 0.25);
@@ -314,6 +366,7 @@ export function resolveEnemyTurn(state, timingResult = null) {
                 if (chipTaken > 0) feedback.push({ kind: "damage", slotId, amount: chipTaken });
             }
             if (dealt > 0) feedback.push({ kind: "damage", slotId: enemySlotId, amount: dealt });
+            state.lastResolvedDefense = "counter";
         } else {
             const penalty = getFailedCounterPenalty(activeId);
             const extraDamage = activeId === "officer" ? 1 : 1.1;
@@ -322,10 +375,13 @@ export function resolveEnemyTurn(state, timingResult = null) {
             state.stats.penalties += 1;
             feedback.push({ kind: "text", slotId, label: "Counter Failed" });
             if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+            state.lastResolvedDefense = "counter";
         }
     } else {
+        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
         const dealt = damageCharacter(state, activeId, damage);
         if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+        state.lastResolvedDefense = null;
     }
 
     if (damage >= Math.round(getCharacterMaxHp(state, activeId) * 0.25)) {

@@ -1,4 +1,5 @@
 import { characters } from "../data/characters.js";
+import { canUseStandardAssist, getBossAssistEntryState, useConvergenceGoodVibes } from "./convergence.js";
 import {
     applyComboChange,
     damageCharacter,
@@ -225,6 +226,20 @@ function getAssistEntries(state) {
 
         if (id === "girl") {
             const cooldown = state.roster.girl.cooldowns.goodVibes || 0;
+            const bossAssist = getBossAssistEntryState(state);
+
+            if (state.enemy.id === "convergence") {
+                return {
+                    id: "assist:girl",
+                    label: "Good Vibes",
+                    title: "Good Vibes",
+                    type: "Assist",
+                    cost: bossAssist?.reason ?? "1/Boss",
+                    desc: "Boss-only heal for the active fighter. Prevents the next forced switch.",
+                    disabled: !bossAssist?.available,
+                    action: { kind: "assist", characterId: "girl", actionId: "goodVibesBoss" }
+                };
+            }
 
             return {
                 id: "assist:girl",
@@ -252,8 +267,10 @@ function getAssistEntries(state) {
                 title: character.assist.active.name,
                 type: "Assist",
                 cost,
-                desc: "Spends combo to soften the enemy's next attack.",
-                disabled,
+                desc: state.enemy.id === "convergence"
+                    ? "Disabled during the boss fight."
+                    : "Spends combo to soften the enemy's next attack.",
+                disabled: !canUseStandardAssist(state, "officer") || disabled,
                 action: { kind: "assist", characterId: "officer", actionId: "tacticalFocus" }
             };
         }
@@ -264,7 +281,10 @@ function getAssistEntries(state) {
             title: character.assist.active.name,
             type: "Assist",
             damage: "15%",
-            desc: "Shaves off a chunk of the enemy's current HP.",
+            desc: state.enemy.id === "convergence"
+                ? "Disabled during the boss fight."
+                : "Shaves off a chunk of the enemy's current HP.",
+            disabled: !canUseStandardAssist(state, "man"),
             action: { kind: "assist", characterId: "man", actionId: "improv" }
         };
     });
@@ -323,6 +343,25 @@ function resolveAttack(state, characterId, actionId) {
     let damage = getCurrentAttackDamage(state, characterId, actionId);
     let comboGain = 0.25;
 
+    const motionStyle = actionId === "pounce" || (characterId === "girl" && actionId === "rockThrow")
+        ? "pounce"
+        : actionId === "heavySwing"
+        ? "heavy"
+        : (actionId === "rockThrow" || actionId === "gunShot" || actionId === "bottleThrow")
+            ? "ranged"
+            : "melee";
+
+    const motionTargetCharacterId = characterId === "girl"
+        ? (actionId === "rockThrow" ? "girl" : "tiger")
+        : null;
+
+    feedback.push({
+        kind: "attack",
+        slotId: "player-slot",
+        style: motionStyle,
+        targetCharacterId: motionTargetCharacterId
+    });
+
     if (characterId === "man" && actionId === "heavySwing") comboGain = 0.75;
     if (characterId === "man" && actionId === "bottleThrow") comboGain = 0;
 
@@ -357,6 +396,12 @@ function resolveSpecial(state, characterId, actionId) {
     if (characterId === "girl" && actionId === "tigersRoar") {
         const emotion = getGirlEmotion(state);
         const damagePct = characters.girl.abilities.special.tigersRoar.getDamagePercent(emotion);
+        feedback.push({
+            kind: "attack",
+            slotId: "player-slot",
+            style: "roar",
+            targetCharacterId: "tiger"
+        });
         const dealt = damageCharacter(state, "enemy", Math.floor(state.enemy.maxHp * damagePct));
         state.enemy.noDamageNextTurn = true;
         state.roster.girl.usedOnce.tigersRoar = true;
@@ -379,6 +424,7 @@ function resolveSpecial(state, characterId, actionId) {
     }
 
     if (characterId === "man" && actionId === "overexert") {
+        feedback.push({ kind: "attack", slotId: "player-slot", style: "heavy" });
         const enemyDamage = damageCharacter(state, "enemy", 40);
         const selfDamage = damageCharacter(state, "man", 15);
         applyComboChange(state, 0.25);
@@ -388,6 +434,7 @@ function resolveSpecial(state, characterId, actionId) {
     }
 
     if (characterId === "man" && actionId === "allIn") {
+        feedback.push({ kind: "attack", slotId: "player-slot", style: "heavy" });
         const dealt = damageCharacter(state, "enemy", Math.round(18 * Math.min(4, Math.max(1, state.combo))));
         state.combo = 1;
         if (dealt > 0) feedback.push({ kind: "damage", slotId: "enemy-slot", amount: dealt });
@@ -401,6 +448,18 @@ function resolveAssist(state, characterId) {
     const feedback = [];
 
     if (characterId === "girl") {
+        if (state.enemy.id === "convergence" && state.activeCharacterId !== "girl") {
+            const healed = useConvergenceGoodVibes(state);
+            state.lastAssistUsed = "girl";
+            if (healed > 0) {
+                feedback.push({ kind: "heal", slotId: "player-slot", amount: healed, label: "Good Vibes" });
+            } else {
+                feedback.push({ kind: "text", slotId: "player-slot", label: "Good Vibes" });
+            }
+            feedback.push({ kind: "text", slotId: "enemy-slot", label: "Switch Locked" });
+            return feedback;
+        }
+
         const emotion = getGirlEmotion(state);
         const values = characters.girl.assist.active.getValues(emotion);
         const activeHeal = healCharacter(state, state.activeCharacterId, Math.floor(getCharacterMaxHp(state, state.activeCharacterId) * values.active));
@@ -420,13 +479,35 @@ function resolveAssist(state, characterId) {
     }
 
     if (characterId === "officer") {
+        if (!canUseStandardAssist(state, "officer")) {
+            feedback.push({ kind: "text", slotId: "player-slot", label: "Assist Locked" });
+            return feedback;
+        }
         state.combo = Math.max(0, state.combo - 1);
         state.enemy.nextAttackMultiplier *= 0.5;
+        if (state.enemy.id === "pull" && (state.enemy.supportStacks ?? 0) > 0) {
+            state.enemy.supportStacks = Math.max(0, state.enemy.supportStacks - 1);
+            feedback.push({ kind: "text", slotId: "enemy-slot", label: "Support Broken" });
+        }
         state.roster.officer.cooldowns.tacticalFocus = 1;
         state.lastAssistUsed = "officer";
         applyComboChange(state, 0.5);
         feedback.push({ kind: "defense", slotId: "player-slot", label: "Focus" });
         return feedback;
+    }
+
+    if (!canUseStandardAssist(state, "man")) {
+        feedback.push({ kind: "text", slotId: "player-slot", label: "Assist Locked" });
+        return feedback;
+    }
+
+    if (state.enemy.id === "pull" && ((state.enemy.supportStacks ?? 0) > 0 || (state.enemy.inactiveBodies ?? 0) > 0)) {
+        if ((state.enemy.supportStacks ?? 0) > 0) {
+            state.enemy.supportStacks = Math.max(0, state.enemy.supportStacks - 1);
+        } else {
+            state.enemy.inactiveBodies = Math.max(0, state.enemy.inactiveBodies - 1);
+        }
+        feedback.push({ kind: "text", slotId: "enemy-slot", label: "Assist Hit Support" });
     }
 
     const damage = Math.floor(state.enemy.hp * 0.15);

@@ -12,7 +12,7 @@ export function applyComboChange(state, delta) {
 }
 
 export function getPlayerTurnDuration(state) {
-    return Math.round(state.playerTurnDurationMs * state.playerTurnScale);
+    return Math.round((state.playerTurnDurationMs + (state.run?.playerTurnBonusMs ?? 0)) * state.playerTurnScale);
 }
 
 export function resetCombo(state) {
@@ -67,8 +67,13 @@ export function healCharacter(state, characterId, amount) {
 export function damageCharacter(state, characterId, amount) {
     if (!amount || isCharacterUnavailable(state, characterId)) return 0;
 
+    let adjustedAmount = amount;
+    if (characterId === "girl" && (state.run?.tigerGuard ?? 0) > 0) {
+        adjustedAmount = Math.round(amount * (1 - state.run.tigerGuard));
+    }
+
     const currentHp = getCharacterHp(state, characterId);
-    const nextHp = setCharacterHp(state, characterId, currentHp - amount);
+    const nextHp = setCharacterHp(state, characterId, currentHp - adjustedAmount);
     return currentHp - nextHp;
 }
 
@@ -95,7 +100,7 @@ export function getInactiveAssistIds(state) {
 
 export function getPassiveBonuses(state) {
     const bonuses = {
-        damageBonus: 0,
+        damageBonus: state.run?.damageBonus ?? 0,
         damageReduction: 0
     };
 
@@ -123,6 +128,10 @@ export function tickCooldowns(state) {
             cooldowns[key] = Math.max(0, cooldowns[key] - 1);
         });
     });
+
+    if (typeof state.enemy.switchCooldown === "number") {
+        state.enemy.switchCooldown = Math.max(0, state.enemy.switchCooldown - 1);
+    }
 }
 
 export function healInactiveCharacters(state) {

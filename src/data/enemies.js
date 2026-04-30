@@ -1,565 +1,344 @@
+function pickAbility(enemy, abilityId) {
+    return enemy.abilities.find((ability) => ability.id === abilityId);
+}
+
+function withTelegraphMeta(ability, overrides = {}) {
+    return {
+        ...ability,
+        shownRange: overrides.shownRange ?? ability.shownRange ?? ability.range ?? ability.type,
+        fake: overrides.fake ?? ability.fake ?? false,
+        delayed: overrides.delayed ?? ability.delayed ?? false,
+        description: overrides.description ?? ability.description
+    };
+}
+
 export const enemies = {
-  familiar: {
-    id: "familiar",
-    name: "Familiar",
-    hp: 100,
-    type: "balanced",
+    familiar: {
+        id: "familiar",
+        name: "Familiar",
+        hp: 100,
+        role: "Balanced / Tutorial",
+        theme: "Something that feels safe but is not.",
+        spritePath: "/assets/enemies/familiar/familiar.png",
+        portraitPath: "/assets/enemies/familiar/familiar.png",
+        telegraphStyle: "honest",
+        abilities: [
+            {
+                id: "pressure_rush",
+                label: "Pressure Rush",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 12,
+                counterable: true,
+                description: "A clear close-range strike that teaches counter timing."
+            },
+            {
+                id: "distant_check",
+                label: "Distant Check",
+                type: "attack",
+                range: "long",
+                shownRange: "long",
+                damage: 9,
+                counterable: false,
+                description: "A readable ranged attack that cannot be countered."
+            },
+            {
+                id: "uneasy_glance",
+                label: "Uneasy Glance",
+                type: "status",
+                range: "status",
+                shownRange: "status",
+                effect: "enemy_damage_up",
+                description: "Light status pressure that boosts the next attack."
+            }
+        ],
+        behavior(state) {
+            const roll = Math.random();
 
-    abilities: [
-      {
-        id: "close_attack",
-        label: "Pressure Rush",
-        type: "attack",
-        range: "close",
-        damage: 12,
-        counterable: true,
-        description: "A direct close-range strike."
-      },
-      {
-        id: "long_attack",
-        label: "Distant Check",
-        type: "attack",
-        range: "long",
-        damage: 8,
-        counterable: false,
-        description: "A safer ranged attack."
-      },
-      {
-        id: "focus",
-        label: "Focus",
-        type: "status",
-        range: "status",
-        effect: "enemy_damage_up",
-        description: "Increases the next Familiar attack damage."
-      }
-    ],
+            if ((state.enemy.nextAttackMultiplier ?? 1) > 1) {
+                return withTelegraphMeta(pickAbility(this, roll < 0.55 ? "pressure_rush" : "distant_check"));
+            }
 
-    behavior() {
-      const roll = Math.random();
-
-      if (roll < 0.4) return this.abilities.find(a => a.id === "close_attack");
-      if (roll < 0.8) return this.abilities.find(a => a.id === "long_attack");
-      return this.abilities.find(a => a.id === "focus");
-    }
-  },
-
-  striker: {
-    id: "striker",
-    name: "Striker",
-    hp: 100,
-    type: "balanced",
-
-    abilities: [
-      {
-        id: "close_attack",
-        label: "Close Attack",
-        type: "attack",
-        range: "close",
-        damage: 12,
-        counterable: true,
-        description: "A basic close-range attack."
-      },
-      {
-        id: "long_attack",
-        label: "Long Attack",
-        type: "attack",
-        range: "long",
-        damage: 8,
-        counterable: false,
-        description: "A safer long-range attack."
-      },
-      {
-        id: "focus",
-        label: "Focus",
-        type: "status",
-        range: "status",
-        effect: "enemy_damage_up",
-        description: "Increases the next enemy attack damage."
-      }
-    ],
-
-    behavior() {
-      const roll = Math.random();
-
-      if (roll < 0.4) return this.abilities.find(a => a.id === "close_attack");
-      if (roll < 0.8) return this.abilities.find(a => a.id === "long_attack");
-      return this.abilities.find(a => a.id === "focus");
-    }
-  },
-
-  breaker: {
-    id: "breaker",
-    name: "Breaker",
-    hp: 120,
-    type: "anti_block",
-    pressure: 0,
-
-    abilities: [
-      {
-        id: "quick_strike",
-        label: "Quick Strike",
-        type: "attack",
-        range: "close",
-        damage: 10,
-        counterable: true,
-        description: "A fast close-range attack."
-      },
-      {
-        id: "pressure",
-        label: "Pressure",
-        type: "status",
-        range: "status",
-        effect: "pressure_up",
-        description: "Builds pressure when the player blocks."
-      },
-      {
-        id: "breaker_slam",
-        label: "Breaker Slam",
-        type: "attack",
-        range: "close",
-        damage: 22,
-        counterable: true,
-        effect: "pressure_consume",
-        description: "Heavy attack triggered at max pressure."
-      }
-    ],
-
-    behavior(state) {
-      if (state?.lastPlayerAction === "block") {
-        this.pressure += 1;
-      }
-
-      if (
-        state?.lastPlayerAction === "counter" ||
-        state?.lastPlayerAction === "dodge"
-      ) {
-        this.pressure = Math.max(0, this.pressure - 1);
-      }
-
-      if (this.pressure >= 3) {
-        this.pressure = 0;
-        return this.abilities.find(a => a.id === "breaker_slam");
-      }
-
-      return this.abilities.find(a => a.id === "quick_strike");
-    }
-  },
-
-  disruptor: {
-    id: "disruptor",
-    name: "Disruptor",
-    hp: 90,
-    type: "combo_control",
-
-    abilities: [
-      {
-        id: "weak_strike",
-        label: "Weak Strike",
-        type: "attack",
-        range: "close",
-        damage: 8,
-        counterable: true,
-        description: "Weak direct damage."
-      },
-      {
-        id: "combo_lock",
-        label: "Combo Lock",
-        type: "status",
-        range: "status",
-        effect: "combo_lock",
-        description: "Prevents combo gain for 1 turn."
-      },
-      {
-        id: "combo_delay",
-        label: "Combo Delay",
-        type: "status",
-        range: "status",
-        effect: "combo_delay",
-        description: "Delays combo gain instead of blocking it."
-      },
-      {
-        id: "combo_drain",
-        label: "Combo Drain",
-        type: "status",
-        range: "status",
-        effect: "combo_drain",
-        comboLoss: 0.5,
-        description: "Reduces combo by 0.5."
-      }
-    ],
-
-    behavior(state) {
-      const roll = Math.random();
-      const combo = state?.combo ?? 1;
-
-      if (combo >= 2) {
-        if (roll < 0.45) return this.abilities.find(a => a.id === "combo_lock");
-        if (roll < 0.8) return this.abilities.find(a => a.id === "combo_drain");
-        return this.abilities.find(a => a.id === "weak_strike");
-      }
-
-      if (roll < 0.45) return this.abilities.find(a => a.id === "weak_strike");
-      if (roll < 0.75) return this.abilities.find(a => a.id === "combo_delay");
-      return this.abilities.find(a => a.id === "combo_lock");
-    }
-  },
-
-  hunter: {
-    id: "hunter",
-    name: "Hunter",
-    hp: 110,
-    type: "tiger_pressure",
-    tigerMarked: false,
-
-    abilities: [
-      {
-        id: "mark_tiger",
-        label: "Mark Tiger",
-        type: "status",
-        range: "status",
-        effect: "tiger_mark",
-        description: "Marks the tiger. The next tiger hit deals increased damage."
-      },
-      {
-        id: "pounce",
-        label: "Pounce",
-        type: "attack",
-        range: "close",
-        damage: 12,
-        counterable: true,
-        target: "active",
-        description: "A close attack."
-      },
-      {
-        id: "marked_pounce",
-        label: "Marked Pounce",
-        type: "attack",
-        range: "close",
-        damage: 18,
-        counterable: true,
-        target: "tiger",
-        effect: "consume_tiger_mark",
-        description: "A stronger attack against a marked tiger."
-      },
-      {
-        id: "emotional_pressure",
-        label: "Emotional Pressure",
-        type: "status",
-        range: "status",
-        effect: "emotional_decay",
-        description: "Applies pressure to Girl/Tiger emotional state."
-      }
-    ],
-
-    behavior(state) {
-      const activeId = state?.player?.id || state?.activeCharacterId;
-      const roll = Math.random();
-
-      if (activeId === "girl") {
-        if (!this.tigerMarked && roll < 0.5) {
-          this.tigerMarked = true;
-          return this.abilities.find(a => a.id === "mark_tiger");
+            if (roll < 0.42) return withTelegraphMeta(pickAbility(this, "pressure_rush"));
+            if (roll < 0.82) return withTelegraphMeta(pickAbility(this, "distant_check"));
+            return withTelegraphMeta(pickAbility(this, "uneasy_glance"));
         }
+    },
 
-        if (this.tigerMarked) {
-          this.tigerMarked = false;
-          return this.abilities.find(a => a.id === "marked_pounce");
+    order: {
+        id: "order",
+        name: "Order",
+        hp: 110,
+        role: "Anti-Block / Pressure Builder",
+        theme: "You cannot just defend. You have to act.",
+        spritePath: "/assets/enemies/enforcer/enforcer.png",
+        portraitPath: "/assets/enemies/enforcer/enforcer.png",
+        telegraphStyle: "honest",
+        abilities: [
+            {
+                id: "quick_strike",
+                label: "Quick Strike",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 10,
+                counterable: true,
+                description: "A fast close-range enforcement hit."
+            },
+            {
+                id: "marching_blow",
+                label: "Marching Blow",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 12,
+                counterable: true,
+                description: "A steadier close attack that keeps pressure on."
+            },
+            {
+                id: "enforcement_strike",
+                label: "Enforcement Strike",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 22,
+                counterable: true,
+                description: "A heavy punish fired after max pressure is reached."
+            }
+        ],
+        behavior(state) {
+            const lastDefense = state.lastResolvedDefense;
+            state.lastResolvedDefense = null;
+
+            if (lastDefense === "block") {
+                state.enemy.pressure = Math.min(3, (state.enemy.pressure ?? 0) + 1);
+            } else if (lastDefense === "counter" || lastDefense === "dodge") {
+                state.enemy.pressure = Math.max(0, (state.enemy.pressure ?? 0) - 1);
+            }
+
+            if ((state.enemy.pressure ?? 0) >= 3) {
+                state.enemy.pressure = 0;
+                return withTelegraphMeta(pickAbility(this, "enforcement_strike"));
+            }
+
+            return withTelegraphMeta(
+                pickAbility(this, Math.random() < 0.58 ? "quick_strike" : "marching_blow")
+            );
         }
+    },
 
-        if (roll < 0.75) {
-          return this.abilities.find(a => a.id === "emotional_pressure");
+    watcher: {
+        id: "watcher",
+        name: "Watcher",
+        hp: 100,
+        role: "Timing Disruption / Deception",
+        theme: "You are being watched and second-guessed.",
+        spritePath: "/assets/enemies/familiar/familiar.png",
+        portraitPath: "/assets/enemies/familiar/familiar.png",
+        telegraphStyle: "deceptive",
+        abilities: [
+            {
+                id: "measured_setup",
+                label: "Measured Strike",
+                type: "status",
+                range: "status",
+                shownRange: "close",
+                delayed: true,
+                effect: "queue_measured_strike",
+                description: "The Watcher measures the timing before striking."
+            },
+            {
+                id: "measured_strike",
+                label: "Measured Strike",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 12,
+                counterable: true,
+                delayed: true,
+                description: "A delayed close hit that tests your timing."
+            },
+            {
+                id: "distant_check",
+                label: "Distant Check",
+                type: "attack",
+                range: "long",
+                shownRange: "long",
+                damage: 10,
+                counterable: false,
+                description: "A ranged probe that forces a clean defensive read."
+            },
+            {
+                id: "false_signal",
+                label: "False Signal",
+                type: "attack",
+                range: "long",
+                shownRange: "close",
+                damage: 10,
+                counterable: false,
+                fake: true,
+                description: "Shows one threat and resolves as another."
+            }
+        ],
+        behavior() {
+            const roll = Math.random();
+
+            if (roll < 0.34) {
+                return withTelegraphMeta(pickAbility(this, "measured_setup"), { delayed: true });
+            }
+
+            if (roll < 0.68) {
+                return withTelegraphMeta(pickAbility(this, "distant_check"));
+            }
+
+            const actual = Math.random() < 0.5
+                ? pickAbility(this, "measured_strike")
+                : pickAbility(this, "distant_check");
+
+            return withTelegraphMeta(actual, {
+                id: "false_signal",
+                label: "False Signal",
+                fake: true,
+                shownRange: actual.range === "close" ? "long" : "close",
+                description: `Shows ${actual.range === "close" ? "long" : "close"} but resolves as ${actual.range}.`
+            });
         }
-      }
+    },
 
-      return this.abilities.find(a => a.id === "pounce");
-    }
-  },
+    pull: {
+        id: "pull",
+        name: "Pull",
+        hp: 130,
+        role: "Multi-Entity / Pressure from Environment",
+        theme: "The environment pulling you back.",
+        spritePath: "/assets/enemies/pull/pull.png",
+        portraitPath: "/assets/enemies/pull/pull-single.png",
+        telegraphStyle: "environmental",
+        abilities: [
+            {
+                id: "active_strike",
+                label: "Active Strike",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 10,
+                counterable: true,
+                description: "The active body steps in for a direct attack."
+            },
+            {
+                id: "support_wave",
+                label: "Support Wave",
+                type: "status",
+                range: "status",
+                shownRange: "status",
+                effect: "enemy_damage_up",
+                description: "Inactive bodies buff the active one."
+            },
+            {
+                id: "bench_pressure",
+                label: "Bench Pressure",
+                type: "status",
+                range: "status",
+                shownRange: "status",
+                effect: "inactive_pressure",
+                description: "Pressure spreads through the whole team."
+            }
+        ],
+        behavior(state) {
+            state.enemy.rotationIndex = ((state.enemy.rotationIndex ?? 0) + 1) % 3;
 
-  controller: {
-    id: "controller",
-    name: "Controller",
-    hp: 100,
-    type: "time_manipulation",
-    lastMove: null,
+            if (state.enemy.rotationIndex === 0) {
+                return withTelegraphMeta(pickAbility(this, "support_wave"));
+            }
 
-    abilities: [
-      {
-        id: "snap_strike",
-        label: "Snap Strike",
-        type: "attack",
-        range: "close",
-        damage: 12,
-        counterable: true,
-        effect: "timer_fast_on_hit",
-        timerMultiplier: 0.8,
-        description: "A fast close-range attack that slightly shortens the next decision timer."
-      },
-      {
-        id: "time_shot",
-        label: "Time Shot",
-        type: "attack",
-        range: "long",
-        damage: 10,
-        counterable: false,
-        description: "A precise long-range attack."
-      },
-      {
-        id: "delay_strike",
-        label: "Delay Strike",
-        type: "attack",
-        range: "close",
-        damage: 14,
-        counterable: true,
-        delayed: true,
-        description: "A delayed close-range attack that lands after the player's next action."
-      },
-      {
-        id: "speed_up",
-        label: "Speed Up",
-        type: "status",
-        range: "status",
-        effect: "timer_fast",
-        timerMultiplier: 0.6,
-        description: "Reduces the player's decision timer for 1 turn."
-      },
-      {
-        id: "fake_telegraph",
-        label: "Fake Telegraph",
-        type: "fake",
-        range: "fake",
-        description: "Displays one attack type but performs another."
-      }
-    ],
+            if (state.enemy.rotationIndex === 2 && Math.random() < 0.5) {
+                return withTelegraphMeta(pickAbility(this, "bench_pressure"));
+            }
 
-    behavior() {
-      const roll = Math.random();
-
-      if (this.lastMove === "delay_strike") {
-        if (roll < 0.5) {
-          this.lastMove = "snap_strike";
-          return this.abilities.find(a => a.id === "snap_strike");
+            return withTelegraphMeta(pickAbility(this, "active_strike"));
         }
+    },
 
-        this.lastMove = "time_shot";
-        return this.abilities.find(a => a.id === "time_shot");
-      }
+    convergence: {
+        id: "convergence",
+        name: "Convergence",
+        hp: 300,
+        role: "Character Switching / System Mastery Boss",
+        theme: "You do not get to stay comfortable. You have to adapt.",
+        spritePath: "/assets/enemies/boss/boss.png",
+        portraitPath: "/assets/enemies/boss/boss2.png",
+        telegraphStyle: "phase",
+        abilities: [
+            {
+                id: "crushing_blow",
+                label: "Crushing Blow",
+                type: "attack",
+                range: "close",
+                shownRange: "close",
+                damage: 18,
+                counterable: true,
+                description: "A direct boss slam."
+            },
+            {
+                id: "core_beam",
+                label: "Core Beam",
+                type: "attack",
+                range: "long",
+                shownRange: "long",
+                damage: 15,
+                counterable: false,
+                description: "A ranged boss beam."
+            },
+            {
+                id: "phase_shift",
+                label: "Phase Shift",
+                type: "status",
+                range: "status",
+                shownRange: "status",
+                effect: "boss_switch_ready",
+                description: "Signals an incoming control shift."
+            },
+            {
+                id: "false_signal",
+                label: "False Signal",
+                type: "attack",
+                range: "close",
+                shownRange: "long",
+                damage: 17,
+                counterable: true,
+                fake: true,
+                description: "The boss disguises a direct threat."
+            }
+        ],
+        behavior(state) {
+            const hpPct = state.enemy.hp / state.enemy.maxHp;
+            const roll = Math.random();
 
-      if (roll < 0.2) {
-        this.lastMove = "speed_up";
-        return this.abilities.find(a => a.id === "speed_up");
-      }
+            if (hpPct > 0.66) {
+                if (roll < 0.5) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
+                if (roll < 0.9) return withTelegraphMeta(pickAbility(this, "core_beam"));
+                return withTelegraphMeta(pickAbility(this, "phase_shift"));
+            }
 
-      if (roll < 0.4) {
-        const actual =
-          Math.random() < 0.5
-            ? this.abilities.find(a => a.id === "snap_strike")
-            : this.abilities.find(a => a.id === "time_shot");
+            if (hpPct > 0.33) {
+                if (roll < 0.38) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
+                if (roll < 0.76) return withTelegraphMeta(pickAbility(this, "core_beam"));
+                return withTelegraphMeta(pickAbility(this, "phase_shift"));
+            }
 
-        this.lastMove = "fake_telegraph";
-
-        return {
-          id: "fake_telegraph",
-          label: "Fake Telegraph",
-          type: "fake",
-          range: "fake",
-          shownRange: actual.range === "close" ? "long" : "close",
-          actualAbility: actual,
-          description: `Shows ${actual.range === "close" ? "long" : "close"} but resolves as ${actual.range}.`
-        };
-      }
-
-      if (roll < 0.65) {
-        this.lastMove = "snap_strike";
-        return this.abilities.find(a => a.id === "snap_strike");
-      }
-
-      if (roll < 0.85) {
-        this.lastMove = "time_shot";
-        return this.abilities.find(a => a.id === "time_shot");
-      }
-
-      this.lastMove = "delay_strike";
-      return this.abilities.find(a => a.id === "delay_strike");
+            if (roll < 0.3) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
+            if (roll < 0.58) return withTelegraphMeta(pickAbility(this, "core_beam"));
+            if (roll < 0.82) return withTelegraphMeta(pickAbility(this, "false_signal"));
+            return withTelegraphMeta(pickAbility(this, "phase_shift"));
+        }
     }
-  },
+};
 
-  mob: {
-    id: "mob",
-    name: "Mob",
-    hp: 140,
-    type: "multi",
-    rotationIndex: 0,
-
-    abilities: [
-      {
-        id: "active_strike",
-        label: "Active Strike",
-        type: "attack",
-        range: "close",
-        damage: 10,
-        counterable: true,
-        description: "The active mob enemy attacks."
-      },
-      {
-        id: "buff_active",
-        label: "Buff Active",
-        type: "status",
-        range: "status",
-        effect: "enemy_damage_up",
-        description: "Inactive enemy buffs the active enemy."
-      },
-      {
-        id: "harass_inactive",
-        label: "Harass Inactive",
-        type: "status",
-        range: "status",
-        effect: "inactive_pressure",
-        description: "Inactive enemy pressures inactive characters."
-      },
-      {
-        id: "rotate",
-        label: "Rotate",
-        type: "status",
-        range: "status",
-        effect: "mob_rotate",
-        description: "Mob rotates the active enemy."
-      }
-    ],
-
-    behavior() {
-      this.rotationIndex++;
-
-      if (this.rotationIndex % 3 === 0) {
-        return this.abilities.find(a => a.id === "rotate");
-      }
-
-      const roll = Math.random();
-
-      if (roll < 0.45) return this.abilities.find(a => a.id === "active_strike");
-      if (roll < 0.75) return this.abilities.find(a => a.id === "buff_active");
-      return this.abilities.find(a => a.id === "harass_inactive");
-    }
-  },
-
-  trinity_breaker: {
-    id: "trinity_breaker",
-    name: "Trinity Breaker",
-    hp: 300,
-    type: "boss",
-    syncThreshold: 5,
-    teamAttackDamage: 75,
-
-    abilities: [
-      {
-        id: "crushing_blow",
-        label: "Crushing Blow",
-        type: "attack",
-        range: "close",
-        damage: 20,
-        counterable: true,
-        description: "A heavy close-range boss attack."
-      },
-      {
-        id: "core_beam",
-        label: "Core Beam",
-        type: "attack",
-        range: "long",
-        damage: 16,
-        counterable: false,
-        description: "A long-range boss attack."
-      },
-      {
-        id: "delay_break",
-        label: "Delay Break",
-        type: "attack",
-        range: "close",
-        damage: 18,
-        counterable: true,
-        delayed: true,
-        description: "A delayed boss strike."
-      },
-      {
-        id: "combo_break",
-        label: "Combo Break",
-        type: "status",
-        range: "status",
-        effect: "combo_break",
-        description: "Damages the player's combo momentum."
-      },
-      {
-        id: "timer_crush",
-        label: "Timer Crush",
-        type: "status",
-        range: "status",
-        effect: "timer_fast",
-        timerMultiplier: 0.6,
-        description: "Shortens the timer."
-      },
-      {
-        id: "tiger_pressure",
-        label: "Tiger Pressure",
-        type: "status",
-        range: "status",
-        effect: "tiger_mark",
-        description: "Pressures the Girl/Tiger lane."
-      },
-      {
-        id: "false_signal",
-        label: "False Signal",
-        type: "fake",
-        range: "fake",
-        description: "Shows one attack range but resolves as another."
-      }
-    ],
-
-    behavior(state) {
-      const hp = state?.enemy?.hp ?? state?.enemyHp ?? this.hp;
-
-      let directPool;
-      let systemPool;
-
-      if (hp > 180) {
-        directPool = ["crushing_blow", "core_beam"];
-        systemPool = ["combo_break", "tiger_pressure"];
-      } else if (hp > 75) {
-        directPool = ["crushing_blow", "core_beam", "delay_break"];
-        systemPool = ["timer_crush", "combo_break", "tiger_pressure"];
-      } else {
-        directPool = ["crushing_blow", "core_beam", "delay_break", "false_signal"];
-        systemPool = ["timer_crush", "combo_break", "tiger_pressure"];
-      }
-
-      const directId = directPool[Math.floor(Math.random() * directPool.length)];
-      const systemId = systemPool[Math.floor(Math.random() * systemPool.length)];
-
-      let directThreat = this.abilities.find(a => a.id === directId);
-
-      if (directId === "false_signal") {
-        const actual =
-          Math.random() < 0.5
-            ? this.abilities.find(a => a.id === "crushing_blow")
-            : this.abilities.find(a => a.id === "core_beam");
-
-        directThreat = {
-          id: "false_signal",
-          label: "False Signal",
-          type: "fake",
-          range: "fake",
-          shownRange: actual.range === "close" ? "long" : "close",
-          actualAbility: actual,
-          description: `Shows ${actual.range === "close" ? "long" : "close"} but resolves as ${actual.range}.`
-        };
-      }
-
-      const systemThreat = this.abilities.find(a => a.id === systemId);
-
-      return {
-        id: "dual_threat",
-        label: "Dual Threat",
-        type: "multi",
-        threats: [directThreat, systemThreat],
-        description: "The boss presents one direct threat and one system threat."
-      };
-    }
-  }
+export const enemyAliases = {
+    striker: "familiar",
+    breaker: "order",
+    controller: "watcher",
+    mob: "pull",
+    trinity_breaker: "convergence"
 };
