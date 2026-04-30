@@ -375,278 +375,313 @@ New Orleans: public/assests/stages/mardi_gras.png
 
 ---
 
-### Striker
+### Familiar
 
-**Role:** Balanced / Tutorial Enemy
+**Role:** Balanced / Tutorial Enemy  
+*(Replaces: Striker)*
 
-- Uses both close-range and long-range attacks
-- Occasionally uses a status move (small buff or debuff)
-- Clearly telegraphs attack type before acting:
-  - Close-range → counterable
-  - Long-range → cannot be countered
-  - Status → clearly indicated
-
-**Purpose:**
-- Teaches core combat loop:
-  - read → decide → act
-
----
-
-### Breaker
-
-**Role:** Anti-Block / Pressure Builder
-
-- Uses fast close-range attacks
-- Counters deal reduced damage against it
-
-**Pressure Mechanic:**
-- Gains **+1 Pressure** when player blocks
-- Loses Pressure when player:
-  - counters
-  - dodges
-- At **3 Pressure**:
-  - Next attack becomes **Breaker Slam**
-  - Deals heavy bonus damage
-  - Pressure resets to 0
-
-**Purpose:**
-- Punishes passive defense
-- Encourages switching between defensive options
-
----
-
-### Disruptor
-
-**Role:** Combo Disruption
-
-- Uses status moves frequently
-- Has weaker direct damage
-
-**Abilities:**
-- **Combo Lock**
-  - Combo cannot increase for 1 turn
-  - Combo is not reduced
-- **Combo Delay**
-  - Combo gain is delayed instead of blocked
-- **Combo Drain**
-  - Reduces combo slightly
-
-**Purpose:**
-- Breaks player momentum
-- Forces recovery and adaptation
-
----
-
-### Hunter
-
-**Role:** Tiger Pressure / Targeted Threat
-
-- Strong against Girl's Tiger companion
-
-**Mark Mechanic:**
-- Applies **Mark** to the Tiger
-- Marked Tiger:
-  - Takes increased damage on next hit
-- Mark is consumed after attack
-- Mark can be removed by switching
-
-**Behavior:**
-- Focuses pressure through timing and targeting
-- Less constant damage, more threat spikes
-
-**Purpose:**
-- Forces player to manage Tiger health
-- Encourages switching and defensive planning
-
----
-
-### Controller
-
-**Role:** Time Manipulation / Decision Pressure
-
-- Manipulates the flow of time during battle
-- Disrupts player reaction timing and decision-making
-- Uses deceptive telegraphs and delayed attacks to punish mistakes
-
----
-
-#### Abilities
-
-- **Snap Strike**
-  - Range: close
-  - Counterable
-  - Deals moderate damage
-  - On hit: slightly reduces the next decision timer
-  - Purpose: fast punishment for hesitation
-
-- **Time Shot**
-  - Range: long
-  - Cannot be countered
-  - Deals moderate damage
-  - Purpose: safe pressure that forces block/dodge decisions
-
-- **Delay Strike**
-  - Range: close
-  - Counterable
-  - Deals higher damage
-  - Lands after the player’s next action
-  - Cannot be used twice in a row
-  - Purpose: forces prediction instead of reaction
-
-- **Speed Up**
-  - Status
-  - Reduces player decision timer by ~30–50% for 1 turn
-  - Purpose: increases pressure and forces faster decisions
-
-- **Fake Telegraph**
-  - Displays one attack type, but performs another
-  - Always wraps a real attack (Snap Strike or Time Shot)
-  - Example:
-    - Shows close-range → resolves as long-range
-    - Shows long-range → resolves as close-range
-  - Purpose: breaks player trust in telegraphs
+The Familiar appears calm and non-threatening at first glance, but applies steady pressure through clear and readable attacks.
 
 ---
 
 #### Behavior
 
-- Mixes:
-  - fast attacks (Snap Strike)
-  - safe pressure (Time Shot)
-  - delayed attacks (Delay Strike)
-  - time manipulation (Speed Up)
-  - deception (Fake Telegraph)
-- Avoids repeating Delay Strike consecutively
+- Uses both close-range and long-range attacks
+- Occasionally uses a light status move
+- Clearly telegraphs attack type before acting:
+  - Close-range → counterable
+  - Long-range → cannot be countered
+  - Status → clearly indicated
 
 ---
 
 #### Purpose
 
-- Tests reaction speed and composure
-- Disrupts rhythm and timing
-- Forces defensive play (cannot safely spam attack)
-- Introduces uncertainty without randomness
+- Teaches core combat loop:
+  - read → decide → act
+- Establishes trust in telegraphs
+- Introduces player to timing-based defense
 
 ---
 
-#### Player Impact
+#### Theme
 
-The player must:
-- react quickly (Speed Up)
-- choose correct defense (close vs long)
-- predict delayed attacks (Delay Strike)
-- question telegraphs (Fake Telegraph)
-
-The Controller turns combat from:
-> reaction  
-into:
-> reaction + prediction + trust management
+> Something that feels safe… but isn’t
 
 ---
 
-### Mob
+### Order
 
-**Role:** Multi-Entity / Chaos Control
+**Role:** Anti-Block / Pressure Builder  
+*(Replaces: Breaker)*
 
-- 1 active enemy
-- 1–2 inactive enemies rotate in periodically
-
-**Inactive Enemies Can:**
-- Apply buffs to the active enemy
-- Apply pressure to inactive characters
-- Be targeted by assists
-- Interact with inactive characters
-
-**Restrictions:**
-- Cannot be directly attacked by the active character
-- Do not deal direct damage to the active character
-
-**Behavior:**
-- Rotation order is predictable
-
-**Purpose:**
-- Introduces multi-target awareness
-- Forces prioritization and planning
+Order enforces structure and punishes overly defensive play. The longer the player relies on blocking, the more dangerous it becomes.
 
 ---
 
-### Trinity Breaker (Final Boss)
+#### Pressure Mechanic
 
-**Role:** System Mastery / Multi-Threat Boss
+- Gains **+1 Pressure** when player blocks
+- Loses Pressure when player:
+  - counters
+  - dodges
 
-The Trinity Breaker represents the culmination of all combat systems.
+At **3 Pressure**:
+- Next attack becomes **Enforcement Strike**
+- Deals heavy bonus damage
+- Pressure resets to 0
+
+---
+
+#### Behavior
+
+- Uses fast close-range attacks
+- Applies steady pressure through repetition
+- Encourages active, decisive play
+
+---
+
+#### Purpose
+
+- Punishes passive defense
+- Forces player to vary defensive choices
+- Reinforces risk vs reward
+
+---
+
+#### Theme
+
+> You can’t just defend—you have to act
+
+---
+
+### Watcher
+
+**Role:** Timing Disruption / Deception  
+*(Simplified Controller)*
+
+The Watcher observes and manipulates timing, making the player question their reactions and decisions.
+
+---
+
+#### Abilities
+
+- **Measured Strike**
+  - Range: close
+  - Counterable
+  - Slight delay before impact
+
+- **Distant Check**
+  - Range: long
+  - Cannot be countered
+  - Forces defensive decision
+
+- **False Signal**
+  - Displays one attack type, but performs another
+  - Example:
+    - Shows close-range → resolves as long-range
+    - Shows long-range → resolves as close-range
+
+---
+
+#### Behavior
+
+- Uses fake telegraphs to disrupt trust
+- Introduces slight timing inconsistencies
+- Avoids predictable patterns
+
+---
+
+#### Purpose
+
+- Forces player to:
+  - think, not just react
+  - question telegraphs
+- Introduces light mind games without overwhelming complexity
+
+---
+
+#### Theme
+
+> You are being watched—and second-guessed
+
+---
+
+### Pull
+
+**Role:** Multi-Entity / Pressure from Environment  
+*(Replaces: Mob)*
+
+The Pull represents external forces that surround and pressure the player over time.
 
 ---
 
 #### Structure
 
-The battle is split into **3 simultaneous lanes**:
-- Girl / Tiger lane
-- Officer lane
-- Man lane
+- 1 active enemy
+- 1–2 inactive enemies rotate in periodically
 
 ---
 
-#### Rules
+#### Inactive Enemies Can:
 
-- Each character fights independently
-- No assists
-- No switching
-- Each lane has its own:
-  - turn flow
-  - decision timer
+- Apply buffs to the active enemy
+- Apply pressure to inactive characters
+- Be targeted by assists
+- Interact with inactive characters
 
 ---
 
-#### Core Mechanic: Dual Threat
+#### Restrictions
 
-Each turn, the boss presents **2 simultaneous threats**:
+- Cannot be directly attacked by the active character
+- Do not deal direct damage to the active character
 
-- One **direct threat**:
-  - Close attack (counterable)
-  - Long attack (not counterable)
-  - Delayed attack
+---
 
-- One **system threat**:
-  - Combo disruption
-  - Timer pressure
-  - Tiger pressure
-  - Fake telegraph
+#### Behavior
 
-Player can only fully respond to one.
+- Rotation order is predictable
+- Builds pressure through presence rather than direct damage
 
-Unaddressed threats still resolve.
+---
+
+#### Purpose
+
+- Introduces multi-target awareness
+- Forces prioritization and planning
+- Creates indirect pressure
+
+---
+
+#### Theme
+
+> The environment pulling you back
+
+---
+
+### Convergence (Final Boss)
+
+**Role:** Character Switching / System Mastery Boss  
+*(Replaces: Trinity Breaker)*
+
+The Convergence represents the combined pressure affecting all characters.  
+Instead of fighting each character in separate lanes, the boss forces the player to manage character switching, cooldowns, timing, and survival.
+
+---
+
+#### Structure
+
+- The player fights the boss directly
+- Only one character is active at a time
+- The boss can force character switches
+- Characters attack the boss directly
+- The boss has one shared HP pool
+
+---
+
+#### Boss Switch Mechanic
+
+The boss can force the active character to switch out.
+
+When this happens:
+
+- The current active character becomes inactive
+- A different non-defeated character becomes active
+- The player must adapt to the new character’s timing, abilities, and risk profile
+
+---
+
+#### Assist Rules
+
+During the final boss:
+
+- Normal assists cannot be used
+- Girl does not have an assist during the boss fight
+- Girl can still use **Comfort** to heal the tiger
+- Girl can use her normal abilities
+
+---
+
+#### Girl Boss Assist Exception
+
+Girl can assist **Officer** or **Man** during the boss fight.
+
+Her boss assist uses her active assist effect:
+
+**Good Vibes**
+- Heals the active character
+- Can only be used once per boss fight
+- After use, the boss gains a **1 boss-switch cooldown**
+- This means the boss cannot force another character switch immediately after Good Vibes is used
+- Good Vibes cannot be used twice in a row because it is one-time use only
+
+---
+
+#### Boss Switch Cooldown
+
+After Girl uses Good Vibes:
+
+- Boss switch is disabled for 1 boss action
+- After that, the boss can switch characters again
+
+---
+
+#### Core Mechanic: Forced Adaptation
+
+The boss tests whether the player can adapt when control changes.
+
+The player must manage:
+
+- Girl / Tiger emotion state
+- Officer’s stable defensive tools
+- Man’s high-risk offense
+- Boss-forced switches
+- Limited healing
+- Combo momentum
 
 ---
 
 #### Phase Behavior
 
 **Phase 1 (High HP):**
-- Simple direct attacks
-- Light combo/tiger pressure
+- Basic close and long attacks
+- Rare boss switch
+- Clear telegraphs
 
 **Phase 2 (Mid HP):**
-- Introduces timer manipulation
-- More frequent disruption
+- More frequent boss switching
+- Adds timing disruption
+- Begins using pressure-style attacks
 
 **Phase 3 (Low HP):**
-- Adds delayed attacks
-- Introduces fake telegraphs
-- Maximum pressure and unpredictability
+- Faster decision pressure
+- More deceptive telegraphs
+- Boss switches become more threatening
+- Player must use each character efficiently
 
 ---
 
 #### Purpose
 
 - Tests:
-  - reaction speed
-  - decision-making under pressure
-  - system mastery
+  - character mastery
+  - adaptability
+  - resource management
+  - timing under pressure
 
 - Forces:
-  - prioritization
-  - risk management
-  - composure under chaos
+  - learning all characters
+  - surviving bad matchups
+  - deciding when to use Girl’s one boss assist
+  - staying composed when the boss changes control
+
+---
+
+#### Theme
+
+> You don’t get to stay comfortable.  
+> You have to adapt.
 
 ## BATTLES
 

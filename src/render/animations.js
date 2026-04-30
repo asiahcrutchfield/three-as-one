@@ -71,7 +71,7 @@ export function setSpriteFrame(sprite, animation, frameIndex) {
 
     sprite.style.backgroundPosition = `-${col * frameWidth * scale}px -${row * frameHeight * scale}px`;
 }
-function getResponsiveAnimationScale(animation) {
+export function getResponsiveAnimationScale(animation) {
     if (typeof animation.scale === "number") {
         return animation.scale;
     }

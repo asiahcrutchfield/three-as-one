@@ -1,3 +1,7 @@
+:root {
+    --portrait-size: 56px;
+}
+
 /* ===== HUD LAYER ===== */
 #hud-layer {
     position: absolute;
@@ -64,14 +68,27 @@
 }
 
 /* ===== PORTRAIT ===== */
+.portrait-frames {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
 .portrait-slot {
-    width: 56px;
+    width: var(--portrait-size);
     aspect-ratio: 1 / 1;
     flex-shrink: 0;
+    position: relative;
 
     overflow: hidden;
     border: 0;
     outline: 0;
+}
+
+.portrait-slot2 {
+    aspect-ratio: 1 / 1;
+    width: calc(var(--portrait-size) * 0.58);
+    margin-top: 2px;
 }
 
 .portrait-slot img {
@@ -99,8 +116,20 @@
 }
 
 .special-stat {
-    font-size: 12px;
-    color: gold;
+    position: absolute;
+    left: 50%;
+    bottom: 2px;
+    transform: translateX(-50%);
+    padding: 0 5px 1px;
+    border: 1px solid rgba(255, 214, 92, 0.45);
+    background: rgba(0, 0, 0, 0.8);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #ffd65c;
+    white-space: nowrap;
+    line-height: 1.1;
 }
 
 .hidden {
@@ -134,7 +163,7 @@
     z-index: 0;
 }
 
-.stat-track > span {
+.stat-track>span {
     position: relative;
     z-index: 1;
 }

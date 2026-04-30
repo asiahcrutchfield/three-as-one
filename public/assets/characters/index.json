@@ -96,8 +96,8 @@
                 },
                 {
                     "id": "girl",
-                    "offsetX": 140,
-                    "offsetY": -220,
+                    "offsetX": -10,
+                    "offsetY": 0,
                     "z": 2
                 }
             ]

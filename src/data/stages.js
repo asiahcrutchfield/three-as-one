@@ -21,7 +21,8 @@ export const stages = {
     nola: {
         name: "NOLA Street",
         layers: {
-            ground: "/assets/stages/nola/battle_lane.png"
+            ground: "/assets/stages/nola/battle_lane.png",
+            far: "/assets/stages/nola/background.png"
         },
         lane: {
             bottom: 95,

@@ -2,7 +2,7 @@
 import { stages } from "./data/stages.js";
 import { renderStage } from "./render/renderStage.js";
 // character rendering
-import { loadCharacterIndex, renderCharacter } from "./render/renderChar.js";
+import { loadCharacterIndex, renderStaticCombatant, renderUnit } from "./render/renderChar.js";
 // ui rendering
 import {
     createPlayerHUD,
@@ -35,4 +35,5 @@ renderStage(stages.paradise);
 
 const characterIndex = await loadCharacterIndex();
 
-renderCharacter(characterIndex, "girl", "idle", "player-slot", "player");
+renderUnit(characterIndex, "girl_tiger", "idle", "player-slot", "player");
+renderStaticCombatant("/assets/enemies/familiar/familiar.png", "enemy-slot", "enemy");
