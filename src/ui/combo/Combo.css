@@ -1,0 +1,81 @@
+#combo-preview {
+    position: absolute;
+    top: 110px;
+    left: 20px;
+    z-index: 52;
+
+    width: 236px;
+    padding: 0;
+
+    background: transparent;
+    color: white;
+    pointer-events: none;
+}
+
+.combo-preview-label {
+    display: block;
+    margin-bottom: 5px;
+    padding-inline: 2px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #d7c98f;
+}
+
+.combo-preview-bar {
+    position: relative;
+    width: 100%;
+    height: 10px;
+    background: rgba(20, 20, 20, 0.58);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.combo-preview-bar::before,
+.combo-preview-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.26);
+    z-index: 1;
+}
+
+.combo-preview-bar::before {
+    left: 33.333%;
+}
+
+.combo-preview-bar::after {
+    left: 66.666%;
+}
+
+.combo-preview-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    height: auto;
+    background: linear-gradient(90deg, rgba(215, 201, 143, 0.65), rgba(255, 214, 92, 0.92));
+}
+
+.combo-preview-readout {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    padding-inline: 2px;
+
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.72);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.combo-preview-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.combo-preview-max {
+    align-self: end;
+    letter-spacing: 0.06em;
+}

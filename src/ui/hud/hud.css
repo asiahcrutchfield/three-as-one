@@ -66,10 +66,12 @@
 /* ===== PORTRAIT ===== */
 .portrait-slot {
     width: 56px;
-    height: 56px;
+    aspect-ratio: 1 / 1;
     flex-shrink: 0;
 
     overflow: hidden;
+    border: 0;
+    outline: 0;
 }
 
 .portrait-slot img {
@@ -77,6 +79,8 @@
     height: 100%;
     object-fit: cover;
     image-rendering: pixelated;
+    border: 0;
+    outline: 0;
 }
 
 /* ===== NAME + SPECIAL ===== */
@@ -110,20 +114,27 @@
 
 /* ===== HP TRACK ===== */
 .stat-track {
+    position: relative;
     width: 100%;
     padding: 4px 6px;
 
     background: #222;
-
+    overflow: hidden;
     text-align: center;
     font-weight: 700;
     font-size: 12px;
 }
 
-/* ===== OPTIONAL FILL BAR (if you keep it) ===== */
 .stat-fill {
-    height: 4px;
-    background: limegreen;
-    border-radius: 999px;
-    margin-top: 4px;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    background: rgba(50, 205, 50, 0.7);
+    transition: width 0.18s ease;
+    z-index: 0;
+}
+
+.stat-track > span {
+    position: relative;
+    z-index: 1;
 }
