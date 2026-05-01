@@ -11,10 +11,6 @@ import {
     getPassiveBonuses
 } from "./statusEffect.js";
 
-function clamp01(value) {
-    return Math.max(0, Math.min(1, value));
-}
-
 function withinWindow(value, start, end, padding = 0) {
     return value >= Math.max(0, start - padding) && value <= Math.min(1, end + padding);
 }
@@ -53,10 +49,12 @@ export function chooseEnemyIntent(state) {
     }
 
     const template = enemies[enemyAliases[state.enemy.id] ?? state.enemy.id];
+
     if (template.id === "convergence") {
         syncConvergenceState(state);
         return chooseConvergenceIntent(state, template);
     }
+
     const picked = template.behavior?.(state) ?? template.abilities[0];
     return { ...picked };
 }
@@ -86,6 +84,7 @@ export function getDefenseTimingConfig(state, intent) {
 
         if (activeId === "girl") {
             const baseSeconds = characters.girl.abilities.defense.dodge.getWindow(emotion);
+
             if (baseSeconds >= 3) {
                 durationMs = 900;
                 goodWindowStart = 0.18;
@@ -104,11 +103,13 @@ export function getDefenseTimingConfig(state, intent) {
                 goodWindowEnd = 0.48;
             }
         }
+
         if (activeId === "officer") {
             durationMs = 800;
             goodWindowStart = 0.22;
             goodWindowEnd = 0.54;
         }
+
         if (activeId === "man") {
             durationMs = 720;
             goodWindowStart = 0.28;
@@ -140,6 +141,7 @@ export function getDefenseTimingConfig(state, intent) {
 
         if (activeId === "girl") {
             const values = characters.girl.abilities.defense.counter.getValues(emotion);
+
             if (values.window >= 2.5) {
                 durationMs = 860;
                 goodWindowStart = 0.14;
@@ -164,11 +166,6 @@ export function getDefenseTimingConfig(state, intent) {
                 goodWindowEnd = 0.38;
                 perfectWindowStart = 0.28;
                 perfectWindowEnd = 0.34;
-            }
-            if (emotion === "happy") {
-            } else if (emotion === "neutral") {
-            } else if (emotion === "worried") {
-            } else {
             }
         } else if (activeId === "officer") {
             durationMs = 820;
@@ -220,6 +217,7 @@ export function evaluateDefenseTiming(state, intent, timingInput) {
         if (intent.type !== "attack" || intent.range === "status") {
             return { defense, outcome: "invalid", success: false };
         }
+
         const config = getDefenseTimingConfig(state, intent);
         const success = withinWindow(cursorRatio, config.goodWindowStart, config.goodWindowEnd, 0.045);
         return { defense, outcome: success ? "success" : "early", success };
@@ -264,9 +262,9 @@ export function resolveEnemyTurn(state, timingResult = null) {
 
         if (intent.effect === "enemy_damage_up") {
             state.enemy.nextAttackMultiplier *= 1.5;
-            state.enemy.supportStacks = Math.min(3, (state.enemy.supportStacks ?? 0) + (state.enemy.id === "pull" ? 1 : 0));
             feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Damage Up" });
         }
+
         if (intent.effect === "queue_measured_strike") {
             state.enemy.pendingIntent = {
                 id: "measured_strike_release",
@@ -279,21 +277,10 @@ export function resolveEnemyTurn(state, timingResult = null) {
                 delayed: true,
                 description: "A delayed strike finally lands."
             };
+
             feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Timing Set" });
         }
-        if (intent.effect === "inactive_pressure") {
-            let pressureHits = 0;
-            ["girl", "officer", "man"].forEach((id) => {
-                if (id === state.activeCharacterId) return;
-                const dealt = damageCharacter(state, id, 6);
-                if (dealt > 0) pressureHits += dealt;
-            });
-            applyComboChange(state, -0.25);
-            feedback.push({ kind: "text", slotId: getCurrentPlayerSlotId(), label: "Bench Pressure" });
-            if (pressureHits > 0) {
-                feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Backline Hit" });
-            }
-        }
+
         if (intent.effect === "boss_switch_ready") {
             state.enemy.switchCooldown = 1;
             feedback.push({ kind: "text", slotId: getCurrentEnemySlotId(), label: "Phase Shift" });
@@ -313,8 +300,12 @@ export function resolveEnemyTurn(state, timingResult = null) {
     const slotId = getCurrentPlayerSlotId();
     const enemySlotId = getCurrentEnemySlotId();
     const passives = getPassiveBonuses(state);
-    const supportMultiplier = 1 + ((state.enemy.supportStacks ?? 0) * 0.15);
-    let damage = Math.round(intent.damage * state.enemy.nextAttackMultiplier * supportMultiplier * (1 - passives.damageReduction));
+
+    let damage = Math.round(
+        intent.damage *
+        state.enemy.nextAttackMultiplier *
+        (1 - passives.damageReduction)
+    );
 
     if (state.enemy.noDamageNextTurn) {
         damage = 0;
@@ -322,21 +313,34 @@ export function resolveEnemyTurn(state, timingResult = null) {
     }
 
     if (state.currentDefense === "block") {
-        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
+        feedback.push({
+            kind: "attack",
+            slotId: enemySlotId,
+            style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee"
+        });
+
         const reduction = getBlockReduction(state);
         const success = timingResult?.success;
         const reductionMultiplier = success ? reduction : reduction * 0.45;
         const dealt = damageCharacter(state, activeId, Math.round(damage * (1 - reductionMultiplier)));
+
         if (success) {
             applyComboChange(state, 0.15);
             feedback.push({ kind: "defense", slotId, label: "Block" });
         } else {
             feedback.push({ kind: "text", slotId, label: "Late Block" });
         }
+
         if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+
         state.lastResolvedDefense = "block";
     } else if (state.currentDefense === "dodge") {
-        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
+        feedback.push({
+            kind: "attack",
+            slotId: enemySlotId,
+            style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee"
+        });
+
         if (timingResult?.success) {
             applyComboChange(state, 0.25);
             feedback.push({ kind: "dodge", slotId, label: "Dodge" });
@@ -346,41 +350,73 @@ export function resolveEnemyTurn(state, timingResult = null) {
             applyComboChange(state, -0.5);
             state.stats.penalties += 1;
             feedback.push({ kind: "text", slotId, label: "Dodge Failed" });
+
             if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+
             state.lastResolvedDefense = "dodge";
         }
     } else if (state.currentDefense === "counter") {
-        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
+        feedback.push({
+            kind: "attack",
+            slotId: enemySlotId,
+            style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee"
+        });
+
         if (timingResult?.success && intent.range === "close" && intent.counterable) {
             const counterValues = getCounterValues(state);
-            const baseMultiplier = timingResult?.outcome === "perfect" ? counterValues.dmg : Math.max(1, counterValues.dmg - 0.25);
+            const baseMultiplier =
+                timingResult?.outcome === "perfect"
+                    ? counterValues.dmg
+                    : Math.max(1, counterValues.dmg - 0.25);
+
             const comboGain = timingResult?.outcome === "perfect" ? 0.5 : 0.25;
             const counterDamage = Math.round(intent.damage * baseMultiplier * Math.max(1, state.combo));
             const dealt = damageCharacter(state, "enemy", counterDamage);
+
             applyComboChange(state, comboGain);
             state.stats.counters += 1;
-            feedback.push({ kind: "counter", slotId, label: timingResult?.outcome === "perfect" ? "Perfect Counter" : "Good Counter" });
+
+            feedback.push({
+                kind: "counter",
+                slotId,
+                label: timingResult?.outcome === "perfect" ? "Perfect Counter" : "Good Counter"
+            });
+
             if (timingResult?.outcome === "good") {
                 const chipDamage = Math.round(damage * 0.25);
                 const chipTaken = damageCharacter(state, activeId, chipDamage);
+
                 if (chipTaken > 0) feedback.push({ kind: "damage", slotId, amount: chipTaken });
             }
+
             if (dealt > 0) feedback.push({ kind: "damage", slotId: enemySlotId, amount: dealt });
+
             state.lastResolvedDefense = "counter";
         } else {
             const penalty = getFailedCounterPenalty(activeId);
             const extraDamage = activeId === "officer" ? 1 : 1.1;
             const dealt = damageCharacter(state, activeId, Math.round(damage * extraDamage));
+
             applyComboChange(state, penalty);
             state.stats.penalties += 1;
+
             feedback.push({ kind: "text", slotId, label: "Counter Failed" });
+
             if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+
             state.lastResolvedDefense = "counter";
         }
     } else {
-        feedback.push({ kind: "attack", slotId: enemySlotId, style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee" });
+        feedback.push({
+            kind: "attack",
+            slotId: enemySlotId,
+            style: damage >= 16 ? "heavy" : intent.range === "long" ? "ranged" : "melee"
+        });
+
         const dealt = damageCharacter(state, activeId, damage);
+
         if (dealt > 0) feedback.push({ kind: "damage", slotId, amount: dealt });
+
         state.lastResolvedDefense = null;
     }
 

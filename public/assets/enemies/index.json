@@ -1,0 +1,88 @@
+{
+    "enemies": {
+        "familiar": {
+            "name": "Familiar",
+            "animations": {
+                "idle": {
+                    "src": "/assets/enemies/familiar/idle/familiar_idle.png",
+                    "frameWidth": 390,
+                    "frameHeight": 650,
+                    "fps": 8,
+                    "scale": {
+                        "min": 0.55,
+                        "max": 0.8
+                    },
+                    "columns": 6,
+                    "frames": 6
+                }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        "order": {
+            "name": "Order",
+            "animations": {
+                "idle": {
+                    "src": "/assets/enemies/order/idle/order_idle.png",
+                    "frameWidth": 512,
+                    "frameHeight": 768,
+                    "fps": 12,
+                    "scale": {
+                        "min": 0.4,
+                        "max": 0.6
+                    },
+                    "columns": 10,
+                    "frames": 100
+                }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        "watcher": {
+            "name": "Watcher",
+            "animations": {
+                "idle": {
+                    "src": "/assets/enemies/watcher/idle/watcher_idle.png",
+                    "frameWidth": 448,
+                    "frameHeight": 672,
+                    "fps": 8,
+                    "scale": {
+                        "min": 0.4,
+                        "max": 0.6
+                    },
+                    "columns": 6,
+                    "frames": 6
+                }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
+            }
+        },
+        "convergence": {
+            "name": "Convergence",
+            "animations": {
+                "idle": {
+                    "src": "/assets/enemies/boss/idle/boss_idle.png",
+                    "frameWidth": 512,
+                    "frameHeight": 768,
+                    "fps": 8,
+                    "scale": {
+                        "min": 0.4,
+                        "max": 0.6
+                    },
+                    "columns": 6,
+                    "frames": 6
+                }
+            },
+            "anchor": {
+                "x": 0,
+                "y": 0
+            }
+        }
+    }
+}

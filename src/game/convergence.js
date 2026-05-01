@@ -1,5 +1,9 @@
-import { PLAYER_CHARACTER_IDS } from "./state.js";
-import { getAvailableCharacterIds, getCharacterMaxHp, healCharacter, isCharacterUnavailable } from "./statusEffect.js";
+import {
+    getAvailableCharacterIds,
+    getCharacterMaxHp,
+    healCharacter,
+    isCharacterUnavailable
+} from "./statusEffect.js";
 
 const BOSS_SWITCH_CHANCES = {
     1: 0.12,
@@ -11,6 +15,7 @@ export function getConvergencePhase(state) {
     if (state.enemy.id !== "convergence") return null;
 
     const hpPct = state.enemy.hp / state.enemy.maxHp;
+
     if (hpPct <= 0.33) return 3;
     if (hpPct <= 0.66) return 2;
     return 1;
@@ -21,6 +26,7 @@ export function syncConvergenceState(state) {
 
     const nextPhase = getConvergencePhase(state);
     const previousPhase = state.enemy.phase ?? 1;
+
     state.enemy.phase = nextPhase;
 
     if (nextPhase === 3) {
@@ -32,6 +38,7 @@ export function syncConvergenceState(state) {
 
 export function getConvergenceStageOverride(state) {
     if (state.enemy.id !== "convergence") return null;
+
     return state.enemy.stageLocked ? "boss" : null;
 }
 
@@ -52,7 +59,7 @@ export function chooseConvergenceIntent(state, enemyTemplate) {
     if (phase === 2) {
         if (roll < 0.34) return { ...pick("crushing_blow") };
         if (roll < 0.64) return { ...pick("core_beam") };
-        if (roll < 0.82) return { ...pick("false_signal") };
+        if (roll < 0.82) return { ...pick("false_signal"), fake: true };
         return { ...pick("phase_shift") };
     }
 
@@ -101,7 +108,7 @@ export function useConvergenceGoodVibes(state) {
     const healed = healCharacter(state, activeId, healAmount);
 
     state.roster.girl.usedOnce.goodVibesBoss = true;
-    state.enemy.switchCooldown = Math.max(state.enemy.switchCooldown, 1);
+    state.enemy.switchCooldown = Math.max(state.enemy.switchCooldown ?? 0, 1);
 
     return healed;
 }
@@ -111,7 +118,10 @@ export function maybeForceBossSwitch(state) {
 
     syncConvergenceState(state);
 
-    if ((state.enemy.switchCooldown ?? 0) > 0) return null;
+    if ((state.enemy.switchCooldown ?? 0) > 0) {
+        state.enemy.switchCooldown -= 1;
+        return null;
+    }
 
     const phase = state.enemy.phase ?? 1;
     const chance = BOSS_SWITCH_CHANCES[phase] ?? 0;
@@ -123,7 +133,10 @@ export function maybeForceBossSwitch(state) {
 
     const nextId = options[Math.floor(Math.random() * options.length)];
     const previousId = state.activeCharacterId;
+
     state.activeCharacterId = nextId;
+
+    // Phase 3 is more aggressive: no forced cooldown after switch.
     state.enemy.switchCooldown = phase === 3 ? 0 : 1;
 
     return {

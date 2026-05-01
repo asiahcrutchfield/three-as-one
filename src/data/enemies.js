@@ -57,7 +57,9 @@ export const enemies = {
             const roll = Math.random();
 
             if ((state.enemy.nextAttackMultiplier ?? 1) > 1) {
-                return withTelegraphMeta(pickAbility(this, roll < 0.55 ? "pressure_rush" : "distant_check"));
+                return withTelegraphMeta(
+                    pickAbility(this, roll < 0.55 ? "pressure_rush" : "distant_check")
+                );
             }
 
             if (roll < 0.42) return withTelegraphMeta(pickAbility(this, "pressure_rush"));
@@ -72,8 +74,8 @@ export const enemies = {
         hp: 110,
         role: "Anti-Block / Pressure Builder",
         theme: "You cannot just defend. You have to act.",
-        spritePath: "/assets/enemies/enforcer/enforcer.png",
-        portraitPath: "/assets/enemies/enforcer/enforcer.png",
+        spritePath: "/assets/enemies/order/order.png",
+        portraitPath: "/assets/enemies/order/order.png",
         telegraphStyle: "honest",
         abilities: [
             {
@@ -104,7 +106,7 @@ export const enemies = {
                 shownRange: "close",
                 damage: 22,
                 counterable: true,
-                description: "A heavy punish fired after max pressure is reached."
+                description: "A heavy punish after max pressure is reached."
             }
         ],
         behavior(state) {
@@ -134,8 +136,8 @@ export const enemies = {
         hp: 100,
         role: "Timing Disruption / Deception",
         theme: "You are being watched and second-guessed.",
-        spritePath: "/assets/enemies/familiar/familiar.png",
-        portraitPath: "/assets/enemies/familiar/familiar.png",
+        spritePath: "/assets/enemies/watcher/watcher.png",
+        portraitPath: "/assets/enemies/watcher/watcher.png",
         telegraphStyle: "deceptive",
         abilities: [
             {
@@ -185,16 +187,19 @@ export const enemies = {
             const roll = Math.random();
 
             if (roll < 0.34) {
-                return withTelegraphMeta(pickAbility(this, "measured_setup"), { delayed: true });
+                return withTelegraphMeta(pickAbility(this, "measured_setup"), {
+                    delayed: true
+                });
             }
 
             if (roll < 0.68) {
                 return withTelegraphMeta(pickAbility(this, "distant_check"));
             }
 
-            const actual = Math.random() < 0.5
-                ? pickAbility(this, "measured_strike")
-                : pickAbility(this, "distant_check");
+            const actual =
+                Math.random() < 0.5
+                    ? pickAbility(this, "measured_strike")
+                    : pickAbility(this, "distant_check");
 
             return withTelegraphMeta(actual, {
                 id: "false_signal",
@@ -206,60 +211,6 @@ export const enemies = {
         }
     },
 
-    pull: {
-        id: "pull",
-        name: "Pull",
-        hp: 130,
-        role: "Multi-Entity / Pressure from Environment",
-        theme: "The environment pulling you back.",
-        spritePath: "/assets/enemies/pull/pull.png",
-        portraitPath: "/assets/enemies/pull/pull-single.png",
-        telegraphStyle: "environmental",
-        abilities: [
-            {
-                id: "active_strike",
-                label: "Active Strike",
-                type: "attack",
-                range: "close",
-                shownRange: "close",
-                damage: 10,
-                counterable: true,
-                description: "The active body steps in for a direct attack."
-            },
-            {
-                id: "support_wave",
-                label: "Support Wave",
-                type: "status",
-                range: "status",
-                shownRange: "status",
-                effect: "enemy_damage_up",
-                description: "Inactive bodies buff the active one."
-            },
-            {
-                id: "bench_pressure",
-                label: "Bench Pressure",
-                type: "status",
-                range: "status",
-                shownRange: "status",
-                effect: "inactive_pressure",
-                description: "Pressure spreads through the whole team."
-            }
-        ],
-        behavior(state) {
-            state.enemy.rotationIndex = ((state.enemy.rotationIndex ?? 0) + 1) % 3;
-
-            if (state.enemy.rotationIndex === 0) {
-                return withTelegraphMeta(pickAbility(this, "support_wave"));
-            }
-
-            if (state.enemy.rotationIndex === 2 && Math.random() < 0.5) {
-                return withTelegraphMeta(pickAbility(this, "bench_pressure"));
-            }
-
-            return withTelegraphMeta(pickAbility(this, "active_strike"));
-        }
-    },
-
     convergence: {
         id: "convergence",
         name: "Convergence",
@@ -267,7 +218,7 @@ export const enemies = {
         role: "Character Switching / System Mastery Boss",
         theme: "You do not get to stay comfortable. You have to adapt.",
         spritePath: "/assets/enemies/boss/boss.png",
-        portraitPath: "/assets/enemies/boss/boss2.png",
+        portraitPath: "/assets/enemies/boss/boss.png",
         telegraphStyle: "phase",
         abilities: [
             {
@@ -278,7 +229,7 @@ export const enemies = {
                 shownRange: "close",
                 damage: 18,
                 counterable: true,
-                description: "A direct boss slam."
+                description: "A direct boss strike."
             },
             {
                 id: "core_beam",
@@ -288,7 +239,7 @@ export const enemies = {
                 shownRange: "long",
                 damage: 15,
                 counterable: false,
-                description: "A ranged boss beam."
+                description: "A ranged boss attack."
             },
             {
                 id: "phase_shift",
@@ -316,20 +267,21 @@ export const enemies = {
             const roll = Math.random();
 
             if (hpPct > 0.66) {
-                if (roll < 0.5) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
+                if (roll < 0.52) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
                 if (roll < 0.9) return withTelegraphMeta(pickAbility(this, "core_beam"));
                 return withTelegraphMeta(pickAbility(this, "phase_shift"));
             }
 
             if (hpPct > 0.33) {
-                if (roll < 0.38) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
-                if (roll < 0.76) return withTelegraphMeta(pickAbility(this, "core_beam"));
+                if (roll < 0.34) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
+                if (roll < 0.64) return withTelegraphMeta(pickAbility(this, "core_beam"));
+                if (roll < 0.82) return withTelegraphMeta(pickAbility(this, "false_signal"));
                 return withTelegraphMeta(pickAbility(this, "phase_shift"));
             }
 
-            if (roll < 0.3) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
-            if (roll < 0.58) return withTelegraphMeta(pickAbility(this, "core_beam"));
-            if (roll < 0.82) return withTelegraphMeta(pickAbility(this, "false_signal"));
+            if (roll < 0.28) return withTelegraphMeta(pickAbility(this, "crushing_blow"));
+            if (roll < 0.52) return withTelegraphMeta(pickAbility(this, "core_beam"));
+            if (roll < 0.8) return withTelegraphMeta(pickAbility(this, "false_signal"));
             return withTelegraphMeta(pickAbility(this, "phase_shift"));
         }
     }
@@ -339,6 +291,5 @@ export const enemyAliases = {
     striker: "familiar",
     breaker: "order",
     controller: "watcher",
-    mob: "pull",
     trinity_breaker: "convergence"
 };

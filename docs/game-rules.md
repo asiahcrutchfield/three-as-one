@@ -507,59 +507,6 @@ The Watcher observes and manipulates timing, making the player question their re
 
 ---
 
-### Pull
-
-**Role:** Multi-Entity / Pressure from Environment  
-*(Replaces: Mob)*
-
-The Pull represents external forces that surround and pressure the player over time.
-
----
-
-#### Structure
-
-- 1 active enemy
-- 1–2 inactive enemies rotate in periodically
-
----
-
-#### Inactive Enemies Can:
-
-- Apply buffs to the active enemy
-- Apply pressure to inactive characters
-- Be targeted by assists
-- Interact with inactive characters
-
----
-
-#### Restrictions
-
-- Cannot be directly attacked by the active character
-- Do not deal direct damage to the active character
-
----
-
-#### Behavior
-
-- Rotation order is predictable
-- Builds pressure through presence rather than direct damage
-
----
-
-#### Purpose
-
-- Introduces multi-target awareness
-- Forces prioritization and planning
-- Creates indirect pressure
-
----
-
-#### Theme
-
-> The environment pulling you back
-
----
-
 ### Convergence (Final Boss)
 
 **Role:** Character Switching / System Mastery Boss  

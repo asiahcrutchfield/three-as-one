@@ -145,8 +145,9 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
     battleIntro.innerHTML = `
         <div class="battle-intro-card">
             <div class="battle-intro-kicker">Battle Start</div>
-            <div class="battle-intro-title">Battle 1</div>
-            <div class="battle-intro-copy">Familiar</div>
+            <div class="battle-intro-ready">Ready?</div>
+            <div class="battle-intro-title">Battle Start</div>
+            <div class="battle-intro-copy">Battle 1</div>
         </div>
     `;
     battleStage.appendChild(battleIntro);
@@ -155,6 +156,16 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
     battleTransition.id = "battle-transition-overlay";
     battleTransition.className = "hidden";
     battleStage.appendChild(battleTransition);
+
+    const enemyActionCallout = document.createElement("div");
+    enemyActionCallout.id = "enemy-action-callout";
+    enemyActionCallout.className = "hidden";
+    enemyActionCallout.innerHTML = `
+        <div class="enemy-action-card">
+            <div class="enemy-action-name">Attack</div>
+        </div>
+    `;
+    battleStage.appendChild(enemyActionCallout);
 
     const gameOver = document.createElement("div");
     gameOver.id = "game-over-popup";
@@ -184,6 +195,7 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
         rewardsPreview,
         battleIntro,
         battleTransition,
+        enemyActionCallout,
         gameOver,
         pauseButton,
         pauseOverlay
@@ -304,28 +316,60 @@ export function showGameOver(ui, outcome) {
     ui.gameOver.classList.remove("hidden");
 }
 
-export function showBattleIntro(ui, { title, subtitle, kicker = "Battle Start", durationMs = 1200 } = {}) {
+export function showBattleIntro(ui, { title, subtitle, kicker = "Battle Start", durationMs = 1200, variant = "message", phaseLabel = "Ready?" } = {}) {
     const overlay = ui.battleIntro;
     if (!overlay) return Promise.resolve();
 
     const kickerEl = overlay.querySelector(".battle-intro-kicker");
+    const readyEl = overlay.querySelector(".battle-intro-ready");
     const titleEl = overlay.querySelector(".battle-intro-title");
     const copyEl = overlay.querySelector(".battle-intro-copy");
+
+    overlay.classList.remove(
+        "hidden",
+        "is-entering",
+        "is-leaving",
+        "is-ready-phase",
+        "is-start-phase",
+        "is-message-variant",
+        "is-battle-start-variant"
+    );
+    void overlay.offsetWidth;
 
     if (kickerEl) {
         kickerEl.textContent = kicker;
         kickerEl.classList.toggle("hidden", !kicker);
     }
+    if (readyEl) readyEl.textContent = phaseLabel;
     if (titleEl) titleEl.textContent = title ?? "Battle";
     if (copyEl) {
         copyEl.textContent = subtitle ?? "";
         copyEl.classList.toggle("hidden", !subtitle);
     }
 
-    overlay.classList.remove("hidden");
-    overlay.classList.remove("is-entering", "is-leaving");
-    void overlay.offsetWidth;
-    overlay.classList.add("is-entering");
+    if (variant === "battle-start" || variant === "battle-end") {
+        overlay.classList.add("is-battle-start-variant", "is-ready-phase");
+
+        return new Promise((resolve) => {
+            window.setTimeout(() => {
+                overlay.classList.remove("is-ready-phase");
+                overlay.classList.add("is-start-phase");
+
+                window.setTimeout(() => {
+                    overlay.classList.remove("is-start-phase");
+                    overlay.classList.add("is-leaving");
+
+                    window.setTimeout(() => {
+                        overlay.classList.add("hidden");
+                        overlay.classList.remove("is-leaving", "is-battle-start-variant");
+                        resolve();
+                    }, 360);
+                }, 1000);
+            }, 1050);
+        });
+    }
+
+    overlay.classList.add("is-message-variant", "is-entering");
 
     return new Promise((resolve) => {
         window.setTimeout(() => {
@@ -334,17 +378,19 @@ export function showBattleIntro(ui, { title, subtitle, kicker = "Battle Start", 
 
             window.setTimeout(() => {
                 overlay.classList.add("hidden");
-                overlay.classList.remove("is-leaving");
+                overlay.classList.remove("is-leaving", "is-message-variant");
                 resolve();
             }, 320);
         }, durationMs);
     });
 }
 
-export function playBattleTransition(ui, { holdMs = 1000 } = {}) {
+export function playBattleTransition(ui, { holdMs = 1000, fadeOutMs = 500, fadeInMs = 500, onBlackout = null } = {}) {
     const overlay = ui.battleTransition;
     if (!overlay) return Promise.resolve();
 
+    overlay.style.setProperty("--battle-transition-fade-out-ms", `${fadeOutMs}ms`);
+    overlay.style.setProperty("--battle-transition-fade-in-ms", `${fadeInMs}ms`);
     overlay.classList.remove("hidden", "is-fade-in", "is-fade-out");
     void overlay.offsetWidth;
     overlay.classList.add("is-fade-out");
@@ -353,16 +399,43 @@ export function playBattleTransition(ui, { holdMs = 1000 } = {}) {
         window.setTimeout(() => {
             overlay.classList.remove("is-fade-out");
 
-            window.setTimeout(() => {
-                overlay.classList.add("is-fade-in");
-
+            Promise.resolve(onBlackout?.()).then(() => {
                 window.setTimeout(() => {
-                    overlay.classList.add("hidden");
-                    overlay.classList.remove("is-fade-in");
-                    resolve();
-                }, 360);
-            }, holdMs);
-        }, 360);
+                    overlay.classList.add("is-fade-in");
+
+                    window.setTimeout(() => {
+                        overlay.classList.add("hidden");
+                        overlay.classList.remove("is-fade-in");
+                        resolve();
+                    }, fadeInMs);
+                }, holdMs);
+            });
+        }, fadeOutMs);
+    });
+}
+
+export function showEnemyActionCallout(ui, label, durationMs = 720) {
+    const callout = ui.enemyActionCallout;
+    if (!callout) return Promise.resolve();
+
+    const nameEl = callout.querySelector(".enemy-action-name");
+    if (nameEl) nameEl.textContent = label ?? "Attack";
+
+    callout.classList.remove("hidden", "is-entering", "is-leaving");
+    void callout.offsetWidth;
+    callout.classList.add("is-entering");
+
+    return new Promise((resolve) => {
+        window.setTimeout(() => {
+            callout.classList.remove("is-entering");
+            callout.classList.add("is-leaving");
+
+            window.setTimeout(() => {
+                callout.classList.add("hidden");
+                callout.classList.remove("is-leaving");
+                resolve();
+            }, 220);
+        }, durationMs);
     });
 }
 

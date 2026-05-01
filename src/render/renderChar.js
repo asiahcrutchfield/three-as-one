@@ -54,11 +54,17 @@ export function renderCharacter(characterIndex, characterId, animationName, slot
     return sprite;
 }
 
-export function renderStaticCombatant(imageSrc, slotId, side = "player") {
+export function renderStaticCombatant(imageSrc, slotId, side = "player", options = {}) {
     const slot = document.querySelector(`#${slotId}`);
     if (!slot) return null;
 
     slot.innerHTML = "";
+
+    const {
+        width = 240,
+        height = 360,
+        scale = 1
+    } = options;
 
     const sprite = document.createElement("div");
     sprite.classList.add("combatant", "sprite", "static-combatant");
@@ -70,8 +76,8 @@ export function renderStaticCombatant(imageSrc, slotId, side = "player") {
     sprite.style.backgroundRepeat = "no-repeat";
     sprite.style.backgroundPosition = "center bottom";
     sprite.style.backgroundSize = "contain";
-    sprite.style.width = "240px";
-    sprite.style.height = "360px";
+    sprite.style.width = `${Math.round(width * scale)}px`;
+    sprite.style.height = `${Math.round(height * scale)}px`;
     sprite.style.setProperty("--character-viewport-scale", "1");
 
     slot.appendChild(sprite);

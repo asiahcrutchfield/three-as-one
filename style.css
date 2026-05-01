@@ -204,7 +204,7 @@ body {
 }
 
 .enemy-combatant {
-    transform: translateX(-50%) scaleX(-1) scale(var(--character-viewport-scale, 1));
+    transform: translateX(-50%) scale(var(--character-viewport-scale, 1));
 }
 
 .player-combatant {
@@ -217,7 +217,7 @@ body {
 }
 
 .combat-unit .enemy-combatant {
-    transform: scaleX(-1) scale(var(--character-viewport-scale, 1));
+    transform: scale(var(--character-viewport-scale, 1));
 }
 
 .combat-unit .player-combatant {
@@ -935,8 +935,10 @@ UI
     display: grid;
     place-items: center;
     background:
-        linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.42)),
+        linear-gradient(180deg, rgba(255, 170, 210, 0.12), rgba(0, 0, 0, 0.28)),
         repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 6px);
+    opacity: 1;
+    transition: opacity 0.28s ease, background 0.22s ease;
     pointer-events: none;
 }
 
@@ -963,6 +965,18 @@ UI
     text-transform: uppercase;
 }
 
+.battle-intro-ready {
+    display: none;
+    font-size: 44px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #fff2fb;
+    text-shadow:
+        0 0 14px rgba(255, 150, 210, 0.5),
+        0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
 .battle-intro-title {
     margin-bottom: 6px;
     font-size: 30px;
@@ -977,6 +991,68 @@ UI
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+}
+
+#battle-intro-overlay.is-battle-start-variant {
+    background:
+        linear-gradient(180deg, rgba(255, 183, 222, 0.16), rgba(16, 10, 22, 0.32)),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 6px);
+    backdrop-filter: saturate(1.02);
+}
+
+#battle-intro-overlay.is-battle-start-variant.is-leaving {
+    opacity: 0;
+    background:
+        linear-gradient(180deg, rgba(255, 183, 222, 0), rgba(16, 10, 22, 0)),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0) 0 2px, transparent 2px 6px);
+}
+
+#battle-intro-overlay.is-battle-start-variant .battle-intro-card {
+    min-width: 100%;
+    padding: 0 64px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#battle-intro-overlay.is-battle-start-variant .battle-intro-kicker {
+    display: none;
+}
+
+#battle-intro-overlay.is-battle-start-variant .battle-intro-ready,
+#battle-intro-overlay.is-battle-start-variant .battle-intro-title,
+#battle-intro-overlay.is-battle-start-variant .battle-intro-copy {
+    opacity: 0;
+}
+
+#battle-intro-overlay.is-battle-start-variant .battle-intro-title {
+    margin-bottom: 10px;
+    font-size: clamp(54px, 8vw, 92px);
+    line-height: 0.94;
+    color: #fff6fd;
+    text-shadow:
+        0 0 18px rgba(255, 116, 190, 0.46),
+        0 12px 28px rgba(0, 0, 0, 0.38);
+}
+
+#battle-intro-overlay.is-battle-start-variant .battle-intro-copy {
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    color: rgba(255, 242, 251, 0.88);
+    text-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
+}
+
+#battle-intro-overlay.is-battle-start-variant.is-ready-phase .battle-intro-ready {
+    display: block;
+    animation: battleReadyIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#battle-intro-overlay.is-battle-start-variant.is-start-phase .battle-intro-title {
+    animation: battleStartIn 0.44s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#battle-intro-overlay.is-battle-start-variant.is-start-phase .battle-intro-copy {
+    animation: battleStartMetaIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) 0.14s forwards;
 }
 
 #battle-intro-overlay.is-entering .battle-intro-card {
@@ -1001,11 +1077,50 @@ UI
 }
 
 #battle-transition-overlay.is-fade-out {
-    animation: battleTransitionFadeOut 0.36s ease forwards;
+    animation: battleTransitionFadeOut var(--battle-transition-fade-out-ms, 360ms) ease forwards;
 }
 
 #battle-transition-overlay.is-fade-in {
-    animation: battleTransitionFadeIn 0.36s ease forwards;
+    animation: battleTransitionFadeIn var(--battle-transition-fade-in-ms, 360ms) ease forwards;
+}
+
+#enemy-action-callout {
+    position: absolute;
+    right: 14%;
+    bottom: 300px;
+    z-index: 77;
+    pointer-events: none;
+}
+
+#enemy-action-callout.hidden {
+    display: none;
+}
+
+.enemy-action-card {
+    min-width: 180px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 214, 92, 0.72);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(28, 14, 18, 0.8));
+    color: white;
+    text-align: center;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+.enemy-action-name {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff1cc;
+    text-shadow: 0 0 12px rgba(255, 214, 92, 0.24);
+}
+
+#enemy-action-callout.is-entering .enemy-action-card {
+    animation: enemyActionIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#enemy-action-callout.is-leaving .enemy-action-card {
+    animation: enemyActionOut 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .pause-card {
@@ -1058,6 +1173,58 @@ UI
     }
 }
 
+@keyframes battleReadyIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.94);
+        filter: blur(4px);
+    }
+
+    62% {
+        opacity: 1;
+        transform: translateY(0) scale(1.03);
+        filter: blur(0);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes battleStartIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+        filter: blur(6px);
+    }
+
+    60% {
+        opacity: 1;
+        transform: scale(1.04);
+        filter: blur(0);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes battleStartMetaIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @keyframes battleTransitionFadeOut {
     0% {
         opacity: 0;
@@ -1075,6 +1242,32 @@ UI
 
     100% {
         opacity: 0;
+    }
+}
+
+@keyframes enemyActionIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.94);
+        filter: blur(2px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes enemyActionOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-8px) scale(1.02);
     }
 }
 

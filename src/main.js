@@ -16,9 +16,9 @@ import { buildActionMenuData, resolvePlayerAction } from "./game/charAbilities.j
 import { getConvergenceStageOverride, maybeForceBossSwitch, syncConvergenceState } from "./game/convergence.js";
 import { chooseEnemyIntent, evaluateDefenseTiming, getDefenseTimingConfig, resolveEnemyTurn } from "./game/enemyAbilities.js";
 import { createBattleState, createEnemyState, resetBattleStats } from "./game/state.js";
-import { applyComboChange, getPlayerTurnDuration, healInactiveCharacters, resolveDefeatState, tickCooldowns } from "./game/statusEffect.js";
+import { applyComboChange, getInactiveCharacterIds, getPlayerTurnDuration, healInactiveCharacters, isCharacterUnavailable, resolveDefeatState, tickCooldowns } from "./game/statusEffect.js";
 import { playBattleFinishSequence, playCombatFeedback, resetCombatantDefeatState, wait } from "./game/visualFeedback.js";
-import { createBattleUI, hideProgressionPanels, playBattleTransition, showBattleSummary, showGameOver, showRewardChoices, updateBattleUI } from "./render/renderUI.js";
+import { createBattleUI, hideProgressionPanels, playBattleTransition, showBattleSummary, showEnemyActionCallout, showGameOver, showRewardChoices, updateBattleUI } from "./render/renderUI.js";
 import { showBattleIntro } from "./render/renderUI.js";
 import { enemyAliases, enemies } from "./data/enemies.js";
 import { battles } from "./data/battles.js";
@@ -27,6 +27,14 @@ import { getRewardsForGrade, rewards as progressionRewards } from "./data/progre
 const hudLayer = document.querySelector("#hud-layer");
 const actionLayer = document.querySelector("#action-layer");
 const battleStage = document.querySelector("#battle-stage");
+
+const enemyRenderScaleById = {
+    familiar: 0.74,
+    order: 0.82,
+    watcher: 0.78,
+    pull: 0.9,
+    convergence: 1.08
+};
 
 async function initBattle() {
     const playerHUD = await createPlayerHUD();
@@ -106,11 +114,22 @@ async function initBattle() {
         renderedEnemyId = null;
     }
 
-    async function startCurrentEncounter({ resetStats: shouldResetStats = false, withTransition = false } = {}) {
-        if (shouldResetStats) {
-            resetBattleStats(battleState);
-        }
+    function chooseRandomInactiveCharacter() {
+        const candidates = getInactiveCharacterIds(battleState)
+            .filter((id) => !isCharacterUnavailable(battleState, id));
 
+        if (!candidates.length) return false;
+
+        const nextCharacterId = candidates[Math.floor(Math.random() * candidates.length)];
+        if (!nextCharacterId || nextCharacterId === battleState.activeCharacterId) return false;
+
+        battleState.activeCharacterId = nextCharacterId;
+        renderedPlayerId = null;
+        renderedStageKey = null;
+        return true;
+    }
+
+    function prepareEncounter() {
         battleState.battleOver = false;
         battleState.outcome = null;
         battleState.currentDefense = null;
@@ -122,15 +141,35 @@ async function initBattle() {
         syncBattleUI();
         syncPauseUI();
         updateMenuLock();
+    }
+
+    async function startCurrentEncounter({ resetStats: shouldResetStats = false, withTransition = false, randomizeActiveCharacter = false } = {}) {
+        if (shouldResetStats) {
+            resetBattleStats(battleState);
+        }
+
         if (withTransition) {
-            await playBattleTransition(ui, { holdMs: 1000 });
+            await playBattleTransition(ui, {
+                fadeOutMs: 500,
+                holdMs: 1000,
+                fadeInMs: 500,
+                onBlackout: () => {
+                    if (randomizeActiveCharacter) {
+                        chooseRandomInactiveCharacter();
+                    }
+                    prepareEncounter();
+                }
+            });
+        } else {
+            prepareEncounter();
         }
         const battleConfig = getCurrentBattleConfig();
         const waveCount = battleConfig?.enemies?.length ?? 1;
         const waveLabel = waveCount > 1 ? `Wave ${battleState.run.enemyIndex + 1}` : battleState.enemy.name;
         await showBattleIntro(ui, {
-            title: battleConfig?.label ?? "Battle",
-            subtitle: waveLabel
+            title: "Battle Start",
+            subtitle: `${battleConfig?.label ?? "Battle"} • ${waveLabel}`,
+            variant: "battle-start"
         });
         startPlayerTurnTimer();
     }
@@ -146,7 +185,8 @@ async function initBattle() {
         battleState.run.completedBattles += 1;
         battleState.run.battleIndex += 1;
         battleState.run.enemyIndex = 0;
-        await startCurrentEncounter({ resetStats: true, withTransition: true });
+        await wait(1000);
+        await startCurrentEncounter({ resetStats: true, withTransition: true, randomizeActiveCharacter: true });
     }
 
     async function continueAfterVictory() {
@@ -202,7 +242,9 @@ async function initBattle() {
 
         renderedEnemyId = battleState.enemy.id;
         const enemyTemplate = enemies[enemyAliases[battleState.enemy.id] ?? battleState.enemy.id] ?? enemies.familiar;
-        renderStaticCombatant(enemyTemplate.spritePath, "enemy-slot", "enemy");
+        renderStaticCombatant(enemyTemplate.spritePath, "enemy-slot", "enemy", {
+            scale: enemyRenderScaleById[enemyTemplate.id] ?? 0.8
+        });
     }
 
     function getStageForCharacter(characterId) {
@@ -500,16 +542,10 @@ async function initBattle() {
         const outcome = battleState.outcome;
         await playBattleFinishSequence(outcome);
         await showBattleIntro(ui, {
-            kicker: "",
-            title: "Battle Over",
-            subtitle: "",
-            durationMs: 650
-        });
-        await showBattleIntro(ui, {
-            kicker: "",
             title: outcome === "victory" ? "Victory" : "Defeat",
-            subtitle: outcome === "victory" ? battleState.enemy.name : "Your Team Has Fallen",
-            durationMs: 900
+            subtitle: "",
+            variant: "battle-end",
+            phaseLabel: "Battle End"
         });
         endSequenceRunning = false;
         if (outcome === "victory") {
@@ -549,7 +585,12 @@ async function initBattle() {
     }
 
     async function runEnemyPhase() {
-        await wait(180);
+        await wait(420);
+
+        if (battleState.enemyIntent?.label) {
+            await showEnemyActionCallout(ui, battleState.enemyIntent.label, 760);
+            await wait(180);
+        }
 
         let timingResult = null;
         if (battleState.currentDefense) {
@@ -643,9 +684,11 @@ async function initBattle() {
         const playerResult = resolvePlayerAction(battleState, item);
         syncBattleUI();
         await playCombatFeedback(playerResult.feedback);
+        await wait(260);
 
         if (timingSnapshot?.isFast) {
             await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: "Fast Action +0.25" }]);
+            await wait(160);
         }
 
         if (await finishBattleIfNeeded()) {
