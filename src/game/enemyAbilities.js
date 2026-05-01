@@ -326,6 +326,9 @@ export function resolveEnemyTurn(state, timingResult = null) {
 
         if (success) {
             applyComboChange(state, 0.15);
+            if (state.meltdown?.active) {
+                applyComboChange(state, 0.25);
+            }
             feedback.push({ kind: "defense", slotId, label: "Block" });
         } else {
             feedback.push({ kind: "text", slotId, label: "Late Block" });
@@ -343,6 +346,9 @@ export function resolveEnemyTurn(state, timingResult = null) {
 
         if (timingResult?.success) {
             applyComboChange(state, 0.25);
+            if (state.meltdown?.active) {
+                applyComboChange(state, 0.25);
+            }
             feedback.push({ kind: "dodge", slotId, label: "Dodge" });
             state.lastResolvedDefense = "dodge";
         } else {
@@ -367,13 +373,19 @@ export function resolveEnemyTurn(state, timingResult = null) {
             const baseMultiplier =
                 timingResult?.outcome === "perfect"
                     ? counterValues.dmg
-                    : Math.max(1, counterValues.dmg - 0.25);
+                    : Math.max(0.75, counterValues.dmg * 0.8);
 
-            const comboGain = timingResult?.outcome === "perfect" ? 0.5 : 0.25;
+            const baseComboGain = counterValues.combo ?? 0.25;
+            const comboGain = timingResult?.outcome === "perfect"
+                ? baseComboGain
+                : Math.max(0.25, baseComboGain * 0.5);
             const counterDamage = Math.round(intent.damage * baseMultiplier * Math.max(1, state.combo));
             const dealt = damageCharacter(state, "enemy", counterDamage);
 
             applyComboChange(state, comboGain);
+            if (state.meltdown?.active) {
+                applyComboChange(state, 0.25);
+            }
             state.stats.counters += 1;
 
             feedback.push({

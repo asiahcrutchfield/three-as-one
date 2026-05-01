@@ -1,6 +1,7 @@
 import html from "./ActionMenu.html?raw";
 import { createSubMenu } from "/src/ui/actionMenu/SubMenu/SubMenu.js";
 import { createTimer } from "/src/ui/actionMenu/Timer/Timer.js";
+import { t } from "/src/i18n.js";
 
 export async function createActionMenu() {
     const template = document.createElement("template");
@@ -26,6 +27,15 @@ export async function createActionMenu() {
     let tooltipHideTimer = null;
     let activeMenuKey = null;
     let isLocked = false;
+
+    actionMenu.querySelector('[data-action="attack"] .action-main-label').textContent = t("ui.attack");
+    actionMenu.querySelector('[data-action="defend"] .action-main-label').textContent = t("ui.defend");
+    actionMenu.querySelector('[data-action="assist"] .action-main-label').textContent = t("ui.assist");
+    actionMenu.querySelector('[data-action="switch"] .action-main-label').textContent = t("ui.switch");
+    actionMenu.querySelector('[data-action="attack"] img').alt = t("ui.attack");
+    actionMenu.querySelector('[data-action="defend"] img').alt = t("ui.defend");
+    actionMenu.querySelector('[data-action="assist"] img').alt = t("ui.assist");
+    actionMenu.querySelector('[data-action="switch"] img').alt = t("ui.switch");
 
     function clearPreview() {
         activeMenuKey = null;

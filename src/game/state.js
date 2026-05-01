@@ -1,5 +1,6 @@
 import { characters } from "../data/characters.js";
 import { enemyAliases, enemies } from "../data/enemies.js";
+import { t } from "../i18n.js";
 
 export const PLAYER_CHARACTER_IDS = ["girl", "officer", "man"];
 
@@ -31,7 +32,7 @@ export function createEnemyState(enemyId) {
 
     return {
         id: enemyTemplate.id,
-        name: enemyTemplate.name,
+        name: t(`enemy.${enemyTemplate.id}.name`, enemyTemplate.name),
         hp: enemyTemplate.hp,
         maxHp: enemyTemplate.hp,
         defeated: false,
@@ -58,9 +59,19 @@ export function resetBattleStats(state) {
     state.currentDefense = null;
     state.enemyIntent = null;
     state.freeSwitch = false;
+    state.manualSwitchUsed = false;
     state.lastAssistUsed = null;
     state.lastAttackUsed = {};
     state.stats = createBattleStats();
+    state.meltdown = {
+        active: false,
+        roundsRemaining: 0
+    };
+
+    PLAYER_CHARACTER_IDS.forEach((id) => {
+        state.roster[id].cooldowns = {};
+        state.roster[id].usedOnce = {};
+    });
 }
 
 export function createBattleState(enemyId = "familiar") {
@@ -78,8 +89,13 @@ export function createBattleState(enemyId = "familiar") {
         currentDefense: null,
         enemyIntent: null,
         freeSwitch: false,
+        manualSwitchUsed: false,
         lastAssistUsed: null,
         lastAttackUsed: {},
+        meltdown: {
+            active: false,
+            roundsRemaining: 0
+        },
         stats: createBattleStats(),
         run: {
             battleIndex: 0,

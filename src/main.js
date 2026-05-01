@@ -16,17 +16,20 @@ import { buildActionMenuData, resolvePlayerAction } from "./game/charAbilities.j
 import { getConvergenceStageOverride, maybeForceBossSwitch, syncConvergenceState } from "./game/convergence.js";
 import { chooseEnemyIntent, evaluateDefenseTiming, getDefenseTimingConfig, resolveEnemyTurn } from "./game/enemyAbilities.js";
 import { createBattleState, createEnemyState, resetBattleStats } from "./game/state.js";
-import { applyComboChange, getInactiveCharacterIds, getPlayerTurnDuration, healInactiveCharacters, isCharacterUnavailable, resolveDefeatState, tickCooldowns } from "./game/statusEffect.js";
+import { advanceMeltdown, applyComboChange, getInactiveCharacterIds, getPlayerTurnDuration, healInactiveCharacters, isCharacterUnavailable, resolveDefeatState, tickCooldowns } from "./game/statusEffect.js";
 import { playBattleFinishSequence, playCombatFeedback, resetCombatantDefeatState, wait } from "./game/visualFeedback.js";
 import { createBattleUI, hideProgressionPanels, playBattleTransition, showBattleSummary, showEnemyActionCallout, showGameOver, showRewardChoices, updateBattleUI } from "./render/renderUI.js";
 import { showBattleIntro } from "./render/renderUI.js";
 import { enemyAliases, enemies } from "./data/enemies.js";
 import { battles } from "./data/battles.js";
 import { getRewardsForGrade, rewards as progressionRewards } from "./data/progression.js";
+import { getLanguage, setLanguage, t } from "./i18n.js";
 
 const hudLayer = document.querySelector("#hud-layer");
 const actionLayer = document.querySelector("#action-layer");
 const battleStage = document.querySelector("#battle-stage");
+const mainMenu = document.querySelector("#main-menu");
+const battleUi = document.querySelector("#battle-ui");
 
 const enemyRenderScaleById = {
     familiar: 0.74,
@@ -35,6 +38,8 @@ const enemyRenderScaleById = {
     pull: 0.9,
     convergence: 1.08
 };
+
+let battleInitPromise = null;
 
 async function initBattle() {
     const playerHUD = await createPlayerHUD();
@@ -69,6 +74,7 @@ async function initBattle() {
     let activeDefenseTimer = null;
     let isPaused = false;
     let endSequenceRunning = false;
+    let wasMeltdownActive = battleState.meltdown?.active ?? false;
     const timingKeys = ["W", "A", "S", "D"];
     const timingDebug = document.createElement("div");
     timingDebug.id = "timing-debug";
@@ -129,11 +135,22 @@ async function initBattle() {
         return true;
     }
 
+    function chooseRandomAvailableCharacter() {
+        const candidates = ["girl", "officer", "man"].filter((id) => !isCharacterUnavailable(battleState, id));
+        if (!candidates.length) return false;
+
+        battleState.activeCharacterId = candidates[Math.floor(Math.random() * candidates.length)];
+        renderedPlayerId = null;
+        renderedStageKey = null;
+        return true;
+    }
+
     function prepareEncounter() {
         battleState.battleOver = false;
         battleState.outcome = null;
         battleState.currentDefense = null;
         battleState.activeTimingResult = null;
+        wasMeltdownActive = battleState.meltdown?.active ?? false;
         hydrateEnemy(getCurrentEncounterId());
         resetCombatantDefeatState("enemy-slot");
         battleState.enemyIntent = chooseEnemyIntent(battleState);
@@ -165,10 +182,15 @@ async function initBattle() {
         }
         const battleConfig = getCurrentBattleConfig();
         const waveCount = battleConfig?.enemies?.length ?? 1;
-        const waveLabel = waveCount > 1 ? `Wave ${battleState.run.enemyIndex + 1}` : battleState.enemy.name;
+        const battleLabel = battleState.run.battleIndex === battles.length - 1
+            ? t("ui.finalBoss")
+            : `${t("ui.battle")} ${battleState.run.battleIndex + 1}`;
+        const waveLabel = waveCount > 1
+            ? `${t("ui.wave")} ${battleState.run.enemyIndex + 1}`
+            : t(`enemy.${battleState.enemy.id}.name`, battleState.enemy.name);
         await showBattleIntro(ui, {
-            title: "Battle Start",
-            subtitle: `${battleConfig?.label ?? "Battle"} • ${waveLabel}`,
+            title: t("ui.battleStart"),
+            subtitle: `${battleLabel} • ${waveLabel}`,
             variant: "battle-start"
         });
         startPlayerTurnTimer();
@@ -283,7 +305,7 @@ async function initBattle() {
 
     function syncPauseUI() {
         ui.pauseOverlay.classList.toggle("hidden", !isPaused);
-        ui.pauseButton.textContent = isPaused ? "Resume" : "Pause";
+        ui.pauseButton.textContent = isPaused ? t("ui.resume") : t("ui.pause");
     }
 
     function updateMenuLock() {
@@ -541,12 +563,12 @@ async function initBattle() {
         updateMenuLock();
         const outcome = battleState.outcome;
         await playBattleFinishSequence(outcome);
-        await showBattleIntro(ui, {
-            title: outcome === "victory" ? "Victory" : "Defeat",
-            subtitle: "",
-            variant: "battle-end",
-            phaseLabel: "Battle End"
-        });
+            await showBattleIntro(ui, {
+                title: outcome === "victory" ? t("ui.victory") : t("ui.defeat"),
+                subtitle: "",
+                variant: "battle-end",
+                phaseLabel: t("ui.battleEnd")
+            });
         endSequenceRunning = false;
         if (outcome === "victory") {
             await continueAfterVictory();
@@ -559,12 +581,28 @@ async function initBattle() {
     async function endRoundAndResume() {
 
         resolveDefeatState(battleState);
+        const meltdownJustTriggered = !wasMeltdownActive && (battleState.meltdown?.active ?? false);
+        wasMeltdownActive = battleState.meltdown?.active ?? false;
         const phaseChanged = syncConvergenceState(battleState);
         const healed = healInactiveCharacters(battleState);
         tickCooldowns(battleState);
+        const meltdownEnded = meltdownJustTriggered ? false : advanceMeltdown(battleState);
+        if (meltdownEnded) {
+            wasMeltdownActive = false;
+        }
 
         if (healed.length) {
-            await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: "Bench Regen" }]);
+            await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: t("feedback.benchRegen") }]);
+        }
+
+        if (meltdownJustTriggered) {
+            syncBattleUI();
+            await showBattleIntro(ui, {
+                title: t("ui.girlInactive"),
+                subtitle: "",
+                variant: "meltdown",
+                phaseLabel: t("ui.meltdown")
+            });
         }
 
         if (await finishBattleIfNeeded()) {
@@ -574,7 +612,12 @@ async function initBattle() {
 
         if (phaseChanged && battleState.enemy.id === "convergence" && battleState.enemy.phase === 3) {
             syncBattleUI();
-            await playCombatFeedback([{ kind: "text", slotId: "enemy-slot", label: "Convergence Arena" }]);
+            await playCombatFeedback([{ kind: "text", slotId: "enemy-slot", label: t("feedback.convergenceArena") }]);
+        }
+
+        if (meltdownEnded) {
+            syncBattleUI();
+            await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: t("feedback.meltdownSettled") }]);
         }
 
         battleState.enemyIntent = chooseEnemyIntent(battleState);
@@ -588,7 +631,7 @@ async function initBattle() {
         await wait(420);
 
         if (battleState.enemyIntent?.label) {
-            await showEnemyActionCallout(ui, battleState.enemyIntent.label, 760);
+            await showEnemyActionCallout(ui, t(`enemyAbility.${battleState.enemyIntent.id}.label`, battleState.enemyIntent.label), 760);
             await wait(180);
         }
 
@@ -643,7 +686,9 @@ async function initBattle() {
                 {
                     kind: "text",
                     slotId: "player-slot",
-                    label: `Forced Switch: ${forcedSwitch.to[0].toUpperCase()}${forcedSwitch.to.slice(1)}`
+                    label: t("feedback.forcedSwitch", `Forced Switch: ${forcedSwitch.to}`, {
+                        name: t(`character.${forcedSwitch.to}`, forcedSwitch.to)
+                    })
                 }
             ]);
         }
@@ -662,7 +707,7 @@ async function initBattle() {
         battleState.activeTimingResult = null;
 
         syncBattleUI();
-        await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: "Time Out" }]);
+        await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: t("feedback.timeOut") }]);
 
         if (await finishBattleIfNeeded()) {
             resolvingTurn = false;
@@ -686,8 +731,12 @@ async function initBattle() {
         await playCombatFeedback(playerResult.feedback);
         await wait(260);
 
+        if (battleState.enemy.hp <= 0) {
+            applyComboChange(battleState, 1);
+        }
+
         if (timingSnapshot?.isFast) {
-            await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: "Fast Action +0.25" }]);
+            await playCombatFeedback([{ kind: "text", slotId: "player-slot", label: t("feedback.fastActionBonus") }]);
             await wait(160);
         }
 
@@ -699,6 +748,7 @@ async function initBattle() {
         await runEnemyPhase();
     }
 
+    chooseRandomAvailableCharacter();
     await startCurrentEncounter({ resetStats: true, withTransition: false });
 
     actionMenu.addEventListener("actionselected", async (event) => {
@@ -720,4 +770,100 @@ async function initBattle() {
     });
 }
 
-initBattle();
+function setupMainMenu() {
+    const menuItems = [...document.querySelectorAll(".main-menu-item")];
+    const menuCards = {
+        options: document.querySelector("#main-menu-options"),
+        credits: document.querySelector("#main-menu-credits"),
+        exit: document.querySelector("#main-menu-exit")
+    };
+    const languageOptions = [...document.querySelectorAll(".language-option")];
+    const localizedNodes = [...document.querySelectorAll("[data-i18n]")];
+
+    function setActiveMenuItem(action) {
+        for (const item of menuItems) {
+            const isActive = item.dataset.menuAction === action;
+            item.classList.toggle("is-active", isActive && !item.disabled);
+        }
+    }
+
+    function showMenuCard(cardKey = null) {
+        Object.entries(menuCards).forEach(([key, node]) => {
+            node?.classList.toggle("hidden", key !== cardKey);
+        });
+        setActiveMenuItem(cardKey ?? "start");
+    }
+
+    function applyLanguage(language) {
+        const activeLanguage = setLanguage(language);
+
+        localizedNodes.forEach((node) => {
+            const key = node.dataset.i18n;
+            if (!key) return;
+            node.textContent = t(`menu.${key}`, node.textContent);
+        });
+
+        languageOptions.forEach((option) => {
+            option.classList.toggle("is-selected", option.dataset.language === activeLanguage);
+        });
+    }
+
+    async function startNewGame() {
+        mainMenu.classList.add("hidden");
+        battleUi.classList.remove("hidden");
+
+        if (!battleInitPromise) {
+            battleInitPromise = initBattle();
+        }
+
+        await battleInitPromise;
+    }
+
+    menuItems.forEach((item) => {
+        item.addEventListener("mouseenter", () => {
+            if (item.disabled) return;
+            const action = item.dataset.menuAction;
+            if (action === "options" || action === "credits" || action === "exit") {
+                showMenuCard(action);
+                return;
+            }
+            showMenuCard(null);
+        });
+
+        item.addEventListener("focus", () => {
+            if (item.disabled) return;
+            const action = item.dataset.menuAction;
+            if (action === "options" || action === "credits" || action === "exit") {
+                showMenuCard(action);
+                return;
+            }
+            showMenuCard(null);
+        });
+
+        item.addEventListener("click", async () => {
+            if (item.disabled) return;
+
+            const action = item.dataset.menuAction;
+            if (action === "start") {
+                await startNewGame();
+                return;
+            }
+
+            if (action === "options" || action === "credits" || action === "exit") {
+                showMenuCard(action);
+            }
+        });
+    });
+
+    languageOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+            applyLanguage(option.dataset.language);
+            showMenuCard("options");
+        });
+    });
+
+    applyLanguage(getLanguage());
+    showMenuCard(null);
+}
+
+setupMainMenu();

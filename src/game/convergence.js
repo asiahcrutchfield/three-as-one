@@ -4,6 +4,7 @@ import {
     healCharacter,
     isCharacterUnavailable
 } from "./statusEffect.js";
+import { t } from "../i18n.js";
 
 const BOSS_SWITCH_CHANCES = {
     1: 0.12,
@@ -85,20 +86,20 @@ export function getBossAssistEntryState(state) {
     if (state.activeCharacterId === "girl" || isCharacterUnavailable(state, "girl")) {
         return {
             available: false,
-            reason: "Girl must be inactive"
+            reason: t("desc.girlMustBeInactive")
         };
     }
 
     if (state.roster.girl.usedOnce.goodVibesBoss) {
         return {
             available: false,
-            reason: "1/Boss"
+            reason: t("cost.oneBoss")
         };
     }
 
     return {
         available: true,
-        reason: "1/Boss"
+        reason: t("cost.oneBoss")
     };
 }
 
@@ -148,10 +149,10 @@ export function maybeForceBossSwitch(state) {
 export function getConvergenceStatusChips(state) {
     if (state.enemy.id !== "convergence") return [];
 
-    const chips = [`Phase ${state.enemy.phase ?? getConvergencePhase(state)}`];
+    const chips = [t("status.phase", `Phase ${state.enemy.phase ?? getConvergencePhase(state)}`, { value: state.enemy.phase ?? getConvergencePhase(state) })];
 
     if (state.enemy.stageLocked) {
-        chips.push("Arena Locked");
+        chips.push(t("status.arenaLocked"));
     }
 
     return chips;

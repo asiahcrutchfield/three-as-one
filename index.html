@@ -17,7 +17,58 @@
 
 <body>
   <div id="app">
-    <div id="battle-ui">
+    <div id="main-menu" aria-label="Main menu">
+      <div class="main-menu-overlay"></div>
+      <div class="main-menu-panel">
+        <div class="main-menu-header">
+          <h1 class="main-menu-title" data-i18n="title">AS ONE</h1>
+          <div class="main-menu-divider" aria-hidden="true">
+            <span></span>
+            <span class="main-menu-divider-icon">✦</span>
+            <span></span>
+          </div>
+        </div>
+
+        <nav class="main-menu-nav" aria-label="Primary">
+          <button class="main-menu-item is-active" type="button" data-menu-action="start" data-i18n="start">START</button>
+          <button class="main-menu-item" type="button" data-menu-action="options" data-i18n="options">OPTIONS</button>
+          <button class="main-menu-item" type="button" data-menu-action="credits" data-i18n="credits">CREDITS</button>
+          <button class="main-menu-item" type="button" data-menu-action="exit" data-i18n="exitGame">EXIT GAME</button>
+        </nav>
+
+        <section id="main-menu-options" class="main-menu-card hidden" aria-live="polite">
+          <div class="main-menu-card-kicker" data-i18n="language">LANGUAGE</div>
+          <div class="main-menu-language-list" role="group" aria-label="Language options">
+            <button class="language-option is-selected" type="button" data-language="en">
+              <span data-i18n="langEnglish">English</span>
+            </button>
+            <button class="language-option" type="button" data-language="ja">
+              <span data-i18n="langJapanese">日本語</span>
+            </button>
+            <button class="language-option" type="button" data-language="zh-Hant">
+              <span data-i18n="langTraditionalChinese">繁體中文</span>
+            </button>
+          </div>
+        </section>
+
+        <section id="main-menu-credits" class="main-menu-card hidden" aria-live="polite">
+          <div class="main-menu-card-kicker" data-i18n="credits">CREDITS</div>
+          <p class="main-menu-card-copy">
+            <span data-i18n="creditsCopy">Created by Asiah Crutchfield.</span>
+            <a class="main-menu-card-link" href="https://asiahcrutchfield.com/?lang=en" target="_blank" rel="noreferrer">asiahcrutchfield.com</a>
+          </p>
+        </section>
+
+        <section id="main-menu-exit" class="main-menu-card hidden" aria-live="polite">
+          <div class="main-menu-card-kicker" data-i18n="exitGame">EXIT GAME</div>
+          <p class="main-menu-card-copy" data-i18n="exitCopy">Closing the game window is handled by your browser or app shell.</p>
+        </section>
+
+        <div class="main-menu-footer">v1.0.0</div>
+      </div>
+    </div>
+
+    <div id="battle-ui" class="hidden">
 
       <div id="battle-stage">
         <div id="stage-background">

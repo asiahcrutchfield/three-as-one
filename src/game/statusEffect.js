@@ -6,13 +6,20 @@ export function clamp(value, min, max) {
 }
 
 export function applyComboChange(state, delta) {
-    state.combo = clamp(Number((state.combo + delta).toFixed(2)), 0, 3);
+    let adjustedDelta = delta;
+
+    if ((state.meltdown?.active ?? false) && delta > 0) {
+        adjustedDelta *= 0.85;
+    }
+
+    state.combo = clamp(Number((state.combo + adjustedDelta).toFixed(2)), 0, 3);
     state.maxComboReached = Math.max(state.maxComboReached, state.combo);
     return state.combo;
 }
 
 export function getPlayerTurnDuration(state) {
-    return Math.round((state.playerTurnDurationMs + (state.run?.playerTurnBonusMs ?? 0)) * state.playerTurnScale);
+    const meltdownScale = (state.meltdown?.active ?? false) ? 0.85 : 1;
+    return Math.round((state.playerTurnDurationMs + (state.run?.playerTurnBonusMs ?? 0)) * state.playerTurnScale * meltdownScale);
 }
 
 export function resetCombo(state) {
@@ -60,7 +67,8 @@ export function healCharacter(state, characterId, amount) {
     if (!amount || isCharacterUnavailable(state, characterId)) return 0;
 
     const currentHp = getCharacterHp(state, characterId);
-    const nextHp = setCharacterHp(state, characterId, currentHp + amount);
+    const healingMultiplier = 1 + Math.max(0, state.combo - 1) * 0.25;
+    const nextHp = setCharacterHp(state, characterId, currentHp + (amount * healingMultiplier));
     return nextHp - currentHp;
 }
 
@@ -96,6 +104,30 @@ export function getInactiveCharacterIds(state) {
 
 export function getInactiveAssistIds(state) {
     return getInactiveCharacterIds(state).filter((id) => !isCharacterUnavailable(state, id));
+}
+
+export function isMeltdownActive(state) {
+    return !!state.meltdown?.active;
+}
+
+export function triggerMeltdown(state) {
+    state.meltdown = {
+        active: true,
+        roundsRemaining: 3
+    };
+    state.roster.girl.unavailable = true;
+}
+
+export function advanceMeltdown(state) {
+    if (!isMeltdownActive(state)) return false;
+
+    state.meltdown.roundsRemaining = Math.max(0, (state.meltdown.roundsRemaining ?? 0) - 1);
+    if (state.meltdown.roundsRemaining === 0) {
+        state.meltdown.active = false;
+        return true;
+    }
+
+    return false;
 }
 
 export function getPassiveBonuses(state) {
@@ -137,6 +169,8 @@ export function tickCooldowns(state) {
 export function healInactiveCharacters(state) {
     if (isCharacterUnavailable(state, "girl") || state.activeCharacterId === "girl") return [];
 
+    if (isMeltdownActive(state)) return [];
+
     const emotion = getGirlEmotion(state);
     const regenPct = characters.girl.assist.passive.getRegen(emotion, state.tiger.hp <= 0);
     const healed = [];
@@ -153,11 +187,18 @@ export function healInactiveCharacters(state) {
 }
 
 export function resolveDefeatState(state) {
+    let needsRandomReplacement = false;
+
     PLAYER_CHARACTER_IDS.forEach((id) => {
         if (id === "girl") {
             if (state.tiger.hp <= 0) {
                 state.tiger.defeated = true;
-                state.roster.girl.unavailable = true;
+                if (!state.roster.girl.unavailable) {
+                    triggerMeltdown(state);
+                }
+                if (state.activeCharacterId === "girl") {
+                    needsRandomReplacement = true;
+                }
             }
             return;
         }
@@ -175,9 +216,14 @@ export function resolveDefeatState(state) {
 
     if (isCharacterUnavailable(state, state.activeCharacterId)) {
         state.stats.defeats += 1;
-        resetCombo(state);
+        if (!needsRandomReplacement) {
+            resetCombo(state);
+        }
 
-        const fallbackId = getAvailableCharacterIds(state)[0] ?? null;
+        const options = getAvailableCharacterIds(state);
+        const fallbackId = options.length
+            ? options[Math.floor(Math.random() * options.length)]
+            : null;
         state.activeCharacterId = fallbackId;
     }
 

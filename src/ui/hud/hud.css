@@ -26,6 +26,12 @@
     font-family: system-ui, sans-serif;
 }
 
+#player-hud.is-meltdown {
+    outline-color: rgba(255, 148, 102, 0.92);
+    background: linear-gradient(180deg, rgba(52, 14, 10, 0.88), rgba(0, 0, 0, 0.8));
+    box-shadow: 0 0 0 1px rgba(255, 122, 88, 0.18), 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
 /* enemy (mirror) */
 #enemy-hud {
     left: auto;
@@ -130,6 +136,24 @@
     color: #ffd65c;
     white-space: nowrap;
     line-height: 1.1;
+}
+
+.meltdown-stat {
+    position: absolute;
+    left: 50%;
+    top: 2px;
+    transform: translateX(-50%);
+    padding: 1px 6px 2px;
+    border: 1px solid rgba(255, 148, 102, 0.55);
+    background: rgba(44, 10, 8, 0.9);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #ffd0b0;
+    white-space: nowrap;
+    line-height: 1.1;
+    box-shadow: 0 0 12px rgba(255, 122, 88, 0.18);
 }
 
 .hidden {

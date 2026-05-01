@@ -52,5 +52,23 @@
             "fromBottom": 200
         },
         "scale": 1.0
+    },
+    "boss": {
+        "name": "Convergence Arena",
+        "layers": {
+            "ground": "/assets/stages/boss/battle_lane.png"
+        },
+        "lane": {
+            "bottom": 110,
+            "height": 380
+        },
+        "floor": {
+            "fromBottom": 150
+        },
+        "dimensions": {
+            "w": 1672,
+            "h": 941
+        },
+        "scale": 1.0
     }
 }

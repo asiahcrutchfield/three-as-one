@@ -20,14 +20,14 @@ export const battles = [
     {
         id: 4,
         label: "Battle 4",
-        enemies: ["pull"],
-        description: "Introduces environmental pressure and rotation."
+        enemies: ["familiar", "order"],
+        description: "Mixes readable pressure with anti-block punishment."
     },
     {
         id: 5,
         label: "Battle 5",
         enemies: ["order", "watcher"],
-        description: "Mixes direct pressure with deceptive telegraphs."
+        description: "The final pre-boss test blends pressure and deceptive reads."
     },
     {
         id: "boss",
