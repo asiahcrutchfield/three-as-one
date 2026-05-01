@@ -1,80 +1,41 @@
-export const stages = {
-    taipei: {
-        name: "Taipei Street",
+let cachedStages = null;
+
+export function normalizeStageConfig(id, rawStage) {
+    return {
+        id,
+        name: rawStage.name,
         layers: {
-            ground: "/assets/stages/taipei/battle_lane2.jpg"
+            sky: rawStage.layers?.sky,
+            far: rawStage.layers?.far,
+            mid: rawStage.layers?.mid,
+            ground: rawStage.layers?.ground,
+            foreground: rawStage.layers?.foreground
         },
         lane: {
-            bottom: 110,
-            height: 358
+            bottom: rawStage.lane?.bottom ?? 0,
+            height: rawStage.lane?.height ?? 340
         },
         floor: {
-            fromBottom: 125
+            fromBottom: rawStage.floor?.fromBottom ?? 0
         },
         dimensions: {
-            w: 1660,
-            h: 358
+            w: rawStage.dimensions?.w ?? 1366,
+            h: rawStage.dimensions?.h ?? 768
         },
-        fitmode: "width",
-        worldScale: 0.8
-    },
-    nola: {
-        name: "NOLA Street",
-        layers: {
-            ground: "/assets/stages/nola/battle_lane.png",
-            far: "/assets/stages/nola/background.jpg"
-        },
-        lane: {
-            bottom: 95,
-            height: 340,
-        },
-        floor: {
-            fromBottom: 120
-        },
-        dimensions: {
-            w: 1344,
-            h: 768
-        },
-        fitmode: "width",
-        worldScale: 0.8
-    },
-    paradise: {
-        name: "Paradise",
-        layers: {
-            ground: "/assets/stages/paradise/battle_lane2.png",
-            far: "/assets/stages/paradise/background.png"
-        },
-        lane: {
-            bottom: 95,
-            height: 340
-        },
-        floor: {
-            fromBottom: 200
-        },
-        dimensions: {
-            w: 1660,
-            h: 359
-        },
-        fitmode: "width",
-        worldScale: 1
-    },
-    boss: {
-        name: "Convergence Arena",
-        layers: {
-            ground: "/assets/stages/boss/battle_lane.png"
-        },
-        lane: {
-            bottom: 110,
-            height: 380
-        },
-        floor: {
-            fromBottom: 150
-        },
-        dimensions: {
-            w: 1672,
-            h: 941
-        },
-        fitmode: "width",
-        worldScale: 1
-    }
-};
+        fitmode: rawStage.fitmode ?? "width",
+        worldScale: rawStage.worldScale ?? rawStage.scale ?? 1
+    };
+}
+
+export async function loadStages() {
+    if (cachedStages) return cachedStages;
+
+    const response = await fetch("/assets/stages/index.json");
+    const rawStages = await response.json();
+
+    cachedStages = Object.fromEntries(
+        Object.entries(rawStages).map(([id, stage]) => [id, normalizeStageConfig(id, stage)])
+    );
+
+    return cachedStages;
+}

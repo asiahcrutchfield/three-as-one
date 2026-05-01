@@ -1,5 +1,5 @@
 // stage rendering
-import { stages } from "./data/stages.js";
+import { loadStages } from "./data/stages.js";
 import { renderStage } from "./render/renderStage.js";
 // character rendering
 import { loadCharacterIndex, renderCharacter, renderStaticCombatant, renderUnit } from "./render/renderChar.js";
@@ -23,7 +23,9 @@ import { showBattleIntro } from "./render/renderUI.js";
 import { enemyAliases, enemies } from "./data/enemies.js";
 import { battles } from "./data/battles.js";
 import { getRewardsForGrade, rewards as progressionRewards } from "./data/progression.js";
+import { characterVariants, stageVariants } from "./data/gallery.js";
 import { getLanguage, setLanguage, t } from "./i18n.js";
+import { playSpriteAnimation } from "./render/animations.js";
 
 const hudLayer = document.querySelector("#hud-layer");
 const actionLayer = document.querySelector("#action-layer");
@@ -42,6 +44,7 @@ const enemyRenderScaleById = {
 let battleInitPromise = null;
 
 async function initBattle() {
+    const stages = await loadStages();
     const playerHUD = await createPlayerHUD();
     const enemyHUD = await createEnemyHUD();
     const assists = await createAssists();
@@ -770,6 +773,99 @@ async function initBattle() {
     });
 }
 
+function createGalleryCard({ title, subtitle = "", className = "" }) {
+    const card = document.createElement("article");
+    card.className = `gallery-card ${className}`.trim();
+
+    const media = document.createElement("div");
+    media.className = "gallery-card-media";
+
+    const label = document.createElement("div");
+    label.className = "gallery-card-label";
+    label.innerHTML = `<strong>${title}</strong>${subtitle ? `<span>${subtitle}</span>` : ""}`;
+
+    card.append(media, label);
+    return { card, media };
+}
+
+function createAnimatedGallerySprite(animation) {
+    const sprite = document.createElement("div");
+    sprite.className = "gallery-sprite";
+    sprite.style.backgroundImage = `url("${animation.src}")`;
+    sprite.style.backgroundRepeat = "no-repeat";
+    playSpriteAnimation(sprite, animation, { loop: true });
+    return sprite;
+}
+
+function renderGalleryTab(tab, grid, data) {
+    grid.innerHTML = "";
+
+    if (tab === "characters") {
+        Object.entries(data.characterIndex.characters).forEach(([id, character]) => {
+            const animation = character.animations.idle;
+            const { card, media } = createGalleryCard({
+                title: character.name,
+                subtitle: id,
+                className: "gallery-card--sprite"
+            });
+
+            media.appendChild(createAnimatedGallerySprite(animation));
+            grid.appendChild(card);
+        });
+        return;
+    }
+
+    if (tab === "variants") {
+        characterVariants.forEach((variant) => {
+            const { card, media } = createGalleryCard({
+                title: variant.name,
+                subtitle: variant.characterId
+            });
+            media.innerHTML = `<img src="${variant.src}" alt="${variant.name}">`;
+            grid.appendChild(card);
+        });
+        return;
+    }
+
+    if (tab === "enemies") {
+        Object.values(enemies).forEach((enemy) => {
+            const { card, media } = createGalleryCard({
+                title: enemy.name,
+                subtitle: enemy.id,
+                className: "gallery-card--sprite"
+            });
+            media.innerHTML = `<img src="${enemy.spritePath}" alt="${enemy.name}">`;
+            grid.appendChild(card);
+        });
+        return;
+    }
+
+    if (tab === "stages") {
+        Object.entries(data.stages).forEach(([id, stage]) => {
+            const { card, media } = createGalleryCard({
+                title: stage.name,
+                subtitle: `${id} battle stage`,
+                className: "gallery-card--stage"
+            });
+            if (stage.layers.far) {
+                media.style.backgroundImage = `url("${stage.layers.far}")`;
+            }
+            media.innerHTML = `<img src="${stage.layers.ground}" alt="${stage.name}">`;
+            grid.appendChild(card);
+        });
+
+        stageVariants.forEach((stage) => {
+            const { card, media } = createGalleryCard({
+                title: stage.name,
+                subtitle: `${stage.stageId} variant`,
+                className: "gallery-card--stage"
+            });
+            media.innerHTML = `<img src="${stage.src}" alt="${stage.name}">`;
+            grid.appendChild(card);
+        });
+    }
+}
+
 function setupMainMenu() {
     const menuItems = [...document.querySelectorAll(".main-menu-item")];
     const menuCards = {
@@ -777,8 +873,14 @@ function setupMainMenu() {
         credits: document.querySelector("#main-menu-credits"),
         exit: document.querySelector("#main-menu-exit")
     };
+    const galleryPanel = document.querySelector("#main-menu-gallery");
+    const galleryClose = document.querySelector("#gallery-close");
+    const galleryGrid = document.querySelector("#gallery-grid");
+    const galleryTabs = [...document.querySelectorAll(".gallery-tab")];
     const languageOptions = [...document.querySelectorAll(".language-option")];
     const localizedNodes = [...document.querySelectorAll("[data-i18n]")];
+    let galleryDataPromise = null;
+    let activeGalleryTab = "characters";
 
     function setActiveMenuItem(action) {
         for (const item of menuItems) {
@@ -792,6 +894,31 @@ function setupMainMenu() {
             node?.classList.toggle("hidden", key !== cardKey);
         });
         setActiveMenuItem(cardKey ?? "start");
+    }
+
+    async function getGalleryData() {
+        if (!galleryDataPromise) {
+            galleryDataPromise = Promise.all([loadCharacterIndex(), loadStages()])
+                .then(([characterIndex, stages]) => ({ characterIndex, stages }));
+        }
+        return galleryDataPromise;
+    }
+
+    async function showGallery(tab = activeGalleryTab) {
+        activeGalleryTab = tab;
+        galleryPanel.classList.remove("hidden");
+        showMenuCard(null);
+        setActiveMenuItem("gallery");
+        galleryTabs.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.galleryTab === activeGalleryTab);
+        });
+        galleryGrid.innerHTML = `<div class="gallery-loading">Loading...</div>`;
+        renderGalleryTab(activeGalleryTab, galleryGrid, await getGalleryData());
+    }
+
+    function hideGallery() {
+        galleryPanel.classList.add("hidden");
+        setActiveMenuItem("start");
     }
 
     function applyLanguage(language) {
@@ -823,6 +950,7 @@ function setupMainMenu() {
         item.addEventListener("mouseenter", () => {
             if (item.disabled) return;
             const action = item.dataset.menuAction;
+            if (action === "gallery") return;
             if (action === "options" || action === "credits" || action === "exit") {
                 showMenuCard(action);
                 return;
@@ -833,6 +961,7 @@ function setupMainMenu() {
         item.addEventListener("focus", () => {
             if (item.disabled) return;
             const action = item.dataset.menuAction;
+            if (action === "gallery") return;
             if (action === "options" || action === "credits" || action === "exit") {
                 showMenuCard(action);
                 return;
@@ -849,14 +978,29 @@ function setupMainMenu() {
                 return;
             }
 
+            if (action === "gallery") {
+                await showGallery();
+                return;
+            }
+
             if (action === "options" || action === "credits" || action === "exit") {
+                hideGallery();
                 showMenuCard(action);
             }
         });
     });
 
+    galleryTabs.forEach((button) => {
+        button.addEventListener("click", () => {
+            void showGallery(button.dataset.galleryTab);
+        });
+    });
+
+    galleryClose.addEventListener("click", hideGallery);
+
     languageOptions.forEach((option) => {
         option.addEventListener("click", () => {
+            hideGallery();
             applyLanguage(option.dataset.language);
             showMenuCard("options");
         });

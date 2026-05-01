@@ -4,6 +4,7 @@ export const translations = {
     en: {
         "menu.title": "AS ONE",
         "menu.start": "START",
+        "menu.gallery": "GALLERY",
         "menu.options": "OPTIONS",
         "menu.credits": "CREDITS",
         "menu.exitGame": "EXIT GAME",
@@ -199,6 +200,7 @@ export const translations = {
     ja: {
         "menu.title": "AS ONE",
         "menu.start": "スタート",
+        "menu.gallery": "GALLERY",
         "menu.options": "オプション",
         "menu.credits": "クレジット",
         "menu.exitGame": "ゲーム終了",
@@ -394,6 +396,7 @@ export const translations = {
     "zh-Hant": {
         "menu.title": "AS ONE",
         "menu.start": "開始",
+        "menu.gallery": "GALLERY",
         "menu.options": "選項",
         "menu.credits": "製作名單",
         "menu.exitGame": "離開遊戲",

@@ -297,6 +297,163 @@ body {
     letter-spacing: 0.08em;
 }
 
+.main-menu-gallery {
+    position: absolute;
+    inset: 24px;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid rgba(216, 173, 82, 0.48);
+    background: rgba(8, 12, 14, 0.94);
+    color: #f4ead2;
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.42);
+}
+
+.gallery-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.gallery-kicker {
+    margin-bottom: 4px;
+    color: #d9ae55;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.gallery-title {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 34px;
+    line-height: 1;
+}
+
+.gallery-close {
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(216, 173, 82, 0.48);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f7c557;
+    font: inherit;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.gallery-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.gallery-tab {
+    padding: 8px 12px;
+    border: 1px solid rgba(216, 173, 82, 0.35);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(244, 234, 210, 0.82);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.gallery-tab:hover,
+.gallery-tab:focus-visible,
+.gallery-tab.is-active,
+.gallery-close:hover,
+.gallery-close:focus-visible {
+    border-color: rgba(247, 197, 87, 0.82);
+    color: #f7c557;
+    outline: 0;
+}
+
+.gallery-grid {
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+    padding-right: 4px;
+}
+
+.gallery-card {
+    min-width: 0;
+    border: 1px solid rgba(216, 173, 82, 0.28);
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.gallery-card-media {
+    position: relative;
+    display: grid;
+    place-items: end center;
+    height: 220px;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.3);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.gallery-card-media img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.gallery-card--stage {
+    grid-column: span 2;
+}
+
+.gallery-card--stage .gallery-card-media {
+    height: 190px;
+}
+
+.gallery-card--stage .gallery-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+}
+
+.gallery-sprite {
+    image-rendering: pixelated;
+}
+
+.gallery-card-label {
+    display: grid;
+    gap: 3px;
+    padding: 10px 12px;
+    font-family: "Courier New", monospace;
+}
+
+.gallery-card-label strong,
+.gallery-card-label span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gallery-card-label strong {
+    color: #f4ead2;
+    font-size: 14px;
+}
+
+.gallery-card-label span,
+.gallery-loading {
+    color: rgba(244, 234, 210, 0.68);
+    font-size: 12px;
+}
+
 #battle-stage {
     position: relative;
     width: 100%;
@@ -357,16 +514,6 @@ body {
 
     pointer-events: none;
     transition: filter 0.28s ease, transform 0.28s ease;
-}
-
-/* Temporary debug line */
-#battle-lane::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 var(--floor-y, 0px) 0;
-    /* top right bottom left */
-    height: 3px;
-    background: red;
 }
 
 /* Slots */
@@ -547,127 +694,22 @@ UI
     .main-menu-footer {
         font-size: 13px;
     }
-}
 
-.stage-preview-page {
-    background: #090b0c;
-    color: #f3ead5;
-    overflow: auto;
-}
+    .main-menu-gallery {
+        inset: 12px;
+        padding: 14px;
+    }
 
-#stage-preview-app {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 360px minmax(0, 1fr);
-    gap: 24px;
-    padding: 24px;
-}
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
 
-.stage-preview-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
+    .gallery-card--stage {
+        grid-column: span 1;
+    }
 
-.stage-preview-card {
-    padding: 16px 18px;
-    border: 1px solid rgba(214, 173, 84, 0.32);
-    background: linear-gradient(180deg, rgba(13, 17, 20, 0.92), rgba(9, 12, 14, 0.88));
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.24);
-}
-
-.stage-preview-kicker {
-    margin-bottom: 8px;
-    color: #d9ae55;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-}
-
-.stage-preview-title {
-    margin: 0 0 10px;
-    font-size: 34px;
-    line-height: 0.95;
-}
-
-.stage-preview-copy {
-    margin: 0;
-    color: rgba(243, 234, 213, 0.82);
-    line-height: 1.5;
-}
-
-.stage-preview-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 14px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-}
-
-.stage-preview-field:last-child {
-    margin-bottom: 0;
-}
-
-.stage-preview-field select,
-.stage-preview-field input {
-    width: 100%;
-    padding: 9px 10px;
-    border: 1px solid rgba(214, 173, 84, 0.3);
-    background: rgba(255, 255, 255, 0.04);
-    color: #f3ead5;
-    font: inherit;
-}
-
-.stage-preview-readout {
-    display: grid;
-    gap: 8px;
-}
-
-.stage-preview-readout div {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 13px;
-}
-
-.stage-preview-readout strong {
-    color: #f7c557;
-}
-
-.stage-preview-code {
-    margin: 0;
-    padding: 12px;
-    min-height: 220px;
-    overflow: auto;
-    border: 1px solid rgba(214, 173, 84, 0.18);
-    background: rgba(0, 0, 0, 0.28);
-    color: #ffe6a7;
-    font-family: "Courier New", monospace;
-    font-size: 12px;
-    line-height: 1.45;
-}
-
-.stage-preview-main {
-    min-width: 0;
-    display: grid;
-    align-items: start;
-}
-
-.stage-preview-battle-ui {
-    width: 100%;
-    max-width: 1280px;
-    aspect-ratio: 16 / 9;
-    margin: 0 auto;
-    border: 1px solid rgba(214, 173, 84, 0.22);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
-}
-
-@media (max-width: 1100px) {
-    #stage-preview-app {
-        grid-template-columns: 1fr;
+    .gallery-card-media {
+        height: 180px;
     }
 }
 

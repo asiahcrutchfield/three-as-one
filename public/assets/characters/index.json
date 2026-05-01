@@ -4,7 +4,7 @@
             "name": "Man",
             "animations": {
                 "idle": {
-                    "src": "/assets/characters/man/idle/man_idle2.png",
+                    "src": "/assets/characters/man/idle/man_idle.png",
                     "frameWidth": 512,
                     "frameHeight": 768,
                     "fps": 30,

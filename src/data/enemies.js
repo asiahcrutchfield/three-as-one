@@ -74,8 +74,8 @@ export const enemies = {
         hp: 110,
         role: "Anti-Block / Pressure Builder",
         theme: "You cannot just defend. You have to act.",
-        spritePath: "/assets/enemies/order/order.png",
-        portraitPath: "/assets/enemies/order/order.png",
+        spritePath: "/assets/enemies/enforcer/enforcer.png",
+        portraitPath: "/assets/enemies/enforcer/enforcer.png",
         telegraphStyle: "honest",
         abilities: [
             {
