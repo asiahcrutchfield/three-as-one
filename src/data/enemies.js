@@ -20,7 +20,7 @@ export const enemies = {
         role: "Balanced / Tutorial",
         theme: "Something that feels safe but is not.",
         spritePath: "/assets/enemies/familiar/familiar.png",
-        portraitPath: "/assets/enemies/familiar/familiar.png",
+        portraitPath: "/assets/enemies/familiar/portrait/portrait.jpg",
         telegraphStyle: "honest",
         abilities: [
             {
@@ -75,7 +75,7 @@ export const enemies = {
         role: "Anti-Block / Pressure Builder",
         theme: "You cannot just defend. You have to act.",
         spritePath: "/assets/enemies/enforcer/enforcer.png",
-        portraitPath: "/assets/enemies/enforcer/enforcer.png",
+        portraitPath: "/assets/enemies/enforcer/portrait/portrait.png",
         telegraphStyle: "honest",
         abilities: [
             {
@@ -137,7 +137,7 @@ export const enemies = {
         role: "Timing Disruption / Deception",
         theme: "You are being watched and second-guessed.",
         spritePath: "/assets/enemies/watcher/watcher.png",
-        portraitPath: "/assets/enemies/watcher/watcher.png",
+        portraitPath: "/assets/enemies/watcher/portrait/portrait.png",
         telegraphStyle: "deceptive",
         abilities: [
             {
@@ -218,7 +218,7 @@ export const enemies = {
         role: "Character Switching / System Mastery Boss",
         theme: "You do not get to stay comfortable. You have to adapt.",
         spritePath: "/assets/enemies/boss/boss.png",
-        portraitPath: "/assets/enemies/boss/boss.png",
+        portraitPath: "/assets/enemies/boss/portrait/portrait.png",
         telegraphStyle: "phase",
         abilities: [
             {

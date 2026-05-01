@@ -41,7 +41,9 @@
     flex: 0 0 58px;
 
     overflow: hidden;
-    background: #1b1b1b;
+    background:
+        radial-gradient(circle at 50% 30%, rgba(247, 197, 87, 0.2), transparent 46%),
+        linear-gradient(145deg, rgba(45, 56, 60, 0.94), rgba(13, 16, 20, 0.96));
 }
 
 .assist-preview-portrait img {
@@ -50,6 +52,7 @@
     display: block;
     object-fit: cover;
     image-rendering: pixelated;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
 }
 
 .assist-preview-hp {

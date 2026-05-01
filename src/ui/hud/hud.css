@@ -89,6 +89,15 @@
     overflow: hidden;
     border: 0;
     outline: 0;
+    background:
+        radial-gradient(circle at 42% 28%, rgba(247, 197, 87, 0.24), transparent 45%),
+        linear-gradient(145deg, rgba(50, 65, 70, 0.92), rgba(15, 20, 24, 0.96));
+}
+
+#enemy-hud .portrait-slot {
+    background:
+        radial-gradient(circle at 58% 28%, rgba(150, 195, 210, 0.22), transparent 44%),
+        linear-gradient(145deg, rgba(42, 50, 58, 0.95), rgba(12, 15, 19, 0.96));
 }
 
 .portrait-slot2 {
@@ -104,6 +113,7 @@
     image-rendering: pixelated;
     border: 0;
     outline: 0;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.55));
 }
 
 /* ===== NAME + SPECIAL ===== */
