@@ -18,7 +18,7 @@ import { chooseEnemyIntent, evaluateDefenseTiming, getDefenseTimingConfig, resol
 import { createBattleState, createEnemyState, resetBattleStats } from "./game/state.js";
 import { advanceMeltdown, applyComboChange, getInactiveCharacterIds, getPlayerTurnDuration, healInactiveCharacters, isCharacterUnavailable, resolveDefeatState, tickCooldowns } from "./game/statusEffect.js";
 import { playBattleFinishSequence, playCombatFeedback, resetCombatantDefeatState, wait } from "./game/visualFeedback.js";
-import { createBattleUI, hideProgressionPanels, playBattleTransition, showBattleSummary, showEnemyActionCallout, showGameOver, showRewardChoices, updateBattleUI } from "./render/renderUI.js";
+import { createBattleUI, hideProgressionPanels, playBattleTransition, showBattleSummary, showEnemyActionCallout, showGameOver, showRewardChoices, showRunResults, updateBattleUI } from "./render/renderUI.js";
 import { showBattleIntro } from "./render/renderUI.js";
 import { enemyAliases, enemies } from "./data/enemies.js";
 import { battles } from "./data/battles.js";
@@ -95,24 +95,62 @@ async function initBattle() {
     function computeBattleSummary() {
         const teamHp = ["girl", "officer", "man"].reduce((sum, id) => sum + battleState.roster[id].hp, 0);
         const teamMaxHp = ["girl", "officer", "man"].reduce((sum, id) => sum + battleState.roster[id].maxHp, 0);
-        const hpBonus = Math.round((teamHp / teamMaxHp) * 40);
-        const comboBonus = Math.round(battleState.maxComboReached * 12);
-        const counterBonus = battleState.stats.counters * 6;
-        const penaltyTotal = battleState.stats.penalties * 5 + battleState.stats.timeouts * 4 + battleState.stats.defeats * 8;
-        const finalScore = hpBonus + comboBonus + counterBonus - penaltyTotal;
+        const hpBonus = Math.round((teamHp / teamMaxHp) * 30);
+        const comboBonus = Math.round((battleState.maxComboReached / 3) * 20);
+        const counterBonus = (battleState.stats.perfectCounters * 2) + battleState.stats.goodCounters;
+        const fastBonus = battleState.stats.fastActions;
+        const penaltyTotal =
+            battleState.stats.heavyDamage +
+            (battleState.stats.failedCounters * 2) +
+            (battleState.stats.timeouts * 5) +
+            (battleState.stats.defeats * 10);
+        const finalScore = 100 + hpBonus + comboBonus + counterBonus + fastBonus - penaltyTotal;
 
         let grade = "D";
-        if (finalScore >= 70) grade = "S";
-        else if (finalScore >= 52) grade = "A";
-        else if (finalScore >= 38) grade = "B";
-        else if (finalScore >= 24) grade = "C";
+        if (finalScore >= 130) grade = "S";
+        else if (finalScore >= 110) grade = "A";
+        else if (finalScore >= 90) grade = "B";
+        else if (finalScore >= 70) grade = "C";
 
         return {
             hpBonus,
             comboBonus,
             counterBonus,
+            fastBonus,
             penaltyTotal,
             finalScore,
+            grade
+        };
+    }
+
+    function computeRunSummary() {
+        const totals = battleState.run.battleSummaries.reduce((acc, summary) => {
+            acc.hpBonus += summary.hpBonus;
+            acc.comboBonus += summary.comboBonus;
+            acc.counterBonus += summary.counterBonus;
+            acc.fastBonus += summary.fastBonus;
+            acc.penaltyTotal += summary.penaltyTotal;
+            acc.finalScore += summary.finalScore;
+            return acc;
+        }, {
+            hpBonus: 0,
+            comboBonus: 0,
+            counterBonus: 0,
+            fastBonus: 0,
+            penaltyTotal: 0,
+            finalScore: 0
+        });
+
+        const battleCount = Math.max(1, battleState.run.battleSummaries.length);
+        const averageScore = totals.finalScore / battleCount;
+        let grade = "D";
+        if (averageScore >= 130) grade = "S";
+        else if (averageScore >= 110) grade = "A";
+        else if (averageScore >= 90) grade = "B";
+        else if (averageScore >= 70) grade = "C";
+
+        return {
+            ...totals,
             grade
         };
     }
@@ -159,7 +197,6 @@ async function initBattle() {
         battleState.enemyIntent = chooseEnemyIntent(battleState);
         hideProgressionPanels(ui);
         syncBattleUI();
-        syncPauseUI();
         updateMenuLock();
     }
 
@@ -225,6 +262,7 @@ async function initBattle() {
         }
 
         const summary = computeBattleSummary();
+        battleState.run.battleSummaries.push(summary);
         const hasMoreBattles = battleState.run.battleIndex < battles.length - 1;
         const rewardChoices = hasMoreBattles ? getRewardsForGrade(summary.grade) : [];
 
@@ -241,7 +279,11 @@ async function initBattle() {
                 } else {
                     battleState.run.completedBattles += 1;
                     hideProgressionPanels(ui);
-                    showGameOver(ui, "victory");
+                    showRunResults(ui, computeRunSummary(), {
+                        onReturn: () => {
+                            window.location.reload();
+                        }
+                    });
                 }
             }
         });
@@ -304,11 +346,6 @@ async function initBattle() {
     function setTimingDebug(lines = [], visible = true) {
         timingDebug.innerHTML = lines.map((line) => `<div>${line}</div>`).join("");
         timingDebug.classList.toggle("hidden", !visible);
-    }
-
-    function syncPauseUI() {
-        ui.pauseOverlay.classList.toggle("hidden", !isPaused);
-        ui.pauseButton.textContent = isPaused ? t("ui.resume") : t("ui.pause");
     }
 
     function updateMenuLock() {
@@ -536,23 +573,6 @@ async function initBattle() {
         });
     }
 
-    function togglePause() {
-        if (battleState.battleOver) return;
-
-        isPaused = !isPaused;
-        syncPauseUI();
-
-        if (isPaused) {
-            activeTurnTimer?.pause?.();
-            activeDefenseTimer?.pause?.();
-        } else {
-            activeTurnTimer?.resume?.();
-            activeDefenseTimer?.resume?.();
-        }
-
-        updateMenuLock();
-    }
-
     async function finishBattleIfNeeded() {
         resolveDefeatState(battleState);
 
@@ -760,22 +780,18 @@ async function initBattle() {
         await runBattleExchange(event.detail.item, timingSnapshot);
     });
 
-    ui.pauseButton.addEventListener("click", () => {
-        togglePause();
-    });
-
-    window.addEventListener("keydown", (event) => {
-        if (event.repeat) return;
-        if (event.key === "Escape") {
-            event.preventDefault();
-            togglePause();
-        }
-    });
 }
 
-function createGalleryCard({ title, subtitle = "", className = "" }) {
+function createGalleryCard({ title, subtitle = "", className = "", preview = null }) {
     const card = document.createElement("article");
     card.className = `gallery-card ${className}`.trim();
+    card.tabIndex = 0;
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", `Open ${title}`);
+
+    if (preview) {
+        card.galleryPreview = { title, subtitle, ...preview };
+    }
 
     const media = document.createElement("div");
     media.className = "gallery-card-media";
@@ -797,8 +813,17 @@ function createAnimatedGallerySprite(animation) {
     return sprite;
 }
 
+function createGalleryImage(src, alt) {
+    const image = document.createElement("img");
+    image.src = src;
+    image.alt = alt;
+    image.loading = "lazy";
+    image.decoding = "async";
+    return image;
+}
+
 function renderGalleryTab(tab, grid, data) {
-    grid.innerHTML = "";
+    const fragment = document.createDocumentFragment();
 
     if (tab === "characters") {
         Object.entries(data.characterIndex.characters).forEach(([id, character]) => {
@@ -806,12 +831,17 @@ function renderGalleryTab(tab, grid, data) {
             const { card, media } = createGalleryCard({
                 title: character.name,
                 subtitle: id,
-                className: "gallery-card--sprite"
+                className: "gallery-card--sprite",
+                preview: {
+                    type: "animation",
+                    animation
+                }
             });
 
             media.appendChild(createAnimatedGallerySprite(animation));
-            grid.appendChild(card);
+            fragment.appendChild(card);
         });
+        grid.replaceChildren(fragment);
         return;
     }
 
@@ -819,11 +849,17 @@ function renderGalleryTab(tab, grid, data) {
         characterVariants.forEach((variant) => {
             const { card, media } = createGalleryCard({
                 title: variant.name,
-                subtitle: variant.characterId
+                subtitle: variant.characterId,
+                preview: {
+                    type: "image",
+                    src: variant.src,
+                    alt: variant.name
+                }
             });
-            media.innerHTML = `<img src="${variant.src}" alt="${variant.name}">`;
-            grid.appendChild(card);
+            media.appendChild(createGalleryImage(variant.src, variant.name));
+            fragment.appendChild(card);
         });
+        grid.replaceChildren(fragment);
         return;
     }
 
@@ -832,11 +868,17 @@ function renderGalleryTab(tab, grid, data) {
             const { card, media } = createGalleryCard({
                 title: enemy.name,
                 subtitle: enemy.id,
-                className: "gallery-card--sprite"
+                className: "gallery-card--sprite",
+                preview: {
+                    type: "image",
+                    src: enemy.spritePath,
+                    alt: enemy.name
+                }
             });
-            media.innerHTML = `<img src="${enemy.spritePath}" alt="${enemy.name}">`;
-            grid.appendChild(card);
+            media.appendChild(createGalleryImage(enemy.spritePath, enemy.name));
+            fragment.appendChild(card);
         });
+        grid.replaceChildren(fragment);
         return;
     }
 
@@ -845,24 +887,36 @@ function renderGalleryTab(tab, grid, data) {
             const { card, media } = createGalleryCard({
                 title: stage.name,
                 subtitle: `${id} battle stage`,
-                className: "gallery-card--stage"
+                className: "gallery-card--stage",
+                preview: {
+                    type: "stage",
+                    src: stage.layers.ground,
+                    backgroundSrc: stage.layers.far,
+                    alt: stage.name
+                }
             });
             if (stage.layers.far) {
                 media.style.backgroundImage = `url("${stage.layers.far}")`;
             }
-            media.innerHTML = `<img src="${stage.layers.ground}" alt="${stage.name}">`;
-            grid.appendChild(card);
+            media.appendChild(createGalleryImage(stage.layers.ground, stage.name));
+            fragment.appendChild(card);
         });
 
         stageVariants.forEach((stage) => {
             const { card, media } = createGalleryCard({
                 title: stage.name,
                 subtitle: `${stage.stageId} variant`,
-                className: "gallery-card--stage"
+                className: "gallery-card--stage",
+                preview: {
+                    type: "image",
+                    src: stage.src,
+                    alt: stage.name
+                }
             });
-            media.innerHTML = `<img src="${stage.src}" alt="${stage.name}">`;
-            grid.appendChild(card);
+            media.appendChild(createGalleryImage(stage.src, stage.name));
+            fragment.appendChild(card);
         });
+        grid.replaceChildren(fragment);
     }
 }
 
@@ -877,10 +931,24 @@ function setupMainMenu() {
     const galleryClose = document.querySelector("#gallery-close");
     const galleryGrid = document.querySelector("#gallery-grid");
     const galleryTabs = [...document.querySelectorAll(".gallery-tab")];
+    const galleryLightbox = document.querySelector("#gallery-lightbox");
+    const galleryLightboxClose = document.querySelector("#gallery-lightbox-close");
+    const galleryLightboxMedia = document.querySelector("#gallery-lightbox-media");
+    const galleryLightboxTitle = document.querySelector("#gallery-lightbox-title");
+    const galleryLightboxSubtitle = document.querySelector("#gallery-lightbox-subtitle");
+    const galleryZoomOut = document.querySelector("#gallery-zoom-out");
+    const galleryZoomReset = document.querySelector("#gallery-zoom-reset");
+    const galleryZoomIn = document.querySelector("#gallery-zoom-in");
+    const tutorialPanel = document.querySelector("#main-menu-tutorial");
+    const tutorialClose = document.querySelector("#tutorial-close");
+    const tutorialTabs = [...document.querySelectorAll(".tutorial-tab")];
+    const tutorialPanels = [...document.querySelectorAll(".tutorial-panel")];
     const languageOptions = [...document.querySelectorAll(".language-option")];
     const localizedNodes = [...document.querySelectorAll("[data-i18n]")];
     let galleryDataPromise = null;
+    const galleryTabPanels = new Map();
     let activeGalleryTab = "characters";
+    let galleryZoom = 1;
 
     function setActiveMenuItem(action) {
         for (const item of menuItems) {
@@ -889,11 +957,32 @@ function setupMainMenu() {
         }
     }
 
-    function showMenuCard(cardKey = null) {
+    function hideMenuCards() {
+        Object.entries(menuCards).forEach(([key, node]) => {
+            node?.classList.add("hidden");
+        });
+    }
+
+    function showMenuCard(cardKey = null, activeAction = cardKey) {
         Object.entries(menuCards).forEach(([key, node]) => {
             node?.classList.toggle("hidden", key !== cardKey);
         });
-        setActiveMenuItem(cardKey ?? "start");
+        setActiveMenuItem(activeAction);
+    }
+
+    function previewMenuAction(action) {
+        if (action === "gallery" || action === "tutorial") {
+            hideMenuCards();
+            setActiveMenuItem(action);
+            return;
+        }
+
+        if (action === "options" || action === "credits" || action === "exit") {
+            showMenuCard(action, action);
+            return;
+        }
+
+        showMenuCard(null, action);
     }
 
     async function getGalleryData() {
@@ -904,25 +993,146 @@ function setupMainMenu() {
         return galleryDataPromise;
     }
 
+    function showCachedGalleryTab(tab, data) {
+        galleryTabPanels.forEach((panel, panelTab) => {
+            panel.classList.toggle("hidden", panelTab !== tab);
+        });
+
+        let panel = galleryTabPanels.get(tab);
+        if (!panel) {
+            panel = document.createElement("div");
+            panel.className = "gallery-grid-panel";
+            panel.dataset.galleryPanel = tab;
+            renderGalleryTab(tab, panel, data);
+            galleryTabPanels.set(tab, panel);
+            galleryGrid.appendChild(panel);
+        }
+
+        panel.classList.remove("hidden");
+    }
+
     async function showGallery(tab = activeGalleryTab) {
         activeGalleryTab = tab;
         galleryPanel.classList.remove("hidden");
-        showMenuCard(null);
+        hideTutorial();
+        hideMenuCards();
         setActiveMenuItem("gallery");
         galleryTabs.forEach((button) => {
             button.classList.toggle("is-active", button.dataset.galleryTab === activeGalleryTab);
         });
-        galleryGrid.innerHTML = `<div class="gallery-loading">Loading...</div>`;
-        renderGalleryTab(activeGalleryTab, galleryGrid, await getGalleryData());
+
+        if (!galleryTabPanels.has(activeGalleryTab)) {
+            galleryGrid.innerHTML = `<div class="gallery-loading">Loading...</div>`;
+        }
+
+        const data = await getGalleryData();
+        if (galleryGrid.querySelector(".gallery-loading")) {
+            galleryGrid.innerHTML = "";
+        }
+        showCachedGalleryTab(activeGalleryTab, data);
     }
 
     function hideGallery() {
         galleryPanel.classList.add("hidden");
+        hideGalleryLightbox();
         setActiveMenuItem("start");
+    }
+
+    function showTutorial() {
+        tutorialPanel.classList.remove("hidden");
+        hideGallery();
+        hideMenuCards();
+        setActiveMenuItem("tutorial");
+    }
+
+    function hideTutorial() {
+        tutorialPanel.classList.add("hidden");
+    }
+
+    function showTutorialTab(tab) {
+        tutorialTabs.forEach((button) => {
+            button.classList.toggle("is-active", button.dataset.tutorialTab === tab);
+        });
+        tutorialPanels.forEach((panel) => {
+            panel.classList.toggle("hidden", panel.dataset.tutorialPanel !== tab);
+        });
+    }
+
+    function showGalleryLightbox(preview) {
+        if (!preview) return;
+
+        galleryLightboxMedia.innerHTML = "";
+        galleryLightboxMedia.style.backgroundImage = "";
+        galleryLightboxMedia.className = `gallery-lightbox-media gallery-lightbox-media--${preview.type}`;
+        galleryLightboxTitle.textContent = preview.title;
+        galleryLightboxSubtitle.textContent = preview.subtitle ?? "";
+        setGalleryZoom(preview.type === "animation" ? 1.5 : 1);
+
+        const content = document.createElement("div");
+        content.className = "gallery-lightbox-content";
+
+        if (preview.type === "animation") {
+            content.appendChild(createAnimatedGallerySprite(preview.animation));
+        } else {
+            if (preview.backgroundSrc) {
+                galleryLightboxMedia.style.backgroundImage = `url("${preview.backgroundSrc}")`;
+            }
+
+            const image = document.createElement("img");
+            image.src = preview.src;
+            image.alt = preview.alt ?? preview.title;
+            content.appendChild(image);
+        }
+
+        galleryLightboxMedia.appendChild(content);
+        galleryLightbox.classList.remove("hidden");
+        galleryLightboxClose.focus();
+    }
+
+    function hideGalleryLightbox() {
+        galleryLightbox.classList.add("hidden");
+        galleryLightboxMedia.innerHTML = "";
+        galleryLightboxMedia.style.backgroundImage = "";
+    }
+
+    function setGalleryZoom(nextZoom) {
+        galleryZoom = Math.max(0.5, Math.min(4, nextZoom));
+        galleryLightboxMedia.style.setProperty("--gallery-zoom", galleryZoom);
+        if (galleryZoomReset) {
+            galleryZoomReset.textContent = `${Math.round(galleryZoom * 100)}%`;
+        }
+    }
+
+    function zoomGallery(delta) {
+        setGalleryZoom(galleryZoom + delta);
+    }
+
+    function preloadImage(src) {
+        if (!src) return;
+        const image = new Image();
+        image.decoding = "async";
+        image.src = src;
+    }
+
+    function prewarmGallery() {
+        const run = () => {
+            void getGalleryData().then((data) => {
+                Object.values(data.characterIndex.characters).forEach((character) => {
+                    preloadImage(character.animations.idle.src);
+                });
+            });
+        };
+
+        if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(run, { timeout: 1800 });
+        } else {
+            window.setTimeout(run, 600);
+        }
     }
 
     function applyLanguage(language) {
         const activeLanguage = setLanguage(language);
+        document.title = t("menu.title");
 
         localizedNodes.forEach((node) => {
             const key = node.dataset.i18n;
@@ -949,24 +1159,12 @@ function setupMainMenu() {
     menuItems.forEach((item) => {
         item.addEventListener("mouseenter", () => {
             if (item.disabled) return;
-            const action = item.dataset.menuAction;
-            if (action === "gallery") return;
-            if (action === "options" || action === "credits" || action === "exit") {
-                showMenuCard(action);
-                return;
-            }
-            showMenuCard(null);
+            previewMenuAction(item.dataset.menuAction);
         });
 
         item.addEventListener("focus", () => {
             if (item.disabled) return;
-            const action = item.dataset.menuAction;
-            if (action === "gallery") return;
-            if (action === "options" || action === "credits" || action === "exit") {
-                showMenuCard(action);
-                return;
-            }
-            showMenuCard(null);
+            previewMenuAction(item.dataset.menuAction);
         });
 
         item.addEventListener("click", async () => {
@@ -983,9 +1181,15 @@ function setupMainMenu() {
                 return;
             }
 
+            if (action === "tutorial") {
+                showTutorial();
+                return;
+            }
+
             if (action === "options" || action === "credits" || action === "exit") {
                 hideGallery();
-                showMenuCard(action);
+                hideTutorial();
+                showMenuCard(action, action);
             }
         });
     });
@@ -997,17 +1201,65 @@ function setupMainMenu() {
     });
 
     galleryClose.addEventListener("click", hideGallery);
+    tutorialClose.addEventListener("click", () => {
+        hideTutorial();
+        setActiveMenuItem("start");
+    });
+
+    tutorialTabs.forEach((button) => {
+        button.addEventListener("click", () => {
+            showTutorialTab(button.dataset.tutorialTab);
+        });
+    });
+
+    galleryGrid.addEventListener("click", (event) => {
+        const card = event.target.closest(".gallery-card");
+        showGalleryLightbox(card?.galleryPreview);
+    });
+
+    galleryGrid.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const card = event.target.closest(".gallery-card");
+        if (!card) return;
+        event.preventDefault();
+        showGalleryLightbox(card.galleryPreview);
+    });
+
+    galleryLightboxClose.addEventListener("click", hideGalleryLightbox);
+    galleryZoomOut.addEventListener("click", () => zoomGallery(-0.25));
+    galleryZoomReset.addEventListener("click", () => setGalleryZoom(1));
+    galleryZoomIn.addEventListener("click", () => zoomGallery(0.25));
+
+    galleryLightboxMedia.addEventListener("wheel", (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomGallery(event.deltaY > 0 ? -0.15 : 0.15);
+    }, { passive: false });
+
+    galleryLightbox.addEventListener("click", (event) => {
+        if (event.target === galleryLightbox) {
+            hideGalleryLightbox();
+        }
+    });
+
+    window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !galleryLightbox.classList.contains("hidden")) {
+            hideGalleryLightbox();
+        }
+    });
 
     languageOptions.forEach((option) => {
         option.addEventListener("click", () => {
             hideGallery();
+            hideTutorial();
             applyLanguage(option.dataset.language);
-            showMenuCard("options");
+            showMenuCard("options", "options");
         });
     });
 
     applyLanguage(getLanguage());
-    showMenuCard(null);
+    showMenuCard(null, "start");
+    prewarmGallery();
 }
 
 setupMainMenu();

@@ -502,7 +502,8 @@ function resolveSpecial(state, characterId, actionId) {
     if (characterId === "man" && actionId === "overexert") {
         feedback.push({ kind: "attack", slotId: "player-slot", style: "heavy" });
         const enemyDamage = damageCharacter(state, "enemy", 40);
-        const selfDamage = damageCharacter(state, "man", 15);
+        const currentHp = getCharacterHp(state, "man");
+        const selfDamage = damageCharacter(state, "man", Math.min(15, Math.max(0, currentHp - 1)));
         applyComboChange(state, 0.25);
         if (isMeltdownActive(state)) {
             applyComboChange(state, 0.25);
@@ -626,6 +627,7 @@ export function resolvePlayerAction(state, item) {
     if (!action) return { feedback: [] };
 
     const feedback = [];
+    const markedBeforeAction = !!state.enemy.marked;
 
     if (action.kind === "attack") {
         feedback.push(...resolveAttack(state, action.characterId, action.actionId));
@@ -659,6 +661,10 @@ export function resolvePlayerAction(state, item) {
 
     if (action.kind === "assist" && action.characterId === "officer") {
         state.playerTurnScale = 1.6;
+    }
+
+    if (markedBeforeAction && action.actionId !== "gunShot" && state.enemy.marked) {
+        state.enemy.marked = false;
     }
 
     return { feedback };

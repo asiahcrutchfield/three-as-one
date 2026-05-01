@@ -51,11 +51,11 @@ export const rewards = [
 ];
 
 export function getRewardsForGrade(grade) {
-    let count = 1;
-    if (grade === "S") count = 3;
+    let count = 0;
+    if (grade === "S") count = rewards.length;
     else if (grade === "A") count = 3;
     else if (grade === "B") count = 2;
-    else if (grade === "C") count = 2;
+    else if (grade === "C") count = 1;
 
     const shuffled = [...rewards].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);

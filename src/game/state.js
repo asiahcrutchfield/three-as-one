@@ -7,7 +7,11 @@ export const PLAYER_CHARACTER_IDS = ["girl", "officer", "man"];
 function createBattleStats() {
     return {
         counters: 0,
+        perfectCounters: 0,
+        goodCounters: 0,
         penalties: 0,
+        failedCounters: 0,
+        heavyDamage: 0,
         defeats: 0,
         fastActions: 0,
         timeouts: 0
@@ -101,6 +105,7 @@ export function createBattleState(enemyId = "familiar") {
             battleIndex: 0,
             enemyIndex: 0,
             completedBattles: 0,
+            battleSummaries: [],
             rewards: [],
             startingCombo: 1,
             damageBonus: 0,

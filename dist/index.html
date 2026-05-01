@@ -11,8 +11,8 @@
   <!-- !!!!!!!! DO NOT DELETE THIS!!!!!!!!! for vibe jam 2026 entry !!!!!!!!-->
   <script async src="https://vibej.am/2026/widget.js"></script>
   <!-- !!!!!!!! DO NOT DELETE THIS!!!!!!!!! for vibe jam 2026 entry !!!!!!!!-->
-  <script type="module" crossorigin src="/assets/index-CkZFEuE_.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Dbt0dvW0.css">
+  <script type="module" crossorigin src="/assets/index-CgaMh6vy.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BZwmxiP4.css">
 </head>
 
 <body>
@@ -31,6 +31,7 @@
 
         <nav class="main-menu-nav" aria-label="Primary">
           <button class="main-menu-item is-active" type="button" data-menu-action="start" data-i18n="start">START</button>
+          <button class="main-menu-item" type="button" data-menu-action="tutorial" data-i18n="tutorial">TUTORIAL</button>
           <button class="main-menu-item" type="button" data-menu-action="gallery" data-i18n="gallery">GALLERY</button>
           <button class="main-menu-item" type="button" data-menu-action="options" data-i18n="options">OPTIONS</button>
           <button class="main-menu-item" type="button" data-menu-action="credits" data-i18n="credits">CREDITS</button>
@@ -85,6 +86,89 @@
         </div>
 
         <div id="gallery-grid" class="gallery-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="main-menu-tutorial" class="main-menu-tutorial hidden" aria-label="Tutorial">
+        <header class="tutorial-header">
+          <div>
+            <div class="tutorial-kicker" data-i18n="tutorialKicker">Field Guide</div>
+            <h2 class="tutorial-title" data-i18n="tutorialTitle">How to Play</h2>
+          </div>
+          <button id="tutorial-close" class="tutorial-close" type="button" aria-label="Close tutorial">×</button>
+        </header>
+
+        <div class="tutorial-tabs" role="tablist" aria-label="Tutorial sections">
+          <button class="tutorial-tab is-active" type="button" data-tutorial-tab="guide" data-i18n="tutorialGuideTab">Guide</button>
+          <button class="tutorial-tab" type="button" data-tutorial-tab="terms" data-i18n="tutorialTermsTab">Terms</button>
+        </div>
+
+        <div class="tutorial-panel" data-tutorial-panel="guide">
+          <div class="tutorial-grid">
+            <article class="tutorial-card">
+              <div class="tutorial-card-index">01</div>
+              <h3 data-i18n="tutorialTurnTitle">Read the enemy</h3>
+              <p data-i18n="tutorialTurnCopy">Watch the intent at the top of the screen. Close attacks can be countered, long attacks cannot, and status moves change the next turn.</p>
+            </article>
+            <article class="tutorial-card">
+              <div class="tutorial-card-index">02</div>
+              <h3 data-i18n="tutorialActionTitle">Choose fast</h3>
+              <p data-i18n="tutorialActionCopy">Pick attack, defense, assist, or switch before the timer empties. Acting quickly builds extra momentum.</p>
+            </article>
+            <article class="tutorial-card">
+              <div class="tutorial-card-index">03</div>
+              <h3 data-i18n="tutorialDefenseTitle">Defend with timing</h3>
+              <p data-i18n="tutorialDefenseCopy">When defending, press the shown key inside the timing window. Counters hit back only against close attacks.</p>
+            </article>
+            <article class="tutorial-card">
+              <div class="tutorial-card-index">04</div>
+              <h3 data-i18n="tutorialTeamTitle">Use the team</h3>
+              <p data-i18n="tutorialTeamCopy">Switch characters to match the fight. Inactive allies recover slowly, and assists can stabilize a dangerous turn.</p>
+            </article>
+            <article class="tutorial-card">
+              <div class="tutorial-card-index">05</div>
+              <h3 data-i18n="tutorialBossTitle">Adapt to the boss</h3>
+              <p data-i18n="tutorialBossCopy">The final boss can force switches and lock the arena. Keep the whole team alive and respond to each phase.</p>
+            </article>
+            <article class="tutorial-card">
+              <div class="tutorial-card-index">06</div>
+              <h3 data-i18n="tutorialScoreTitle">Protect your grade</h3>
+              <p data-i18n="tutorialScoreCopy">Your score rewards team HP, max combo, and counters. Penalties, defeats, and timeouts lower the final grade.</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="tutorial-panel hidden" data-tutorial-panel="terms">
+          <dl class="tutorial-terms">
+            <div><dt data-i18n="termBattle">Battle</dt><dd data-i18n="termBattleDef">A full fight that ends when the enemy is defeated or all player characters fall.</dd></div>
+            <div><dt data-i18n="termTurn">Turn</dt><dd data-i18n="termTurnDef">One action taken by either the player or the enemy.</dd></div>
+            <div><dt data-i18n="termRound">Round</dt><dd data-i18n="termRoundDef">A pair of turns: the player acts, then the enemy resolves its action.</dd></div>
+            <div><dt data-i18n="termIntent">Intent</dt><dd data-i18n="termIntentDef">The enemy's telegraphed next action, shown before you choose your move.</dd></div>
+            <div><dt data-i18n="termCombo">Combo</dt><dd data-i18n="termComboDef">Your momentum multiplier. Good play raises it, mistakes lower it, and damage scales with it.</dd></div>
+            <div><dt data-i18n="termCounter">Counter</dt><dd data-i18n="termCounterDef">A risky timed defense that only works against close attacks and can hit the enemy back.</dd></div>
+            <div><dt data-i18n="termDodge">Dodge</dt><dd data-i18n="termDodgeDef">A timed defense that avoids direct attack damage when successful.</dd></div>
+            <div><dt data-i18n="termBlock">Block</dt><dd data-i18n="termBlockDef">The safest defense. It reduces damage and gives a small combo gain.</dd></div>
+            <div><dt data-i18n="termAssist">Assist</dt><dd data-i18n="termAssistDef">A support action from an inactive character that can heal, weaken enemies, or create openings.</dd></div>
+            <div><dt data-i18n="termSwitch">Switch</dt><dd data-i18n="termSwitchDef">Change the active character. Each battle allows one normal manual switch.</dd></div>
+            <div><dt data-i18n="termMeltdown">Meltdown</dt><dd data-i18n="termMeltdownDef">A dangerous state triggered when Tiger reaches 0 HP. Girl becomes inactive and other characters fight under unstable pressure.</dd></div>
+            <div><dt data-i18n="termGrade">Grade</dt><dd data-i18n="termGradeDef">Your battle rating based on HP, combo, counters, fast actions, and penalties.</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section id="gallery-lightbox" class="gallery-lightbox hidden" aria-modal="true" role="dialog" aria-label="Gallery preview">
+        <button id="gallery-lightbox-close" class="gallery-lightbox-close" type="button" aria-label="Close preview">×</button>
+        <div class="gallery-lightbox-controls" aria-label="Preview zoom controls">
+          <button id="gallery-zoom-out" type="button" aria-label="Zoom out">−</button>
+          <button id="gallery-zoom-reset" type="button" aria-label="Reset zoom">100%</button>
+          <button id="gallery-zoom-in" type="button" aria-label="Zoom in">+</button>
+        </div>
+        <div class="gallery-lightbox-frame">
+          <div id="gallery-lightbox-media" class="gallery-lightbox-media"></div>
+          <div class="gallery-lightbox-label">
+            <strong id="gallery-lightbox-title"></strong>
+            <span id="gallery-lightbox-subtitle"></span>
+          </div>
+        </div>
       </section>
     </div>
 

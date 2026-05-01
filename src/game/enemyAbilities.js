@@ -387,6 +387,11 @@ export function resolveEnemyTurn(state, timingResult = null) {
                 applyComboChange(state, 0.25);
             }
             state.stats.counters += 1;
+            if (timingResult?.outcome === "perfect") {
+                state.stats.perfectCounters += 1;
+            } else {
+                state.stats.goodCounters += 1;
+            }
 
             feedback.push({
                 kind: "counter",
@@ -411,6 +416,7 @@ export function resolveEnemyTurn(state, timingResult = null) {
 
             applyComboChange(state, penalty);
             state.stats.penalties += 1;
+            state.stats.failedCounters += 1;
 
             feedback.push({ kind: "text", slotId, label: "Counter Failed" });
 
@@ -435,6 +441,7 @@ export function resolveEnemyTurn(state, timingResult = null) {
     if (damage >= Math.round(getCharacterMaxHp(state, activeId) * 0.25)) {
         applyComboChange(state, -0.5);
         state.stats.penalties += 1;
+        state.stats.heavyDamage += 1;
     }
 
     state.enemy.nextAttackMultiplier = 1;

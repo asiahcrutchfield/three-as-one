@@ -138,23 +138,6 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
 
     const enemyIntent = document.querySelector("#enemy-intent-preview");
     const enemyStatus = document.querySelector("#enemy-status-preview");
-    const pauseButton = document.createElement("button");
-    pauseButton.id = "pause-button";
-    pauseButton.type = "button";
-    pauseButton.textContent = t("ui.pause");
-    battleStage.appendChild(pauseButton);
-
-    const pauseOverlay = document.createElement("div");
-    pauseOverlay.id = "pause-overlay";
-    pauseOverlay.className = "hidden";
-    pauseOverlay.innerHTML = `
-        <div class="pause-card">
-            <div class="pause-title">${t("ui.paused")}</div>
-            <div class="pause-copy">${t("ui.pauseCopy")}</div>
-        </div>
-    `;
-    battleStage.appendChild(pauseOverlay);
-
     const battleIntro = document.createElement("div");
     battleIntro.id = "battle-intro-overlay";
     battleIntro.className = "hidden";
@@ -195,6 +178,11 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
     `;
     battleStage.appendChild(gameOver);
 
+    const runResults = document.createElement("div");
+    runResults.id = "run-results-overlay";
+    runResults.className = "hidden";
+    battleStage.appendChild(runResults);
+
     gameOver.querySelector(".game-over-button")?.addEventListener("click", () => {
         window.location.reload();
     });
@@ -213,8 +201,9 @@ export function createBattleUI({ playerHUD, enemyHUD, assists, comboMeter, actio
         battleTransition,
         enemyActionCallout,
         gameOver,
-        pauseButton,
-        pauseOverlay
+        runResults,
+        pauseButton: null,
+        pauseOverlay: null
     };
 }
 
@@ -491,6 +480,7 @@ export function showBattleSummary(ui, summary) {
             <div><span>${t("ui.hpBonus")}</span><strong>+${summary.hpBonus}</strong></div>
             <div><span>${t("ui.comboBonus")}</span><strong>+${summary.comboBonus}</strong></div>
             <div><span>${t("ui.counters")}</span><strong>+${summary.counterBonus}</strong></div>
+            <div><span>${t("ui.fastActions", "Fast Actions")}</span><strong>+${summary.fastBonus}</strong></div>
             <div><span>${t("ui.penalties")}</span><strong>-${summary.penaltyTotal}</strong></div>
         </div>
         <div class="results-preview-rank">
@@ -531,5 +521,36 @@ export function showRewardChoices(ui, rewards, { onSelect, finalBattle = false }
         button.addEventListener("click", () => {
             onSelect?.(button.dataset.rewardId);
         });
+    });
+}
+
+export function showRunResults(ui, summary, { onReturn } = {}) {
+    if (!ui.runResults) return;
+
+    ui.runResults.innerHTML = `
+        <div class="run-results-card">
+            <div class="ui-preview-kicker">${t("ui.runResults", "Run Results")}</div>
+            <div class="run-results-grade">${summary.grade}</div>
+            <div class="run-results-grid">
+                <div><span>${t("ui.hpBonus")}</span><strong>+${summary.hpBonus}</strong></div>
+                <div><span>${t("ui.comboBonus")}</span><strong>+${summary.comboBonus}</strong></div>
+                <div><span>${t("ui.counters")}</span><strong>+${summary.counterBonus}</strong></div>
+                <div><span>${t("ui.fastActions", "Fast Actions")}</span><strong>+${summary.fastBonus}</strong></div>
+                <div><span>${t("ui.penalties")}</span><strong>-${summary.penaltyTotal}</strong></div>
+            </div>
+            <div class="run-results-score">
+                <span>${t("ui.finalScore")}</span>
+                <strong>${summary.finalScore}</strong>
+            </div>
+            <button type="button" class="run-results-button">${t("ui.returnToMenu", "Return to Main Menu")}</button>
+        </div>
+    `;
+
+    ui.runResults.classList.remove("hidden", "is-visible");
+    void ui.runResults.offsetWidth;
+    ui.runResults.classList.add("is-visible");
+
+    ui.runResults.querySelector(".run-results-button")?.addEventListener("click", () => {
+        onReturn?.();
     });
 }
